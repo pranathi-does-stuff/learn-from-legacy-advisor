@@ -4,60 +4,392 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Executive Career Advisory</title>
+    <title>Legacy Career &amp; Academic Advisory</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap"
         rel="stylesheet" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='5') }}" />
 </head>
 
 <body>
     <div class="page-wrapper">
         <header class="site-header">
-            <div class="brand-mark" aria-hidden="true"></div>
-            <span class="brand-title">Vanguard Career Advisory</span>
+            <div class="header-brand">
+                <div class="brand-mark" aria-hidden="true"></div>
+                <span class="brand-title">Legacy Advisory &bull; Career &amp; Degree Pathways</span>
+            </div>
+            <div id="wizard-progress" class="wizard-progress" hidden>
+                <span id="progress-label" class="progress-label">Step 1 of 6</span>
+                <div class="progress-track" aria-hidden="true">
+                    <div id="progress-fill" class="progress-fill"></div>
+                </div>
+            </div>
         </header>
 
         <main class="main-container">
-            <section class="advisory-card" aria-labelledby="prompt-heading">
-                <p class="eyebrow">Private Consultation</p>
-                <h1 id="prompt-heading" class="prompt-heading">What's your name?</h1>
-                <p class="prompt-subtext">
-                    Enter your name below to initialize your personalized career strategy briefing.
-                </p>
+            <section class="advisory-card" aria-live="polite">
+                <!-- ==========================================
+                     STEP 0: ROLE SELECTION (WELCOME PAGE)
+                     ========================================== -->
+                <div id="step-welcome" class="wizard-step active" data-step="welcome">
+                    <p class="eyebrow">Academic &amp; Career Intelligence</p>
+                    <h1 class="step-heading">Are you a Student or an Academic Advisor?</h1>
+                    <p class="step-description">
+                        Select your role to begin a structured assessment grounded in empirical degree trajectories and
+                        alumni outcomes.
+                    </p>
 
-                <form id="start-form" class="intake-form" novalidate>
-                    <div class="input-group">
-                        <label for="name-input" class="sr-only">Full Name or Preferred Name</label>
-                        <input type="text" id="name-input" name="name" class="text-input"
-                            placeholder="e.g., Alexandra Chen" autocomplete="name" required />
-                        <button type="submit" id="submit-btn" class="submit-btn">
-                            <span class="btn-label">Continue</span>
-                            <span class="btn-spinner" hidden aria-hidden="true"></span>
+                    <div class="role-grid">
+                        <button type="button" class="role-card" data-role="student">
+                            <span class="role-badge">Individual Pathway</span>
+                            <span class="role-title">Student</span>
+                            <span class="role-subtext">
+                                Evaluate your coursework, campus involvement, experience, and graduation timeline
+                                against real career outcomes.
+                            </span>
+                        </button>
+
+                        <button type="button" class="role-card" data-role="advisor">
+                            <span class="role-badge">Institutional Review</span>
+                            <span class="role-title">Academic Advisor</span>
+                            <span class="role-subtext">
+                                Upload a student transcript and record advisory observations to prepare a comprehensive
+                                career alignment brief.
+                            </span>
                         </button>
                     </div>
-                    <p id="form-error" class="form-error" role="alert" hidden></p>
-                </form>
+                </div>
 
-                <section id="greeting-section" class="greeting-section" aria-live="polite" hidden>
-                    <div class="divider"></div>
-                    <div class="greeting-header">
-                        <span class="status-dot" aria-hidden="true"></span>
-                        <span class="greeting-meta">Executive Advisor Response</span>
+                <!-- ==========================================
+                     STUDENT FLOW — QUESTION 1: YEAR IN COLLEGE
+                     ========================================== -->
+                <div id="step-student-1" class="wizard-step" data-step="student-1" hidden>
+                    <p class="eyebrow">Student Intake &bull; Question 1 of 6</p>
+                    <h2 class="step-heading">What is your current year in college?</h2>
+                    <p class="step-description">
+                        Your class standing shapes how we match you against historical student and alumni pathways in
+                        Tiger Data.
+                    </p>
+
+                    <div class="year-primary-grid" role="group" aria-label="Primary college year options">
+                        <button type="button" class="year-btn" data-year="Freshman">
+                            <span class="year-title">Freshman</span>
+                            <span class="year-meta">Year 1 &bull; Foundation Stage</span>
+                        </button>
+                        <button type="button" class="year-btn" data-year="Sophomore">
+                            <span class="year-title">Sophomore</span>
+                            <span class="year-meta">Year 2 &bull; Core Sequence</span>
+                        </button>
+                        <button type="button" class="year-btn" data-year="Junior">
+                            <span class="year-title">Junior</span>
+                            <span class="year-meta">Year 3 &bull; Upper-Level Specialization</span>
+                        </button>
+                        <button type="button" class="year-btn" data-year="Senior">
+                            <span class="year-title">Senior</span>
+                            <span class="year-meta">Year 4 &bull; Capstone &amp; Career Launch</span>
+                        </button>
                     </div>
-                    <blockquote id="greeting-text" class="greeting-text"></blockquote>
-                </section>
+
+                    <div class="year-secondary-wrapper">
+                        <button type="button" class="year-btn year-btn-secondary" data-year="More than 4 years">
+                            <span class="year-title">More than 4 years</span>
+                            <span class="year-meta">Extended Undergraduate / Multi-Degree / Part-Time Progression</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     STUDENT FLOW — STEP 2: ACADEMICS
+                     ========================================== -->
+                <div id="step-student-2" class="wizard-step" data-step="student-2" hidden>
+                    <p class="eyebrow">Student Intake &bull; Step 2 of 6</p>
+                    <h2 class="step-heading">Academic Profile &amp; Credit Standing</h2>
+                    <p class="step-description">
+                        Select your Major, Major Track, and Minor (populated directly from
+                        <code>students_current</code>)
+                        along with your current GPA and Credits Completed.
+                    </p>
+
+                    <div class="form-grid">
+                        <div class="field-group">
+                            <label for="student-major" class="field-label">Primary Major</label>
+                            <select id="student-major" class="text-input">
+                                <option value="">Select your Major...</option>
+                            </select>
+                        </div>
+
+                        <div class="field-group">
+                            <label for="student-major-track" class="field-label">Major Track (if applicable)</label>
+                            <select id="student-major-track" class="text-input">
+                                <option value="Not Applicable">General / No Specific Track</option>
+                            </select>
+                        </div>
+
+                        <div class="field-group">
+                            <label for="student-other-categories" class="field-label">Minor (if applicable)</label>
+                            <select id="student-other-categories" class="text-input">
+                                <option value="Not Applicable">None / Not Applicable</option>
+                            </select>
+                        </div>
+
+                        <div class="field-group">
+                            <label for="student-name" class="field-label">Full Name <span
+                                    class="optional-tag">(Optional)</span></label>
+                            <input type="text" id="student-name" class="text-input" placeholder="e.g., Jordan Vance"
+                                autocomplete="name" />
+                        </div>
+
+                        <div class="field-group">
+                            <label for="student-gpa" class="field-label">Cumulative GPA (0.00 – 4.00)</label>
+                            <input type="number" id="student-gpa" class="text-input" placeholder="e.g., 3.55"
+                                step="0.01" min="0" max="4.0" />
+                        </div>
+
+                        <div class="field-group">
+                            <label for="student-credits" class="field-label">Credits Completed</label>
+                            <input type="number" id="student-credits" class="text-input" placeholder="e.g., 18 or 64"
+                                step="1" min="0" max="200" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     STUDENT FLOW — STEP 3: CAREER PATH
+                     ========================================== -->
+                <div id="step-student-3" class="wizard-step" data-step="student-3" hidden>
+                    <p class="eyebrow">Student Intake &bull; Step 3 of 6</p>
+                    <h2 class="step-heading">Target Career Path</h2>
+                    <p class="step-description">
+                        Define your compensation target, target company or industry, desired work location, and career
+                        goals so our matching engine can query comparable alumni outcomes.
+                    </p>
+
+                    <div class="form-grid">
+                        <div class="field-group">
+                            <label for="career-expected-salary" class="field-label">Target Annual Salary (USD)</label>
+                            <input type="text" id="career-expected-salary" class="text-input"
+                                placeholder="e.g., $95,000 or 95000" />
+                        </div>
+
+                        <div class="field-group">
+                            <label for="career-target-companies" class="field-label">Target Company or Industry</label>
+                            <input type="text" id="career-target-companies" class="text-input"
+                                placeholder="e.g., Software Products, Defense & Aerospace, FinTech, Cloud" />
+                        </div>
+
+                        <div class="field-group">
+                            <label for="career-target-location" class="field-label">Target Location (City, State, or
+                                Remote)</label>
+                            <input type="text" id="career-target-location" class="text-input"
+                                placeholder="e.g., Washington, DC Metro • Baltimore, MD • Remote" />
+                        </div>
+
+                        <div class="field-group">
+                            <label for="expected-grad-year" class="field-label">Expected Graduation Year</label>
+                            <input type="number" id="expected-grad-year" class="text-input" placeholder="e.g., 2028"
+                                min="2026" max="2036" />
+                        </div>
+
+                        <div class="field-group field-group-full">
+                            <label for="career-goals" class="field-label">General Career Goals</label>
+                            <textarea id="career-goals" class="text-area" rows="3"
+                                placeholder="e.g., Break into AI/ML engineering or cybersecurity architecture at a top technology or defense organization..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     STUDENT FLOW — STEP 4: FIRST MATCHING OPERATION & CLASS REPORT
+                     (Conversational Chat-Bubble Style from /api/match-classes)
+                     ========================================== -->
+                <div id="step-student-4" class="wizard-step" data-step="student-4" hidden>
+                    <p class="eyebrow">Database Matching Engine &bull; Step 4 of 6</p>
+                    <h2 class="step-heading">Matched Coursework &amp; Elective Blueprint</h2>
+                    <p class="step-description">
+                        Real-time SQL analysis across <code>students_current</code>, <code>alumni</code>, and
+                        <code>transcripts</code> in Tiger Data.
+                    </p>
+
+                    <div id="class-match-chat-stream" class="chat-stream" aria-live="polite">
+                        <!-- Dynamically rendered chat bubbles from /api/match-classes -->
+                    </div>
+
+                    <div class="transition-cta-box">
+                        <button type="button" id="continue-to-involvement-btn" class="submit-btn transition-hero-btn">
+                            <span class="btn-label">Let's continue learning about you to best optimize your path.</span>
+                            <span class="btn-spinner" id="involvement-transition-spinner" hidden
+                                aria-hidden="true"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     STUDENT FLOW — STEP 5: TRANSITION & CAMPUS INVOLVEMENT
+                     (Conversational Prompt Based on Credits Completed + Interactive Inputs)
+                     ========================================== -->
+                <div id="step-student-5" class="wizard-step" data-step="student-5" hidden>
+                    <p class="eyebrow">Co-Curricular Matching &bull; Step 5 of 6</p>
+                    <h2 class="step-heading">Campus Involvement &amp; Experience</h2>
+
+                    <div id="involvement-prompt-chat" class="chat-stream">
+                        <!-- Dynamically rendered credits-aware AI chat bubble (<30 vs >=30 credits) -->
+                    </div>
+
+                    <div class="involvement-interactive-card">
+                        <div class="field-group">
+                            <span class="field-label">Select Campus Organizations, Teams, or Roles (Click all that
+                                apply)</span>
+                            <div id="involvement-pills-grid" class="involvement-pills-grid" role="group"
+                                aria-label="Campus activities">
+                                <!-- Populated dynamically from /api/match-involvement -->
+                            </div>
+                        </div>
+
+                        <div class="field-group" style="margin-top: 1.15rem;">
+                            <label for="custom-involvement-input" class="field-label">
+                                Unusual, Niche, or Out-of-the-Box Activities <span
+                                    class="optional-tag">(Optional)</span>
+                            </label>
+                            <input type="text" id="custom-involvement-input" class="text-input"
+                                placeholder="e.g., Beekeeping Club, Indie Game Modding, Stand-Up Comedy, Esports, Rock Climbing..." />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     STUDENT FLOW — STEP 6: FINAL INVOLVEMENT REPORT
+                     (Condensed Report + Outliers + Career Path Summary)
+                     ========================================== -->
+                <div id="step-student-6" class="wizard-step" data-step="student-6" hidden>
+                    <p class="eyebrow">Pathway Optimization Complete &bull; Step 6 of 6</p>
+                    <h2 class="step-heading">Final Involvement &amp; Career Optimization Report</h2>
+                    <p class="step-description">
+                        Your responses have been saved to Tiger Data and benchmarked against historical alumni outcomes.
+                    </p>
+
+                    <div id="final-involvement-report-container" class="chat-stream">
+                        <!-- Dynamically rendered final report bubbles, success drivers, and outlier callout -->
+                    </div>
+
+                    <div class="completion-actions" style="margin-top: 1.5rem;">
+                        <button type="button" id="restart-student-flow-btn" class="secondary-btn">
+                            Start New Student Analysis
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     ADVISOR FLOW — STEP 1: TRANSCRIPT UPLOAD
+                     ========================================== -->
+                <div id="step-advisor-1" class="wizard-step" data-step="advisor-1" hidden>
+                    <p class="eyebrow">Academic Advisor Workflow &bull; Step 1 of 2</p>
+                    <h2 class="step-heading">Student Transcript Upload</h2>
+                    <p class="step-description">
+                        Upload a student's academic transcript file (`.csv`, `.pdf`, `.txt`, or `.json`) to extract
+                        completed coursework, credit progression, and GPA metrics.
+                    </p>
+
+                    <div class="upload-zone" id="transcript-dropzone">
+                        <input type="file" id="transcript-file-input" class="file-input-hidden"
+                            accept=".csv,.pdf,.txt,.json" />
+                        <label for="transcript-file-input" class="upload-label">
+                            <span class="upload-title">Select Student Transcript File</span>
+                            <span class="upload-subtitle">Supports CSV, PDF, TXT, or JSON academic records</span>
+                            <span class="upload-cta">Browse Files</span>
+                        </label>
+                    </div>
+
+                    <div id="transcript-preview-card" class="transcript-preview-card" hidden>
+                        <div class="preview-header">
+                            <span class="status-dot" aria-hidden="true"></span>
+                            <span id="parsed-filename" class="preview-title">Transcript Parsed</span>
+                        </div>
+                        <div id="parsed-summary-grid" class="preview-grid"></div>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     ADVISOR FLOW — STEP 2: ADVISOR INPUT
+                     ========================================== -->
+                <div id="step-advisor-2" class="wizard-step" data-step="advisor-2" hidden>
+                    <p class="eyebrow">Academic Advisor Workflow &bull; Step 2 of 2</p>
+                    <h2 class="step-heading">Advisor Assessment &amp; Standing</h2>
+                    <p class="step-description">
+                        Record your advisory observations regarding the student's career aspirations, academic
+                        readiness, and current institutional standing.
+                    </p>
+
+                    <div class="form-stack">
+                        <div class="field-group">
+                            <label for="advisor-notes" class="field-label">
+                                Advisor Notes (Career Wants, Aspirations &amp; Strategic Recommendations)
+                            </label>
+                            <textarea id="advisor-notes" class="text-area" rows="4"
+                                placeholder="Summarize the student's target career direction, strengths, credit pacing, and recommended experiential milestones..."></textarea>
+                        </div>
+
+                        <div class="field-group">
+                            <label for="advisor-academic-standing" class="field-label">
+                                Current Academic Standing <span class="optional-tag">(Optional)</span>
+                            </label>
+                            <input type="text" id="advisor-academic-standing" class="text-input"
+                                list="standing-suggestions"
+                                placeholder="e.g., Good Standing, Dean's List, Academic Warning" />
+                            <datalist id="standing-suggestions">
+                                <option value="Good Standing"></option>
+                                <option value="Dean's List / Honors"></option>
+                                <option value="Academic Warning"></option>
+                                <option value="Academic Probation"></option>
+                                <option value="First-Term Pending GPA"></option>
+                            </datalist>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     COMPLETION SCREEN (THANK YOU)
+                     ========================================== -->
+                <div id="step-complete" class="wizard-step" data-step="complete" hidden>
+                    <div class="completion-badge">Submission Recorded</div>
+                    <h2 id="completion-heading" class="step-heading">Thank You</h2>
+                    <p id="completion-subtext" class="step-description">
+                        Your questionnaire state has been compiled and saved for pathway analysis.
+                    </p>
+
+                    <div id="completion-summary" class="completion-summary"></div>
+
+                    <div class="completion-actions">
+                        <button type="button" id="restart-wizard-btn" class="secondary-btn">
+                            Start New Assessment
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     INLINE VALIDATION ALERT & WIZARD NAVIGATION
+                     ========================================== -->
+                <p id="wizard-error" class="form-error" role="alert" hidden></p>
+
+                <div id="wizard-nav" class="wizard-nav" hidden>
+                    <button type="button" id="back-btn" class="secondary-btn">
+                        Back
+                    </button>
+                    <button type="button" id="next-btn" class="submit-btn">
+                        <span id="next-btn-label" class="btn-label">Continue</span>
+                        <span id="next-btn-spinner" class="btn-spinner" hidden aria-hidden="true"></span>
+                    </button>
+                </div>
             </section>
         </main>
 
         <footer class="site-footer">
-            <span>Confidential &bull; Powered by Gemini &amp; ElevenLabs</span>
+            <span>Legacy Career &amp; Academic Advisory &bull; Powered by Tiger Data &amp; Gemini</span>
         </footer>
     </div>
 
-    <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/script.js', v='5') }}"></script>
 </body>
 
 </html>
