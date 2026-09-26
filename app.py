@@ -882,18 +882,33 @@ Guidelines:
 # ELEVENLABS TEXT-TO-SPEECH (TTS) INTEGRATION
 # ==============================================================================
 
-def generate_elevenlabs_tts(text: str) -> str:
+def generate_elevenlabs_tts(text: str, section_name: str = "basic_info") -> str:
     """
     Pass the generated Gemini response string into the ElevenLabs SDK
     to generate the TTS audio stream, and return it as a Base64 encoded audio string.
+    Maps distinct ElevenLabs voices to each of the 4 avatar advisors across the 5 sections.
     """
     if not elevenlabs_client or not text:
         return ""
 
+    clean_sec = (section_name or "").lower()
+    
+    # Avatar 1 (Blue): Section 1 (Basic Info) & Section 5 (Final Report) -> George
+    # Avatar 2 (Green): Section 2 (Course Advising) -> Sarah / specialized advisor
+    # Avatar 3 (Yellow): Section 3 (Campus Involvement) -> Liam / energetic mentor
+    # Avatar 4 (Purple): Section 4 (Professional Involvement) -> Daniel / career strategist
+    if "course" in clean_sec or "2" in clean_sec:
+        voice_id = "EXAVITQu4vr4xnSDxMaL"  # Sarah (Green: Course Advising)
+    elif "campus" in clean_sec or "3" in clean_sec:
+        voice_id = "TX3LPaxmHKxFdv7VOQHJ"  # Liam (Yellow: Campus Involvement)
+    elif "prof" in clean_sec or "4" in clean_sec:
+        voice_id = "onwK4e9ZLuTAKqWW03F9"  # Daniel (Purple: Professional Involvement)
+    else:
+        voice_id = "JBFqnCBsd6RMkjVDRZzb"  # George (Blue: Basic Info & Final Report)
+
     try:
-        # Default authoritative advisor voice ID (George: 'JBFqnCBsd6RMkjVDRZzb' or customizable)
         audio_stream = elevenlabs_client.text_to_speech.convert(
-            voice_id="JBFqnCBsd6RMkjVDRZzb",
+            voice_id=voice_id,
             text=text,
             model_id="eleven_turbo_v2_5",
             output_format="mp3_44100_128",
@@ -907,7 +922,19 @@ def generate_elevenlabs_tts(text: str) -> str:
             audio_bytes = b"".join(audio_chunks)
             return base64.b64encode(audio_bytes).decode("utf-8")
     except Exception as exc:
-        print(f"ElevenLabs TTS generation warning: {exc}")
+        print(f"ElevenLabs TTS generation warning with voice {voice_id}: {exc}, falling back to default voice.")
+        try:
+            audio_stream = elevenlabs_client.text_to_speech.convert(
+                voice_id="JBFqnCBsd6RMkjVDRZzb",
+                text=text,
+                model_id="eleven_turbo_v2_5",
+                output_format="mp3_44100_128",
+            )
+            audio_chunks = [c for c in audio_stream if isinstance(c, bytes)]
+            if audio_chunks:
+                return base64.b64encode(b"".join(audio_chunks)).decode("utf-8")
+        except Exception as fallback_exc:
+            print(f"ElevenLabs fallback error: {fallback_exc}")
 
     return ""
 
@@ -958,8 +985,8 @@ def generate_report():
     # Step B: Gemini API Summary
     gemini_text = generate_gemini_advice(section_name, user_data, matches)
 
-    # Step C: ElevenLabs TTS Audio
-    base64_audio = generate_elevenlabs_tts(gemini_text)
+    # Step C: ElevenLabs TTS Audio (with section-specific persona voice)
+    base64_audio = generate_elevenlabs_tts(gemini_text, section_name)
 
     return jsonify({
         "section_name": section_name,

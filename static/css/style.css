@@ -20,6 +20,8 @@
     --avatar-blue-glow: rgba(59, 130, 246, 0.45);
     --avatar-green: #10b981;
     --avatar-green-glow: rgba(16, 185, 129, 0.45);
+    --avatar-yellow: #eab308;
+    --avatar-yellow-glow: rgba(234, 179, 8, 0.45);
     --avatar-orange: #f59e0b;
     --avatar-orange-glow: rgba(245, 158, 11, 0.45);
     --avatar-purple: #8b5cf6;
@@ -247,9 +249,10 @@ body {
     box-shadow: 0 0 8px var(--avatar-green-glow);
 }
 
+.dock-yellow,
 .dock-orange {
-    background-color: var(--avatar-orange);
-    box-shadow: 0 0 8px var(--avatar-orange-glow);
+    background-color: var(--avatar-yellow);
+    box-shadow: 0 0 8px var(--avatar-yellow-glow);
 }
 
 .dock-purple {
@@ -302,28 +305,29 @@ body {
     transform: scale(1.04);
 }
 
-/* Avatar 1: Blue (Section 1 & 5) */
+/* Avatar 1: Blue (Section 1: Basic Info & Section 5: Final Report) */
 .avatar-circle.avatar-1-blue {
     background: linear-gradient(135deg, #3b82f6, #1d4ed8);
     box-shadow: 0 0 28px var(--avatar-blue-glow), inset 0 2px 4px rgba(255, 255, 255, 0.3);
     border-color: rgba(147, 197, 253, 0.6);
 }
 
-/* Avatar 2: Green (Section 2) */
+/* Avatar 2: Green (Section 2: Course Advising) */
 .avatar-circle.avatar-2-green {
     background: linear-gradient(135deg, #10b981, #047857);
     box-shadow: 0 0 28px var(--avatar-green-glow), inset 0 2px 4px rgba(255, 255, 255, 0.3);
     border-color: rgba(110, 231, 183, 0.6);
 }
 
-/* Avatar 3: Orange (Section 3) */
+/* Avatar 3: Yellow (Section 3: Campus Involvement) */
+.avatar-circle.avatar-3-yellow,
 .avatar-circle.avatar-3-orange {
-    background: linear-gradient(135deg, #f59e0b, #b45309);
-    box-shadow: 0 0 28px var(--avatar-orange-glow), inset 0 2px 4px rgba(255, 255, 255, 0.3);
-    border-color: rgba(252, 211, 77, 0.6);
+    background: linear-gradient(135deg, #facc15, #ca8a04);
+    box-shadow: 0 0 28px var(--avatar-yellow-glow), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+    border-color: rgba(254, 240, 138, 0.7);
 }
 
-/* Avatar 4: Purple (Section 4) */
+/* Avatar 4: Purple (Section 4: Professional Involvement & Skills) */
 .avatar-circle.avatar-4-purple {
     background: linear-gradient(135deg, #8b5cf6, #6d28d9);
     box-shadow: 0 0 28px var(--avatar-purple-glow), inset 0 2px 4px rgba(255, 255, 255, 0.3);

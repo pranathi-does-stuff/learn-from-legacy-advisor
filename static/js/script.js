@@ -273,10 +273,10 @@ document.addEventListener("DOMContentLoaded", () => {
             persona: "Course Advising Specialist",
         },
         3: {
-            className: "avatar-3-orange",
+            className: "avatar-3-yellow",
             glyph: "⚡",
             numberBadge: "A3",
-            nameTag: "Avatar 3 (Orange)",
+            nameTag: "Avatar 3 (Yellow)",
             persona: "Student Engagement Mentor",
         },
         4: {
@@ -368,39 +368,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const SCREEN_INTRO_PROMPTS = {
         1: {
-            text: "Welcome to your personalized career & academic advising session! Select your college standing to get started.",
+            text: "Hello! I am your Academic Foundations Advisor in Blue. I will walk you through Section 1: Basic Information, establishing your college standing, degree concentration, GPA velocity, and baseline career goals. Let's start with your current year in college.",
             avatar: 1,
         },
         2: {
-            text: "Select your primary Major and concentration track so we can align your courses against historical transcripts.",
+            text: "Now, select your primary Major, concentration track, and minor so we can benchmark your degree sequence against historical student transcripts.",
             avatar: 1,
         },
         3: {
-            text: "What is your current cumulative GPA and completed credits? This helps calibrate your graduation pacing.",
+            text: "What is your current cumulative GPA and completed credits? This helps us evaluate your credit velocity and graduation pacing.",
             avatar: 1,
         },
         4: {
-            text: "Now, define your target industry, compensation, and career goals so we can query Tiger Data for your baseline matches.",
+            text: "Next, define your target industry, compensation, and career goals so we can query Tiger Data for your baseline alumni matches.",
             avatar: 1,
         },
         5: {
-            text: "Avatar 2 is reviewing your major course sequences and high-yield electives against top-earning alumni.",
+            text: "Hi there! I am your Course Advising Specialist in Green. Welcome to Section 2: Course Advising. I will walk you through prerequisite roadmaps, high-yield elective sequences, and course benchmarks from top-earning alumni in your field.",
             avatar: 2,
         },
         6: {
-            text: "Avatar 3 is matching your credits completed to high-impact campus organizations and creative activities.",
+            text: "Hey! I am your Student Engagement Mentor in Yellow. Welcome to Section 3: Campus Involvement. I will walk you through high-impact student organizations, hackathons, and creative outlier activities that give your resume a decisive edge.",
             avatar: 3,
         },
         7: {
-            text: "Avatar 4 here! Tell me about the technical skills and frameworks you have built or are learning.",
+            text: "Greetings! I am your Career and Industry Strategist in Purple. Welcome to Section 4: Professional Involvement. I will walk you through calibrating your technical stack, frameworks, and internship experiences against industry hiring standards. What skills have you built?",
             avatar: 4,
         },
         8: {
-            text: "Next, describe your internships, co-ops, research roles, or campus jobs to benchmark against industry hiring.",
+            text: "Next, describe your internships, co-ops, research roles, or campus jobs so we can benchmark your work history against alumni hiring trajectories.",
             avatar: 4,
         },
         9: {
-            text: "Avatar 1 is synthesizing your coursework, campus involvement, and professional skills into your comprehensive report.",
+            text: "Welcome back! I am your Academic Advisor in Blue. Welcome to Section 5: Final Report. I will synthesize your coursework, campus involvement, professional skills, and Tiger Data benchmarks into your comprehensive career roadmap.",
             avatar: 1,
         },
     };
@@ -517,15 +517,15 @@ document.addEventListener("DOMContentLoaded", () => {
         state.currentScreen = screenNum;
         const totalScreens = 9;
         const screenLabels = {
-            1: "Step 1 of 9 • College Standing",
-            2: "Step 2 of 9 • Academic Program",
-            3: "Step 3 of 9 • GPA & Credit Progression",
-            4: "Step 4 of 9 • Career Goals & Section 1 Report",
-            5: "Step 5 of 9 • Section 2 Course Advising Report",
-            6: "Step 6 of 9 • Section 3 Campus Involvement Report",
-            7: "Step 7 of 9 • Section 4 Professional Skills",
-            8: "Step 8 of 9 • Section 4 Internships & Experience Report",
-            9: "Step 9 of 9 • Section 5 Comprehensive Final Report",
+            1: "Section 1 of 5 • Basic Info (Standing)",
+            2: "Section 1 of 5 • Basic Info (Program)",
+            3: "Section 1 of 5 • Basic Info (GPA & Credits)",
+            4: "Section 1 of 5 • Basic Info & Baseline Report",
+            5: "Section 2 of 5 • Course Advising & Electives",
+            6: "Section 3 of 5 • Campus Involvement",
+            7: "Section 4 of 5 • Professional Skills",
+            8: "Section 4 of 5 • Internships & Experience",
+            9: "Section 5 of 5 • Comprehensive Final Report",
         };
         if (progressLabel) progressLabel.textContent = screenLabels[screenNum] || `Step ${screenNum} of ${totalScreens}`;
         if (progressFill) progressFill.style.width = `${Math.round((screenNum / totalScreens) * 100)}%`;
