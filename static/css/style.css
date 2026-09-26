@@ -533,6 +533,27 @@ body {
     transform: translateY(-1px);
 }
 
+.voice-replay-btn.pulse-prompt {
+    background-color: rgba(197, 168, 128, 0.35);
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 14px rgba(197, 168, 128, 0.5);
+    animation: btnGlowPulse 1.6s infinite ease-in-out;
+}
+
+@keyframes btnGlowPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 8px rgba(197, 168, 128, 0.3);
+        transform: scale(1);
+    }
+
+    50% {
+        box-shadow: 0 0 18px rgba(197, 168, 128, 0.7);
+        transform: scale(1.04);
+    }
+}
+
 .thought-text {
     font-size: 0.98rem;
     line-height: 1.62;
@@ -977,9 +998,10 @@ body {
     display: none;
 }
 
-.wizard-progress[hidden]{
-    display:none;
+.wizard-progress[hidden] {
+    display: none;
 }
+
 .submit-btn,
 .secondary-btn {
     display: inline-flex;

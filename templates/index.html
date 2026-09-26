@@ -10,11 +10,14 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap"
         rel="stylesheet" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='9') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='10') }}" />
 </head>
 
 <body>
     <div class="page-wrapper">
+        <!-- Hidden Audio Element for reliable playback -->
+        <audio id="advisor-audio-element" preload="auto" style="display:none;"></audio>
+
         <!-- Site Header & Progress Navigation -->
         <header class="site-header">
             <div class="header-brand">
@@ -85,7 +88,7 @@
                                             <span></span><span></span><span></span><span></span>
                                         </div>
                                         <button type="button" id="voice-replay-btn" class="voice-replay-btn"
-                                            title="Replay Report Audio">
+                                            title="Play / Replay Voice">
                                             <span class="voice-icon" aria-hidden="true">🔊</span>
                                             <span id="voice-btn-label">Play Voice</span>
                                         </button>
@@ -545,7 +548,7 @@
         </footer>
     </div>
 
-    <script src="{{ url_for('static', filename='js/script.js', v='9') }}"></script>
+    <script src="{{ url_for('static', filename='js/script.js', v='10') }}"></script>
 </body>
 
 </html>

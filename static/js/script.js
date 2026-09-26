@@ -66,32 +66,69 @@ document.addEventListener("DOMContentLoaded", () => {
     // AUDIO ENGINE (Strictly for Reports & Explicit Replay)
     // =========================================================================
 
+    const advisorAudioEl = document.getElementById("advisor-audio-element");
+    let currentBlobUrl = null;
     let audioContextUnlocked = false;
+
+    // Convert Base64 string to an audio/mpeg Blob
+    const base64ToBlob = (base64, mimeType = "audio/mpeg") => {
+        const cleanBase64 = base64.replace(/^data:audio\/\w+;base64,/, "");
+        const byteCharacters = atob(cleanBase64);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        return new Blob([byteArray], { type: mimeType });
+    };
+
+    // Prime/Unlock AudioContext and HTML5 Audio on user interactions
     const unlockAudio = () => {
-        if (audioContextUnlocked) return;
-        try {
-            const AudioCtx = window.AudioContext || window.webkitAudioContext;
-            if (AudioCtx) {
-                const ctx = new AudioCtx();
-                ctx.resume();
+        if (!audioContextUnlocked) {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) {
+                    const ctx = new AudioCtx();
+                    if (ctx.state === "suspended") ctx.resume();
+                }
+            } catch (_e) { }
+            if (advisorAudioEl && !advisorAudioEl.dataset.unlocked) {
+                advisorAudioEl.play().catch(() => { });
+                advisorAudioEl.pause();
+                advisorAudioEl.dataset.unlocked = "true";
             }
             audioContextUnlocked = true;
-        } catch (_e) { }
+        }
     };
-    document.addEventListener("click", unlockAudio, { once: true });
+    document.addEventListener("click", unlockAudio);
+    document.addEventListener("keydown", unlockAudio);
 
     const stopAllSpeech = () => {
         if (state.currentAudio) {
-            state.currentAudio.pause();
-            state.currentAudio.currentTime = 0;
+            try {
+                state.currentAudio.pause();
+                state.currentAudio.currentTime = 0;
+            } catch (_e) { }
             state.currentAudio = null;
         }
+        if (advisorAudioEl) {
+            try {
+                advisorAudioEl.pause();
+                advisorAudioEl.currentTime = 0;
+            } catch (_e) { }
+        }
         if (window.speechSynthesis) {
-            window.speechSynthesis.cancel();
+            try {
+                window.speechSynthesis.cancel();
+            } catch (_e) { }
         }
         if (audioWaveAnim) audioWaveAnim.hidden = true;
-        if (activeAvatarCircle) activeAvatarCircle.classList.remove("speaking");
+        if (activeAvatarCircle) {
+            activeAvatarCircle.classList.remove("speaking");
+            activeAvatarCircle.classList.remove("pulse-prompt");
+        }
         if (voiceBtnLabel) voiceBtnLabel.textContent = "Play Voice";
+        if (voiceReplayBtn) voiceReplayBtn.classList.remove("pulse-prompt");
     };
 
     const speakViaWebSpeech = (text) => {
@@ -105,7 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const voices = window.speechSynthesis.getVoices();
             const preferredVoice = voices.find((v) =>
                 v.lang.startsWith("en") &&
-                (v.name.includes("Natural") || v.name.includes("Google") || v.name.includes("Samantha") || v.name.includes("Daniel"))
+                (v.name.includes("Natural") || v.name.includes("Google") || v.name.includes("Samantha") || v.name.includes("Daniel") || v.name.includes("Alex"))
             );
             if (preferredVoice) utterance.voice = preferredVoice;
 
@@ -113,6 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (audioWaveAnim) audioWaveAnim.hidden = false;
                 if (activeAvatarCircle) activeAvatarCircle.classList.add("speaking");
                 if (voiceBtnLabel) voiceBtnLabel.textContent = "Speaking...";
+                if (voiceReplayBtn) voiceReplayBtn.classList.remove("pulse-prompt");
             };
 
             utterance.onend = () => {
@@ -140,42 +178,59 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (base64Audio) {
             try {
-                const audio = new Audio(`data:audio/mp3;base64,${base64Audio}`);
-                state.currentAudio = audio;
+                if (currentBlobUrl) {
+                    URL.revokeObjectURL(currentBlobUrl);
+                    currentBlobUrl = null;
+                }
+                const blob = base64ToBlob(base64Audio, "audio/mpeg");
+                currentBlobUrl = URL.createObjectURL(blob);
 
-                audio.addEventListener("play", () => {
+                const audioEl = advisorAudioEl || new Audio();
+                audioEl.src = currentBlobUrl;
+                audioEl.load();
+
+                audioEl.onplay = () => {
                     if (audioWaveAnim) audioWaveAnim.hidden = false;
                     if (activeAvatarCircle) activeAvatarCircle.classList.add("speaking");
                     if (voiceBtnLabel) voiceBtnLabel.textContent = "Speaking...";
-                });
+                    if (voiceReplayBtn) voiceReplayBtn.classList.remove("pulse-prompt");
+                };
 
-                audio.addEventListener("ended", () => {
+                audioEl.onended = () => {
                     if (audioWaveAnim) audioWaveAnim.hidden = true;
                     if (activeAvatarCircle) activeAvatarCircle.classList.remove("speaking");
                     if (voiceBtnLabel) voiceBtnLabel.textContent = "Replay Voice";
-                });
+                };
 
-                audio.addEventListener("pause", () => {
+                audioEl.onpause = () => {
                     if (audioWaveAnim) audioWaveAnim.hidden = true;
                     if (activeAvatarCircle) activeAvatarCircle.classList.remove("speaking");
-                    if (voiceBtnLabel) voiceBtnLabel.textContent = "Replay Voice";
-                });
+                    if (voiceBtnLabel && voiceBtnLabel.textContent === "Speaking...") {
+                        voiceBtnLabel.textContent = "Replay Voice";
+                    }
+                };
 
-                audio.addEventListener("error", () => {
-                    console.warn("ElevenLabs audio decode failed, falling back to Web Speech.");
+                audioEl.onerror = (e) => {
+                    console.warn("HTML5 audio playback error, falling back to Web Speech:", e);
                     speakViaWebSpeech(text);
-                });
+                };
 
-                const playPromise = audio.play();
+                state.currentAudio = audioEl;
+
+                const playPromise = audioEl.play();
                 if (playPromise !== undefined) {
-                    playPromise.catch((_err) => {
-                        console.log("Autoplay blocked, falling back to Web Speech:", _err);
+                    playPromise.catch((err) => {
+                        console.log("Autoplay was prevented by browser:", err);
+                        // Make the voice button pulse so user can click to hear audio
+                        if (voiceBtnLabel) voiceBtnLabel.textContent = "Play Voice";
+                        if (voiceReplayBtn) voiceReplayBtn.classList.add("pulse-prompt");
+                        // Fallback attempt with web speech
                         speakViaWebSpeech(text);
                     });
                 }
                 return;
             } catch (err) {
-                console.warn("Audio error:", err);
+                console.warn("Audio initialization error:", err);
             }
         }
 
@@ -1022,11 +1077,30 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Voice Replay Button (Explicitly Replays the Last Report Audio)
+    // Voice Replay Button (Explicitly Plays/Replays the Last Report Audio)
     if (voiceReplayBtn) {
         voiceReplayBtn.addEventListener("click", () => {
-            if (state.lastReportText) {
+            unlockAudio();
+            if (state.currentAudio && !state.currentAudio.paused) {
+                stopAllSpeech();
+            } else if (state.lastReportText) {
                 playReportAudio(state.lastReportText, state.lastReportBase64Audio);
+            } else if (thoughtBubbleText && thoughtBubbleText.textContent.trim()) {
+                playReportAudio(thoughtBubbleText.textContent.trim(), "");
+            }
+        });
+    }
+
+    // Clicking the Avatar Circle also triggers/replays the voice!
+    if (activeAvatarCircle) {
+        activeAvatarCircle.addEventListener("click", () => {
+            unlockAudio();
+            if (state.currentAudio && !state.currentAudio.paused) {
+                stopAllSpeech();
+            } else if (state.lastReportText) {
+                playReportAudio(state.lastReportText, state.lastReportBase64Audio);
+            } else if (thoughtBubbleText && thoughtBubbleText.textContent.trim()) {
+                playReportAudio(thoughtBubbleText.textContent.trim(), "");
             }
         });
     }

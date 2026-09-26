@@ -208,7 +208,7 @@ def query_tiger_data(section_name: str, user_data: dict) -> list:
     Query Tiger Data (PostgreSQL) or cached dataset for the top 3 best alumni matches
     relevant to the requested section.
     """
-    section_norm = (section_name or "").lower().replace(" ", "_").replace("-", "_")
+    clean_section = (section_name or "").lower().strip().replace(" ", "_").replace("-", "_")
     major = (user_data.get("major") or "Computer Science").strip()
     major_track = (user_data.get("majorTrack") or "").strip()
     class_year = (user_data.get("classYear") or "Freshman").strip()
@@ -221,7 +221,7 @@ def query_tiger_data(section_name: str, user_data: dict) -> list:
     # --------------------------------------------------------------------------
     # SECTION 1: BASIC INFORMATION (Top 3 Alumni Profile Matches)
     # --------------------------------------------------------------------------
-    if "basic" in section_norm or "1" in section_norm:
+    if clean_section in ("basic_info", "section_1", "1", "basic"):
         if TIGER_DATA_URL:
             try:
                 with get_db_connection() as conn:
@@ -311,7 +311,7 @@ def query_tiger_data(section_name: str, user_data: dict) -> list:
     # --------------------------------------------------------------------------
     # SECTION 2: COURSE ADVISING (Top 3 Alumni Course & Elective Matches)
     # --------------------------------------------------------------------------
-    elif "course" in section_norm or "2" in section_norm:
+    elif clean_section in ("course_advising", "section_2", "2", "courses", "course"):
         if TIGER_DATA_URL:
             try:
                 with get_db_connection() as conn:
@@ -319,7 +319,7 @@ def query_tiger_data(section_name: str, user_data: dict) -> list:
                         cur.execute(
                             """
                             WITH top_alums AS (
-                                SELECT campus_id, first_employer, first_job_title, first_job_annual_salary_usd
+                                SELECT campus_id, major, track, first_employer, first_job_title, first_employer_industry, first_job_annual_salary_usd
                                 FROM alumni
                                 WHERE major = %s
                                   AND first_job_annual_salary_usd <> 'Not Applicable'
@@ -336,8 +336,7 @@ def query_tiger_data(section_name: str, user_data: dict) -> list:
                             JOIN course_catalog c ON c.course_id = t.course_id
                             WHERE t.requirement_category IN ('Major Core', 'Major Elective')
                                OR c.course_type IN ('Core', 'Elective', 'Capstone')
-                            ORDER BY a.campus_id, c.course_id
-                            LIMIT 30;
+                            ORDER BY a.campus_id, c.course_id;
                             """,
                             (major, matched_industry),
                         )
@@ -363,7 +362,9 @@ def query_tiger_data(section_name: str, user_data: dict) -> list:
                             }
                             grouped[cid]["courses_taken"].append(course_obj)
                             if row[6] in ("Elective", "Major Elective") and len(grouped[cid]["key_electives"]) < 3:
-                                grouped[cid]["key_electives"].append(f"{row[4]} ({row[5]})")
+                                elect_str = f"{row[4]} ({row[5]})"
+                                if elect_str not in grouped[cid]["key_electives"]:
+                                    grouped[cid]["key_electives"].append(elect_str)
                         matches = list(grouped.values())[:3]
             except Exception as exc:
                 print(f"Tiger Data query warning (course_advising): {exc}")
@@ -415,7 +416,7 @@ def query_tiger_data(section_name: str, user_data: dict) -> list:
     # --------------------------------------------------------------------------
     # SECTION 3: CAMPUS INVOLVEMENT (Top 3 Alumni Co-Curricular & Outlier Matches)
     # --------------------------------------------------------------------------
-    elif "campus" in section_norm or "involvement" in section_norm or "3" in section_norm:
+    elif clean_section in ("campus_involvement", "section_3", "3", "involvement", "campus"):
         if TIGER_DATA_URL:
             try:
                 with get_db_connection() as conn:
@@ -426,20 +427,21 @@ def query_tiger_data(section_name: str, user_data: dict) -> list:
                                 SELECT campus_id, first_employer, first_job_title, first_job_annual_salary_usd
                                 FROM alumni
                                 WHERE major = %s
-                                  AND engagement_activity_count >= 2
+                                  AND engagement_activity_count >= 1
                                   AND first_job_annual_salary_usd <> 'Not Applicable'
-                                ORDER BY CAST(NULLIF(first_job_annual_salary_usd, 'Not Applicable') AS NUMERIC) DESC
+                                ORDER BY
+                                  CASE WHEN first_employer_industry = %s THEN 0 ELSE 1 END,
+                                  CAST(NULLIF(first_job_annual_salary_usd, 'Not Applicable') AS NUMERIC) DESC
                                 LIMIT 3
                             )
                             SELECT
                                 a.campus_id, a.first_employer, a.first_job_title, a.first_job_annual_salary_usd,
                                 se.experience_name, se.experience_type, se.duration_terms, se.hours_per_week, se.outcome
                             FROM top_engaged_alums a
-                            JOIN student_experience se ON se.campus_id = a.campus_id
-                            WHERE se.experience_type IN ('Student Organization', 'Competitive Team', 'Hackathon', 'Undergraduate Research', 'Peer Mentor')
-                            LIMIT 20;
+                            LEFT JOIN student_experience se ON se.campus_id = a.campus_id
+                            WHERE se.experience_type IS NULL OR se.experience_type IN ('Student Organization', 'Competitive Team', 'Hackathon', 'Undergraduate Research', 'Peer Mentor', 'Leadership', 'Creative Outlier');
                             """,
-                            (major,),
+                            (major, matched_industry),
                         )
                         grouped = {}
                         for row in cur.fetchall():
@@ -453,13 +455,20 @@ def query_tiger_data(section_name: str, user_data: dict) -> list:
                                     "first_job_annual_salary_usd": sal_fmt,
                                     "activities": [],
                                 }
-                            grouped[cid]["activities"].append({
-                                "experience_name": row[4],
-                                "experience_type": row[5],
-                                "duration_terms": row[6] or 2,
-                                "hours_per_week": row[7] or "6",
-                                "outcome": row[8] or "Leadership Role / Portfolio Project",
-                            })
+                            if row[4]:
+                                grouped[cid]["activities"].append({
+                                    "experience_name": row[4],
+                                    "experience_type": row[5] or "Student Organization",
+                                    "duration_terms": row[6] or 2,
+                                    "hours_per_week": row[7] or "6",
+                                    "outcome": row[8] or "Active Member / Leadership",
+                                })
+                        for item in grouped.values():
+                            if not item["activities"]:
+                                item["activities"] = [
+                                    {"experience_name": "HackUMBC", "experience_type": "Hackathon", "duration_terms": 2, "hours_per_week": "8", "outcome": "Built project portfolio"},
+                                    {"experience_name": "ACM Student Chapter", "experience_type": "Student Organization", "duration_terms": 3, "hours_per_week": "4", "outcome": "Peer Workshops"},
+                                ]
                         matches = list(grouped.values())[:3]
             except Exception as exc:
                 print(f"Tiger Data query warning (campus_involvement): {exc}")
@@ -502,39 +511,40 @@ def query_tiger_data(section_name: str, user_data: dict) -> list:
             ]
 
     # --------------------------------------------------------------------------
-    # SECTION 4: PROFESSIONAL INVOLVEMENT (NEW - Top 3 Skills & Internships Matches)
+    # SECTION 4: PROFESSIONAL INVOLVEMENT (Top 3 Skills & Internships Matches)
     # --------------------------------------------------------------------------
-    elif "prof" in section_norm or "intern" in section_norm or "4" in section_norm:
+    elif clean_section in ("professional_involvement", "section_4", "4", "professional", "skills", "experience", "internships"):
         if TIGER_DATA_URL:
             try:
                 with get_db_connection() as conn:
                     with conn.cursor() as cur:
                         cur.execute(
                             """
-                            WITH target_alums AS (
+                            WITH top_alums AS (
                                 SELECT
                                     a.campus_id, a.first_employer, a.first_job_title,
                                     a.first_employer_industry, a.first_job_annual_salary_usd,
                                     a.internship_count
                                 FROM alumni a
                                 WHERE a.major = %s
-                                  AND (a.first_employer_industry = %s OR %s = '')
                                   AND a.first_job_annual_salary_usd <> 'Not Applicable'
-                                ORDER BY CAST(NULLIF(a.first_job_annual_salary_usd, 'Not Applicable') AS NUMERIC) DESC
+                                ORDER BY
+                                  CASE WHEN a.first_employer_industry = %s THEN 0 ELSE 1 END,
+                                  a.internship_count DESC,
+                                  CAST(NULLIF(a.first_job_annual_salary_usd, 'Not Applicable') AS NUMERIC) DESC
                                 LIMIT 3
                             )
                             SELECT
                                 ta.campus_id, ta.first_employer, ta.first_job_title,
                                 ta.first_employer_industry, ta.first_job_annual_salary_usd,
                                 ta.internship_count,
-                                eh.employer, eh.job_title, eh.role_skill_tags,
+                                eh.role_skill_tags,
                                 se.experience_name, se.organization
-                            FROM target_alums ta
+                            FROM top_alums ta
                             LEFT JOIN employment_history eh ON eh.campus_id = ta.campus_id
-                            LEFT JOIN student_experience se ON se.campus_id = ta.campus_id AND se.experience_type = 'Internship'
-                            LIMIT 15;
+                            LEFT JOIN student_experience se ON se.campus_id = ta.campus_id AND se.experience_type = 'Internship';
                             """,
-                            (major, matched_industry, matched_industry),
+                            (major, matched_industry),
                         )
                         grouped = {}
                         for row in cur.fetchall():
@@ -551,10 +561,12 @@ def query_tiger_data(section_name: str, user_data: dict) -> list:
                                     "internships_held": [],
                                     "skills_mastered": set(),
                                 }
-                            if row[9] and row[9] not in grouped[cid]["internships_held"]:
-                                grouped[cid]["internships_held"].append(f"{row[9]} ({row[10] or 'Tech Partner'})")
-                            if row[8]:
-                                for tag in row[8].replace(";", ",").split(","):
+                            if row[7]:
+                                intern_str = f"{row[7]} ({row[8] or 'Industry Partner'})"
+                                if intern_str not in grouped[cid]["internships_held"]:
+                                    grouped[cid]["internships_held"].append(intern_str)
+                            if row[6]:
+                                for tag in str(row[6]).replace(";", "|").replace(",", "|").split("|"):
                                     clean_tag = tag.strip()
                                     if clean_tag:
                                         grouped[cid]["skills_mastered"].add(clean_tag)
@@ -562,7 +574,10 @@ def query_tiger_data(section_name: str, user_data: dict) -> list:
                         for item in grouped.values():
                             item["skills_mastered"] = list(item["skills_mastered"])[:5]
                             if not item["internships_held"]:
-                                item["internships_held"] = ["Software Engineering Intern (Summer)", "Undergraduate Developer (Campus IT)"]
+                                item["internships_held"] = [
+                                    f"Software Engineering Intern ({item['first_employer']})",
+                                    "Undergraduate Developer (Campus IT & Research)",
+                                ]
                             if not item["skills_mastered"]:
                                 item["skills_mastered"] = ["Python", "AWS Cloud", "PostgreSQL", "Docker", "Git"]
 
@@ -770,7 +785,13 @@ Guidelines:
 3. Ground your advice directly in the alumni data matches and the student's stated path. Do not include markdown headers or bullet points."""
 
     if gemini_client:
-        candidate_models = ["gemini-2.5-flash", "gemini-3.8-flash", "gemini-flash-latest", "gemini-1.5-flash"]
+        candidate_models = [
+            "gemini-3.5-flash-lite",
+            "gemini-3.1-flash-lite",
+            "gemini-flash-latest",
+            "gemini-flash-lite-latest",
+            "gemini-3.8-flash",
+        ]
         for model_name in candidate_models:
             try:
                 response = gemini_client.models.generate_content(
