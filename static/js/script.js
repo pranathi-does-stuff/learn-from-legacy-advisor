@@ -367,40 +367,60 @@ document.addEventListener("DOMContentLoaded", () => {
     // =========================================================================
 
     const SCREEN_INTRO_PROMPTS = {
+        "intro-1": {
+            text: "Hello! I am your Academic Foundations Advisor in Blue. I will guide you through Section 1: Basic Information, establishing your college standing, degree concentration, GPA velocity, and baseline career goals.",
+            avatar: 1,
+        },
         1: {
-            text: "Hello! I am your Academic Foundations Advisor in Blue. I will walk you through Section 1: Basic Information, establishing your college standing, degree concentration, GPA velocity, and baseline career goals. Let's start with your current year in college.",
+            text: "Select your college standing to get started. Avatar 1 will adapt its advice and milestones to your academic stage.",
             avatar: 1,
         },
         2: {
-            text: "Now, select your primary Major, concentration track, and minor so we can benchmark your degree sequence against historical student transcripts.",
+            text: "Select your primary Major and concentration track so we can align your courses against historical transcripts.",
             avatar: 1,
         },
         3: {
-            text: "What is your current cumulative GPA and completed credits? This helps us evaluate your credit velocity and graduation pacing.",
+            text: "What is your current cumulative GPA and completed credits? This helps calibrate your graduation pacing.",
             avatar: 1,
         },
         4: {
-            text: "Next, define your target industry, compensation, and career goals so we can query Tiger Data for your baseline alumni matches.",
+            text: "Now, define your target industry, compensation, and career goals so we can query Tiger Data for your baseline matches.",
             avatar: 1,
         },
-        5: {
+        "intro-2": {
             text: "Hi there! I am your Course Advising Specialist in Green. Welcome to Section 2: Course Advising. I will walk you through prerequisite roadmaps, high-yield elective sequences, and course benchmarks from top-earning alumni in your field.",
             avatar: 2,
         },
-        6: {
+        5: {
+            text: "Avatar 2 is reviewing your major course sequences and high-yield electives against top-earning alumni.",
+            avatar: 2,
+        },
+        "intro-3": {
             text: "Hey! I am your Student Engagement Mentor in Yellow. Welcome to Section 3: Campus Involvement. I will walk you through high-impact student organizations, hackathons, and creative outlier activities that give your resume a decisive edge.",
             avatar: 3,
         },
+        6: {
+            text: "Avatar 3 is matching your credits completed to high-impact campus organizations and creative activities.",
+            avatar: 3,
+        },
+        "intro-4": {
+            text: "Greetings! I am your Career and Industry Strategist in Purple. Welcome to Section 4: Professional Involvement. I will walk you through calibrating your technical stack, frameworks, and internship experiences against industry hiring standards.",
+            avatar: 4,
+        },
         7: {
-            text: "Greetings! I am your Career and Industry Strategist in Purple. Welcome to Section 4: Professional Involvement. I will walk you through calibrating your technical stack, frameworks, and internship experiences against industry hiring standards. What skills have you built?",
+            text: "Tell me about the technical skills and frameworks you have built or are learning.",
             avatar: 4,
         },
         8: {
-            text: "Next, describe your internships, co-ops, research roles, or campus jobs so we can benchmark your work history against alumni hiring trajectories.",
+            text: "Next, describe your internships, co-ops, research roles, or campus jobs to benchmark against industry hiring.",
             avatar: 4,
         },
-        9: {
+        "intro-5": {
             text: "Welcome back! I am your Academic Advisor in Blue. Welcome to Section 5: Final Report. I will synthesize your coursework, campus involvement, professional skills, and Tiger Data benchmarks into your comprehensive career roadmap.",
+            avatar: 1,
+        },
+        9: {
+            text: "Avatar 1 is synthesizing your coursework, campus involvement, and professional skills into your comprehensive report.",
             avatar: 1,
         },
     };
@@ -513,29 +533,48 @@ document.addEventListener("DOMContentLoaded", () => {
     // NAVIGATION & 1-QUESTION-PER-SCREEN PROGRESSION
     // =========================================================================
 
-    const updateProgressDisplay = (screenNum) => {
-        state.currentScreen = screenNum;
-        const totalScreens = 9;
-        const screenLabels = {
-            1: "Section 1 of 5 • Basic Info (Standing)",
-            2: "Section 1 of 5 • Basic Info (Program)",
-            3: "Section 1 of 5 • Basic Info (GPA & Credits)",
-            4: "Section 1 of 5 • Basic Info & Baseline Report",
-            5: "Section 2 of 5 • Course Advising & Electives",
-            6: "Section 3 of 5 • Campus Involvement",
-            7: "Section 4 of 5 • Professional Skills",
-            8: "Section 4 of 5 • Internships & Experience",
-            9: "Section 5 of 5 • Comprehensive Final Report",
-        };
-        if (progressLabel) progressLabel.textContent = screenLabels[screenNum] || `Step ${screenNum} of ${totalScreens}`;
-        if (progressFill) progressFill.style.width = `${Math.round((screenNum / totalScreens) * 100)}%`;
+    const avatarStage = document.getElementById("avatar-stage");
+
+    const progressConfig = {
+        "intro-1": { label: "Section 1 Introduction • Basic Information", pct: 5 },
+        "1": { label: "Section 1 • Step 1 of 4 (College Standing)", pct: 12 },
+        "2": { label: "Section 1 • Step 2 of 4 (Academic Program)", pct: 20 },
+        "3": { label: "Section 1 • Step 3 of 4 (GPA & Credits)", pct: 28 },
+        "4": { label: "Section 1 • Step 4 of 4 (Career Goals & Baseline Report)", pct: 36 },
+        "intro-2": { label: "Section 2 Introduction • Course Advising", pct: 44 },
+        "5": { label: "Section 2 • Course Advising & Elective Strategy", pct: 52 },
+        "intro-3": { label: "Section 3 Introduction • Campus Involvement", pct: 60 },
+        "6": { label: "Section 3 • Campus Involvement & Organizations", pct: 68 },
+        "intro-4": { label: "Section 4 Introduction • Professional Involvement", pct: 76 },
+        "7": { label: "Section 4 • Step 1 of 2 (Technical Skills)", pct: 82 },
+        "8": { label: "Section 4 • Step 2 of 2 (Internships & Jobs)", pct: 88 },
+        "intro-5": { label: "Section 5 Introduction • Comprehensive Final Report", pct: 94 },
+        "9": { label: "Section 5 • Comprehensive Career Roadmap", pct: 100 },
+        "loading": { label: "Querying Tiger Data & Calibrating Model...", pct: 50 },
     };
 
-    const goToScreen = (screenNum, shouldSpeakPrompt = true) => {
-        updateProgressDisplay(screenNum);
+    const updateProgressDisplay = (screenKey) => {
+        const key = String(screenKey);
+        state.currentScreen = key;
+        const config = progressConfig[key] || { label: `Section View (${key})`, pct: 50 };
+        if (progressLabel) progressLabel.textContent = config.label;
+        if (progressFill) progressFill.style.width = `${config.pct}%`;
+    };
+
+    const goToScreen = (screenKey, shouldSpeakPrompt = true) => {
+        const key = String(screenKey);
+        updateProgressDisplay(key);
+        const isIntro = key.startsWith("intro-");
+        const isLoading = key === "loading";
+
+        // Hide top thought bubble stage on intro & loading screens so hero avatar is front & center
+        if (avatarStage) {
+            avatarStage.hidden = isIntro || isLoading;
+        }
+
         document.querySelectorAll(".interactive-screen").forEach((screen) => {
-            const sNum = parseInt(screen.getAttribute("data-screen"), 10);
-            if (sNum === screenNum) {
+            const sKey = String(screen.getAttribute("data-screen"));
+            if (sKey === key) {
                 screen.hidden = false;
                 screen.classList.add("active");
             } else {
@@ -545,10 +584,25 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         window.scrollTo({ top: 0, behavior: "smooth" });
 
-        if (shouldSpeakPrompt && SCREEN_INTRO_PROMPTS[screenNum]) {
-            const intro = SCREEN_INTRO_PROMPTS[screenNum];
-            avatarSpeakPrompt(intro.text, intro.avatar);
+        if (shouldSpeakPrompt && SCREEN_INTRO_PROMPTS[key]) {
+            const intro = SCREEN_INTRO_PROMPTS[key];
+            if (isIntro) {
+                // Speak static intro voice via Web Speech synthesis (Zero Gemini API calls)
+                speakViaWebSpeech(intro.text, intro.avatar);
+            } else {
+                // Speak opening question prompt
+                avatarSpeakPrompt(intro.text, intro.avatar);
+            }
         }
+    };
+
+    const showLoadingScreen = (title = "Querying Tiger Data...", subtitle = "Benchmarking historical student transcripts and synthesizing personalized recommendations...") => {
+        stopAllSpeech();
+        const titleEl = document.getElementById("loading-status-title");
+        const subEl = document.getElementById("loading-status-subtitle");
+        if (titleEl) titleEl.textContent = title;
+        if (subEl) subEl.textContent = subtitle;
+        goToScreen("loading", false);
     };
 
     const collectFormData = () => {
@@ -1018,6 +1072,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // SECTION 1 INTRO: Start Section 1 Button
+    document.getElementById("btn-start-section-1")?.addEventListener("click", () => {
+        goToScreen(1);
+    });
+
     // SCREEN 4: Section 1 Baseline Report Button (API CALL WITH VOICE)
     document.getElementById("btn-generate-section-1-report")?.addEventListener("click", async () => {
         const spinner = document.getElementById("spinner-section-1");
@@ -1025,20 +1084,38 @@ document.addEventListener("DOMContentLoaded", () => {
         await runReportPipeline("basic_info", 1, 1, spinner, btn);
     });
 
-    // SCREEN 4 -> SCREEN 5 (Section 2 Course Advising Report - API CALL WITH VOICE)
-    document.getElementById("btn-next-to-section-2")?.addEventListener("click", async () => {
-        goToScreen(5, false);
-        await runReportPipeline("course_advising", 2, 2, null, null);
+    // SCREEN 4 -> SECTION 2 INTRO
+    document.getElementById("btn-next-to-section-2")?.addEventListener("click", () => {
+        goToScreen("intro-2");
     });
 
-    // SCREEN 5 -> SCREEN 6 (Section 3 Campus Involvement Report - API CALL WITH VOICE)
-    document.getElementById("btn-next-to-section-3")?.addEventListener("click", async () => {
-        goToScreen(6, false);
+    // SECTION 2 INTRO: Start Section 2 Button (SHOW LOADING -> API CALL -> SCREEN 5)
+    document.getElementById("btn-start-section-2")?.addEventListener("click", async () => {
+        showLoadingScreen(
+            "Analyzing Course Catalog & Tiger Data...",
+            "Avatar 2 (Green) is matching course sequences and electives against top-earning alumni..."
+        );
+        await runReportPipeline("course_advising", 2, 2, null, null);
+        goToScreen(5, false);
+    });
+
+    // SCREEN 5 -> SECTION 3 INTRO
+    document.getElementById("btn-next-to-section-3")?.addEventListener("click", () => {
+        goToScreen("intro-3");
+    });
+
+    // SECTION 3 INTRO: Start Section 3 Button (SHOW LOADING -> API CALL -> SCREEN 6)
+    document.getElementById("btn-start-section-3")?.addEventListener("click", async () => {
+        showLoadingScreen(
+            "Querying Campus Organizations & Activities...",
+            "Avatar 3 (Yellow) is analyzing extracurricular footprints of top-earning alumni..."
+        );
         document.querySelectorAll("#involvement-pills-container .involvement-pill").forEach((pill) => {
             const name = pill.getAttribute("data-name");
             pill.classList.toggle("active", state.user.selectedActivities.includes(name));
         });
         await runReportPipeline("campus_involvement", 3, 3, null, null);
+        goToScreen(6, false);
     });
 
     // SCREEN 6: Activity Pills (Instant Text-Only Reaction)
@@ -1074,8 +1151,13 @@ document.addEventListener("DOMContentLoaded", () => {
         await runReportPipeline("campus_involvement", 3, 3, spinner, btn);
     });
 
-    // SCREEN 6 -> SCREEN 7 (Section 4 Professional Skills)
+    // SCREEN 6 -> SECTION 4 INTRO
     document.getElementById("btn-next-to-section-4")?.addEventListener("click", () => {
+        goToScreen("intro-4");
+    });
+
+    // SECTION 4 INTRO: Start Section 4 Button
+    document.getElementById("btn-start-section-4")?.addEventListener("click", () => {
         goToScreen(7);
     });
 
@@ -1137,18 +1219,44 @@ document.addEventListener("DOMContentLoaded", () => {
         await runReportPipeline("professional_involvement", 4, 4, spinner, btn);
     });
 
-    // SCREEN 8 -> SCREEN 9 (Section 5 Final Report - API CALL WITH VOICE)
-    document.getElementById("btn-next-to-section-5")?.addEventListener("click", async () => {
-        goToScreen(9, false);
-        await runReportPipeline("final_report", 5, 1, null, null);
+    // SCREEN 8 -> SECTION 5 INTRO
+    document.getElementById("btn-next-to-section-5")?.addEventListener("click", () => {
+        goToScreen("intro-5");
     });
 
-    // Generic Back Buttons
+    // SECTION 5 INTRO: Start Section 5 Button (SHOW LOADING -> API CALL -> SCREEN 9)
+    document.getElementById("btn-start-section-5")?.addEventListener("click", async () => {
+        showLoadingScreen(
+            "Compiling Comprehensive Career Synthesis...",
+            "Avatar 1 (Blue) is compiling your 4-year degree plan and final alumni dossiers..."
+        );
+        await runReportPipeline("final_report", 5, 1, null, null);
+        goToScreen(9, false);
+    });
+
+    // Generic Back Buttons (Supports numeric and string screen keys)
     document.querySelectorAll(".btn-prev-screen").forEach((btn) => {
         btn.addEventListener("click", () => {
-            const target = parseInt(btn.getAttribute("data-to"), 10);
+            const target = btn.getAttribute("data-to");
             if (target) goToScreen(target);
         });
+    });
+
+    // Intro Hero Spotlight and Speech Card Click-to-Replay
+    document.querySelectorAll(".section-intro-card").forEach((card) => {
+        const circle = card.querySelector(".hero-avatar-circle");
+        const speech = card.querySelector(".section-intro-speech-box");
+        const screenEl = card.closest(".interactive-screen");
+        const playIntroSpeech = () => {
+            const screenKey = screenEl?.getAttribute("data-screen");
+            if (screenKey && SCREEN_INTRO_PROMPTS[screenKey]) {
+                unlockAudio();
+                const intro = SCREEN_INTRO_PROMPTS[screenKey];
+                speakViaWebSpeech(intro.text, intro.avatar);
+            }
+        };
+        circle?.addEventListener("click", playIntroSpeech);
+        speech?.addEventListener("click", playIntroSpeech);
     });
 
     // Voice Replay Button (Explicitly Plays/Replays the Last Report Audio)
@@ -1320,7 +1428,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;");
 
-    // Initialize application: Start on Screen 1 with opening prompt voice
+    // Initialize application: Start on Section 1 Intro with opening prompt voice
     loadAcademicOptions();
-    goToScreen(1);
+    goToScreen("intro-1");
 });
