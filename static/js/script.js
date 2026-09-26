@@ -131,20 +131,35 @@ document.addEventListener("DOMContentLoaded", () => {
         if (voiceReplayBtn) voiceReplayBtn.classList.remove("pulse-prompt");
     };
 
-    const speakViaWebSpeech = (text) => {
+    const speakViaWebSpeech = (text, avatarNum = 1) => {
         if (!window.speechSynthesis || !text) return;
         try {
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = 1.05;
-            utterance.pitch = 1.0;
+
+            // Distinct pitch and rate per avatar persona
+            if (avatarNum === 2) {
+                utterance.pitch = 1.15;
+                utterance.rate = 1.02;
+            } else if (avatarNum === 3) {
+                utterance.pitch = 1.22;
+                utterance.rate = 1.08;
+            } else if (avatarNum === 4) {
+                utterance.pitch = 0.92;
+                utterance.rate = 1.0;
+            } else {
+                utterance.pitch = 1.0;
+                utterance.rate = 1.04;
+            }
 
             const voices = window.speechSynthesis.getVoices();
-            const preferredVoice = voices.find((v) =>
-                v.lang.startsWith("en") &&
-                (v.name.includes("Natural") || v.name.includes("Google") || v.name.includes("Samantha") || v.name.includes("Daniel") || v.name.includes("Alex"))
-            );
-            if (preferredVoice) utterance.voice = preferredVoice;
+            if (voices && voices.length > 0) {
+                const preferredVoice = voices.find((v) =>
+                    v.lang.startsWith("en") &&
+                    (v.name.includes("Natural") || v.name.includes("Google") || v.name.includes("Samantha") || v.name.includes("Daniel") || v.name.includes("Alex"))
+                );
+                if (preferredVoice) utterance.voice = preferredVoice;
+            }
 
             utterance.onstart = () => {
                 if (audioWaveAnim) audioWaveAnim.hidden = false;
@@ -171,7 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
-    const playReportAudio = (text, base64Audio = "") => {
+    const playReportAudio = (text, base64Audio = "", avatarNum = 1) => {
         stopAllSpeech();
         state.lastReportText = text;
         state.lastReportBase64Audio = base64Audio;
@@ -212,7 +227,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 audioEl.onerror = (e) => {
                     console.warn("HTML5 audio playback error, falling back to Web Speech:", e);
-                    speakViaWebSpeech(text);
+                    speakViaWebSpeech(text, avatarNum);
                 };
 
                 state.currentAudio = audioEl;
@@ -225,7 +240,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         if (voiceBtnLabel) voiceBtnLabel.textContent = "Play Voice";
                         if (voiceReplayBtn) voiceReplayBtn.classList.add("pulse-prompt");
                         // Fallback attempt with web speech
-                        speakViaWebSpeech(text);
+                        speakViaWebSpeech(text, avatarNum);
                     });
                 }
                 return;
@@ -235,7 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // Fallback to Web Speech
-        speakViaWebSpeech(text);
+        speakViaWebSpeech(text, avatarNum);
     };
 
     // =========================================================================
@@ -299,8 +314,24 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     /**
-     * TEXT-ONLY REACTION: Used for all real-time input interactions across every box & input.
-     * No audio/voice is played on instant reactions.
+     * OPENING PROMPT / REPORT WITH VOICE:
+     * Plays voice audio automatically for the first prompt when arriving on each page/screen.
+     */
+    const avatarSpeakPrompt = (text, avatarNum = 1, base64Audio = "") => {
+        setAvatar(avatarNum);
+        if (thoughtBubbleText) {
+            const formatted = text.replace(
+                /\b(Freshman|Sophomore|Junior|Senior|Computer Science|Data Science|Information Systems|Cybersecurity|Computer Engineering|GPA|Internships|Tiger Data|Algorithms|Electives|Starting Salary|Alumni)\b/gi,
+                "<strong>$1</strong>"
+            );
+            thoughtBubbleText.innerHTML = formatted;
+        }
+        playReportAudio(text, base64Audio, avatarNum);
+    };
+
+    /**
+     * TEXT-ONLY REACTION: Used for all subsequent real-time input interactions across every box & input.
+     * Voice is NOT played on instant input reactions.
      */
     const avatarSayTextOnly = (text, avatarNum = 1) => {
         stopAllSpeech();
@@ -328,7 +359,50 @@ document.addEventListener("DOMContentLoaded", () => {
             );
             thoughtBubbleText.innerHTML = formatted;
         }
-        playReportAudio(text, base64Audio);
+        playReportAudio(text, base64Audio, avatarNum);
+    };
+
+    // =========================================================================
+    // OPENING PROMPTS FOR EACH PAGE (VOICE AUTOPLAYS ON FIRST PROMPT)
+    // =========================================================================
+
+    const SCREEN_INTRO_PROMPTS = {
+        1: {
+            text: "Welcome to your personalized career & academic advising session! Select your college standing to get started.",
+            avatar: 1,
+        },
+        2: {
+            text: "Select your primary Major and concentration track so we can align your courses against historical transcripts.",
+            avatar: 1,
+        },
+        3: {
+            text: "What is your current cumulative GPA and completed credits? This helps calibrate your graduation pacing.",
+            avatar: 1,
+        },
+        4: {
+            text: "Now, define your target industry, compensation, and career goals so we can query Tiger Data for your baseline matches.",
+            avatar: 1,
+        },
+        5: {
+            text: "Avatar 2 is reviewing your major course sequences and high-yield electives against top-earning alumni.",
+            avatar: 2,
+        },
+        6: {
+            text: "Avatar 3 is matching your credits completed to high-impact campus organizations and creative activities.",
+            avatar: 3,
+        },
+        7: {
+            text: "Avatar 4 here! Tell me about the technical skills and frameworks you have built or are learning.",
+            avatar: 4,
+        },
+        8: {
+            text: "Next, describe your internships, co-ops, research roles, or campus jobs to benchmark against industry hiring.",
+            avatar: 4,
+        },
+        9: {
+            text: "Avatar 1 is synthesizing your coursework, campus involvement, and professional skills into your comprehensive report.",
+            avatar: 1,
+        },
     };
 
     // =========================================================================
@@ -457,7 +531,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (progressFill) progressFill.style.width = `${Math.round((screenNum / totalScreens) * 100)}%`;
     };
 
-    const goToScreen = (screenNum) => {
+    const goToScreen = (screenNum, shouldSpeakPrompt = true) => {
         updateProgressDisplay(screenNum);
         document.querySelectorAll(".interactive-screen").forEach((screen) => {
             const sNum = parseInt(screen.getAttribute("data-screen"), 10);
@@ -470,6 +544,11 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
         window.scrollTo({ top: 0, behavior: "smooth" });
+
+        if (shouldSpeakPrompt && SCREEN_INTRO_PROMPTS[screenNum]) {
+            const intro = SCREEN_INTRO_PROMPTS[screenNum];
+            avatarSpeakPrompt(intro.text, intro.avatar);
+        }
     };
 
     const collectFormData = () => {
@@ -797,7 +876,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("btn-next-screen-1")?.addEventListener("click", () => {
         goToScreen(2);
-        avatarSayTextOnly("Select your primary Major and concentration track so we can align your courses.", 1);
     });
 
     // SCREEN 2: Major, Track, Minor, and Name Inputs
@@ -839,7 +917,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btn-next-screen-2")?.addEventListener("click", () => {
         collectFormData();
         goToScreen(3);
-        avatarSayTextOnly("What is your current cumulative GPA and completed credits?", 1);
     });
 
     // SCREEN 3: GPA & Credits Inputs
@@ -878,7 +955,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btn-next-screen-3")?.addEventListener("click", () => {
         collectFormData();
         goToScreen(4);
-        avatarSayTextOnly("Now, define your target industry, compensation, and career goals so we can query Tiger Data.", 1);
     });
 
     // SCREEN 4: Career Target Inputs
@@ -951,13 +1027,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // SCREEN 4 -> SCREEN 5 (Section 2 Course Advising Report - API CALL WITH VOICE)
     document.getElementById("btn-next-to-section-2")?.addEventListener("click", async () => {
-        goToScreen(5);
+        goToScreen(5, false);
         await runReportPipeline("course_advising", 2, 2, null, null);
     });
 
     // SCREEN 5 -> SCREEN 6 (Section 3 Campus Involvement Report - API CALL WITH VOICE)
     document.getElementById("btn-next-to-section-3")?.addEventListener("click", async () => {
-        goToScreen(6);
+        goToScreen(6, false);
         document.querySelectorAll("#involvement-pills-container .involvement-pill").forEach((pill) => {
             const name = pill.getAttribute("data-name");
             pill.classList.toggle("active", state.user.selectedActivities.includes(name));
@@ -1001,7 +1077,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // SCREEN 6 -> SCREEN 7 (Section 4 Professional Skills)
     document.getElementById("btn-next-to-section-4")?.addEventListener("click", () => {
         goToScreen(7);
-        avatarSayTextOnly("Avatar 4 (Purple) here! Tell me about the technical skills you have built or are learning.", 4);
     });
 
     // SCREEN 7: Skill Pills (Instant Text-Only Reaction)
@@ -1040,7 +1115,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btn-next-screen-7")?.addEventListener("click", () => {
         collectFormData();
         goToScreen(8);
-        avatarSayTextOnly("Next, describe your internships, co-ops, research roles, or campus jobs.", 4);
     });
 
     // SCREEN 8: Internships Input
@@ -1065,7 +1139,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // SCREEN 8 -> SCREEN 9 (Section 5 Final Report - API CALL WITH VOICE)
     document.getElementById("btn-next-to-section-5")?.addEventListener("click", async () => {
-        goToScreen(9);
+        goToScreen(9, false);
         await runReportPipeline("final_report", 5, 1, null, null);
     });
 
@@ -1246,8 +1320,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;");
 
-    // Initialize application: Start on Screen 1 with text-only intro
+    // Initialize application: Start on Screen 1 with opening prompt voice
     loadAcademicOptions();
     goToScreen(1);
-    avatarSayTextOnly("Welcome to your personalized career & academic advising session! Select your college standing to get started.", 1);
 });
