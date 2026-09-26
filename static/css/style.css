@@ -594,6 +594,13 @@ body {
     gap: 1rem;
 }
 
+.wizard-nav[hidden] {
+    display: none;
+}
+
+.wizard-progress[hidden]{
+    display:none;
+}
 .submit-btn,
 .secondary-btn {
     display: inline-flex;
