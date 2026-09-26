@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Executive Career Advisory</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <header class="site-header">
+            <div class="brand-mark" aria-hidden="true"></div>
+            <span class="brand-title">Vanguard Career Advisory</span>
+        </header>
+
+        <main class="main-container">
+            <section class="advisory-card" aria-labelledby="prompt-heading">
+                <p class="eyebrow">Private Consultation</p>
+                <h1 id="prompt-heading" class="prompt-heading">What's your name?</h1>
+                <p class="prompt-subtext">
+                    Enter your name below to initialize your personalized career strategy briefing.
+                </p>
+
+                <form id="start-form" class="intake-form" novalidate>
+                    <div class="input-group">
+                        <label for="name-input" class="sr-only">Full Name or Preferred Name</label>
+                        <input type="text" id="name-input" name="name" class="text-input"
+                            placeholder="e.g., Alexandra Chen" autocomplete="name" required />
+                        <button type="submit" id="submit-btn" class="submit-btn">
+                            <span class="btn-label">Continue</span>
+                            <span class="btn-spinner" hidden aria-hidden="true"></span>
+                        </button>
+                    </div>
+                    <p id="form-error" class="form-error" role="alert" hidden></p>
+                </form>
+
+                <section id="greeting-section" class="greeting-section" aria-live="polite" hidden>
+                    <div class="divider"></div>
+                    <div class="greeting-header">
+                        <span class="status-dot" aria-hidden="true"></span>
+                        <span class="greeting-meta">Executive Advisor Response</span>
+                    </div>
+                    <blockquote id="greeting-text" class="greeting-text"></blockquote>
+                </section>
+            </section>
+        </main>
+
+        <footer class="site-footer">
+            <span>Confidential &bull; Powered by Gemini &amp; ElevenLabs</span>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+</body>
+
+</html>

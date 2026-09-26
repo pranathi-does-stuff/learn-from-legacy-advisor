@@ -9,3 +9,8 @@ test-ledger
 solpg-wallet.json
 node_modules/
 target/
+.env
+.venv/
+__pycache__/
+*.pyc
+
