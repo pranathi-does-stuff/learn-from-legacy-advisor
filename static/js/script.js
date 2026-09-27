@@ -4,22 +4,23 @@ document.addEventListener("DOMContentLoaded", () => {
     // =========================================================================
     const state = {
         currentScreen: 1,
+        activeUserId: null,
         user: {
-            classYear: "Freshman",
-            major: "Computer Science",
-            majorTrack: "Not Applicable",
-            minor: "Not Applicable",
+            classYear: "",
+            major: "",
+            majorTrack: "",
+            minor: "",
             name: "",
-            gpa: "3.65",
-            creditsCompleted: 18,
-            targetCompanyIndustry: "Software Products",
-            targetSalary: "$105,000",
-            targetLocation: "Washington DC Metro • Remote",
-            expectedGradYear: "2028",
-            careerGoals: "Land a Software Development Engineer role at a leading tech firm.",
-            selectedActivities: ["HackUMBC", "ACM Student Chapter"],
+            gpa: "",
+            creditsCompleted: "",
+            targetCompanyIndustry: "",
+            targetSalary: "",
+            targetLocation: "",
+            expectedGradYear: "",
+            careerGoals: "",
+            selectedActivities: [],
             customActivity: "",
-            skills: "Python, SQL, AWS, Git, Linux",
+            skills: "",
             internships: "",
             checkedCourses: [],
         },
@@ -34,6 +35,41 @@ document.addEventListener("DOMContentLoaded", () => {
         lastReportText: "",
         lastReportBase64Audio: "",
     };
+
+    // =========================================================================
+    // UNLOAD / REFRESH SESSION CLEANUP (VisibilityChange Beacon)
+    // =========================================================================
+    document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "hidden" && state.activeUserId) {
+            const payload = JSON.stringify({ user_id: state.activeUserId });
+            const blob = new Blob([payload], { type: "application/json" });
+            const beaconSent = navigator.sendBeacon("/api/cleanup-user", blob);
+            if (!beaconSent) {
+                fetch("/api/cleanup-user", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: payload,
+                    keepalive: true,
+                }).catch(() => { });
+            }
+        }
+    });
+
+    window.addEventListener("pagehide", () => {
+        if (state.activeUserId) {
+            const payload = JSON.stringify({ user_id: state.activeUserId });
+            const blob = new Blob([payload], { type: "application/json" });
+            const beaconSent = navigator.sendBeacon("/api/cleanup-user", blob);
+            if (!beaconSent) {
+                fetch("/api/cleanup-user", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: payload,
+                    keepalive: true,
+                }).catch(() => { });
+            }
+        }
+    });
 
     // Cached academic options
     let academicOptions = {
@@ -1213,6 +1249,9 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             const result = await res.json();
+            if (result.user_id) {
+                state.activeUserId = result.user_id;
+            }
             if (msgEl) {
                 msgEl.hidden = false;
                 msgEl.textContent = `✓ Report successfully saved to Tiger Data (Record ID: ${result.submission_id || "Saved"}).`;
@@ -1231,6 +1270,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btn-restart-quiz")?.addEventListener("click", () => {
         stopAllSpeech();
         if (confirm("Start a new student career assessment?")) {
+            resetAllFormsAndState();
             window.location.reload();
         }
     });
@@ -1240,7 +1280,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // =========================================================================
     const populateTrackDropdown = (selectedMajor) => {
         if (!trackSelect) return;
-        trackSelect.innerHTML = `<option value="Not Applicable">General / No Specific Track</option>`;
+        trackSelect.innerHTML = `<option value="" disabled selected>Select concentration / track...</option><option value="Not Applicable">General / No Specific Track</option>`;
         const tracks = (academicOptions.tracks_by_major && academicOptions.tracks_by_major[selectedMajor])
             ? academicOptions.tracks_by_major[selectedMajor]
             : academicOptions.tracks;
@@ -1252,11 +1292,12 @@ document.addEventListener("DOMContentLoaded", () => {
             opt.textContent = t;
             trackSelect.appendChild(opt);
         });
+        trackSelect.value = "";
     };
 
     const populateMinorDropdown = () => {
         if (!minorSelect) return;
-        minorSelect.innerHTML = `<option value="Not Applicable">None / Not Applicable</option>`;
+        minorSelect.innerHTML = `<option value="" disabled selected>Select minor / secondary field...</option><option value="Not Applicable">None / Not Applicable</option>`;
         (academicOptions.minors || []).forEach((m) => {
             if (!m || m === "Not Applicable") return;
             const opt = document.createElement("option");
@@ -1264,6 +1305,7 @@ document.addEventListener("DOMContentLoaded", () => {
             opt.textContent = m;
             minorSelect.appendChild(opt);
         });
+        minorSelect.value = "";
     };
 
     const loadAcademicOptions = async () => {
@@ -1278,17 +1320,89 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (majorSelect) {
-            majorSelect.innerHTML = `<option value="">Select your Major...</option>`;
+            majorSelect.innerHTML = `<option value="" disabled selected>Select your Major...</option>`;
             academicOptions.majors.forEach((m) => {
                 const opt = document.createElement("option");
                 opt.value = m;
                 opt.textContent = m;
-                if (m === "Computer Science") opt.selected = true;
                 majorSelect.appendChild(opt);
             });
-            populateTrackDropdown(majorSelect.value);
+            majorSelect.value = "";
+            populateTrackDropdown("");
         }
         populateMinorDropdown();
+    };
+
+    // =========================================================================
+    // STRICT ON-LOAD FORM & JAVASCRIPT STATE RESETS
+    // =========================================================================
+    const resetAllFormsAndState = () => {
+        // Clear JavaScript State Objects
+        state.activeUserId = null;
+        state.currentScreen = 1;
+        state.user = {
+            classYear: "",
+            major: "",
+            majorTrack: "",
+            minor: "",
+            name: "",
+            gpa: "",
+            creditsCompleted: "",
+            targetCompanyIndustry: "",
+            targetSalary: "",
+            targetLocation: "",
+            expectedGradYear: "",
+            careerGoals: "",
+            selectedActivities: [],
+            customActivity: "",
+            skills: "",
+            internships: "",
+            checkedCourses: [],
+        };
+        state.sectionData = {
+            1: null,
+            2: null,
+            3: null,
+            4: null,
+            5: null,
+        };
+        state.currentAudio = null;
+        state.lastReportText = "";
+        state.lastReportBase64Audio = "";
+
+        // Clear web session storage
+        try {
+            sessionStorage.clear();
+            localStorage.clear();
+        } catch (_e) { }
+
+        // Reset all text, number, and search inputs
+        document.querySelectorAll('input[type="text"], input[type="number"], input[type="email"], input[type="search"], textarea').forEach((input) => {
+            input.value = "";
+        });
+
+        // Reset all checkboxes and radios
+        document.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach((input) => {
+            input.checked = false;
+        });
+
+        // Reset all <select> dropdowns to default placeholder (<option value="" disabled selected>...</option>)
+        document.querySelectorAll("select").forEach((select) => {
+            select.selectedIndex = 0;
+            select.value = "";
+        });
+
+        // Remove active / selected visual states from interactive pills & buttons
+        document.querySelectorAll(".year-btn, .pill-option, .gpa-pill, .involvement-pill, .skill-pill, .course-check-item").forEach((el) => {
+            el.classList.remove("selected", "active", "checked");
+        });
+
+        clearError();
+        const saveMsg = document.getElementById("save-confirmation-msg");
+        if (saveMsg) {
+            saveMsg.hidden = true;
+            saveMsg.textContent = "";
+        }
     };
 
     // Helper functions
@@ -1309,7 +1423,8 @@ document.addEventListener("DOMContentLoaded", () => {
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;");
 
-    // Initialize application: Start on Screen 1 with opening prompt voice
+    // Initialize application: Strictly reset all forms & state, load options, and start on Screen 1
+    resetAllFormsAndState();
     loadAcademicOptions();
     goToScreen(1);
 });

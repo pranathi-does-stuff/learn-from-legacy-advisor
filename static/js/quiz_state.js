@@ -5,6 +5,7 @@
 const STORAGE_KEY = "legacy_advisory_state_v2";
 
 const DEFAULT_QUIZ_STATE = {
+    activeUserId: null,
     user: {
         classYear: "",
         name: "",
@@ -38,6 +39,45 @@ const DEFAULT_QUIZ_STATE = {
     voiceEnabled: true,
 };
 
+// Global session cleanup on unload, page close, or hard refresh
+document.addEventListener("visibilitychange", () => {
+    try {
+        const state = QuizApp.getQuizState();
+        if (document.visibilityState === "hidden" && state && state.activeUserId) {
+            const payload = JSON.stringify({ user_id: state.activeUserId });
+            const blob = new Blob([payload], { type: "application/json" });
+            const beaconSent = navigator.sendBeacon("/api/cleanup-user", blob);
+            if (!beaconSent) {
+                fetch("/api/cleanup-user", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: payload,
+                    keepalive: true,
+                }).catch(() => { });
+            }
+        }
+    } catch (_e) { }
+});
+
+window.addEventListener("pagehide", () => {
+    try {
+        const state = QuizApp.getQuizState();
+        if (state && state.activeUserId) {
+            const payload = JSON.stringify({ user_id: state.activeUserId });
+            const blob = new Blob([payload], { type: "application/json" });
+            const beaconSent = navigator.sendBeacon("/api/cleanup-user", blob);
+            if (!beaconSent) {
+                fetch("/api/cleanup-user", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: payload,
+                    keepalive: true,
+                }).catch(() => { });
+            }
+        }
+    } catch (_e) { }
+});
+
 const QuizApp = {
     shouldResetFormInputsOnReload() {
         const navEntries = performance.getEntriesByType ? performance.getEntriesByType("navigation") : [];
@@ -58,6 +98,7 @@ const QuizApp = {
             if (raw) {
                 const parsed = JSON.parse(raw);
                 return {
+                    activeUserId: parsed.activeUserId !== undefined ? parsed.activeUserId : null,
                     user: { ...DEFAULT_QUIZ_STATE.user, ...(parsed.user || {}) },
                     sections: { ...DEFAULT_QUIZ_STATE.sections, ...(parsed.sections || {}) },
                     voiceEnabled: parsed.voiceEnabled !== undefined ? parsed.voiceEnabled : true,

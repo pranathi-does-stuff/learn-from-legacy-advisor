@@ -176,6 +176,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                 });
 
                 const result = await res.json();
+                if (result.user_id) {
+                    const s = QuizApp.getQuizState();
+                    s.activeUserId = result.user_id;
+                    QuizApp.saveQuizState(s);
+                }
                 if (msgEl) {
                     msgEl.hidden = false;
                     msgEl.textContent = `✓ Report successfully saved to Tiger Data (Record ID: ${result.submission_id || "Saved"}).`;

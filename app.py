@@ -1411,6 +1411,60 @@ def submit_quiz():
     }), 200
 
 
+@app.route("/api/cleanup-user", methods=["POST"])
+def cleanup_user():
+    """
+    Clean up session data when user leaves or refreshes the page.
+    Executes DELETE FROM users WHERE id = :user_id to remove the abandoned session from Tiger Data.
+    """
+    payload = request.get_json(silent=True) or {}
+    user_id = payload.get("user_id") or payload.get("id")
+
+    # Fallback to parsing raw payload from navigator.sendBeacon
+    if not user_id and request.data:
+        try:
+            data_str = request.data.decode("utf-8")
+            parsed = json.loads(data_str)
+            if isinstance(parsed, dict):
+                user_id = parsed.get("user_id") or parsed.get("id")
+        except Exception:
+            pass
+
+    if not user_id:
+        user_id = request.form.get("user_id") or request.args.get("user_id")
+
+    if not user_id:
+        return jsonify({"status": "error", "message": "Missing user_id parameter."}), 400
+
+    # Clean user_id if string with prefix
+    if isinstance(user_id, str) and user_id.startswith("user-"):
+        user_id = user_id.replace("user-", "")
+
+    deleted_rows = 0
+    if TIGER_DATA_URL:
+        try:
+            with get_db_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute("DELETE FROM users WHERE id = %s;", (user_id,))
+                    deleted_rows = cur.rowcount
+                conn.commit()
+        except Exception as exc:
+            print(f"Warning: Failed to execute DELETE FROM users WHERE id = {user_id}: {exc}")
+            return jsonify({"status": "error", "message": str(exc)}), 500
+
+    # Clean up from local memory submissions store
+    for sub_key in [f"user-{user_id}", str(user_id)]:
+        if sub_key in SUBMISSIONS_STORE:
+            del SUBMISSIONS_STORE[sub_key]
+
+    return jsonify({
+        "status": "success",
+        "message": f"User session {user_id} deleted successfully from database.",
+        "user_id": user_id,
+        "deleted_rows": deleted_rows,
+    }), 200
+
+
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5001))
     print(f"Starting Legacy Career & Academic Advisory server at http://127.0.0.1:{port}")
