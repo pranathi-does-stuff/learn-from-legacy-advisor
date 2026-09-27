@@ -13,6 +13,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const introMsgEl = document.getElementById("advisor-intro-message");
     const introText = introMsgEl ? introMsgEl.textContent.trim() : "";
     const introReplayBtn = document.getElementById("intro-replay-voice-btn");
+    const skillsPage = document.getElementById("section4-skills-page");
+    const alumniPage = document.getElementById("section4-alumni-page");
 
     const base64Audio = sec4Data ? sec4Data.audio : null;
 
@@ -47,6 +49,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     const skillsInput = document.getElementById("user-skills-input");
+    const quickSkillsContainer = document.getElementById("quick-skills-container");
+    const skillSourceSummary = document.getElementById("skill-source-summary");
     const internshipsInput = document.getElementById("user-internships-input");
     const noPriorExperienceCheckbox = document.getElementById("no-prior-experience");
     const professionalError = document.getElementById("professional-required-error");
@@ -65,7 +69,53 @@ document.addEventListener("DOMContentLoaded", async () => {
             pill.classList.toggle("active", isActive);
         });
     };
-    syncSkillPills();
+
+    const renderSkillOptions = (reportData) => {
+        if (!quickSkillsContainer) return;
+        quickSkillsContainer.replaceChildren();
+        const matches = reportData?.matches || [];
+        if (skillSourceSummary) {
+            skillSourceSummary.textContent = matches.length
+                ? `Skill examples drawn from ${matches.length} matched ${matches.length === 1 ? "alumnus profile" : "alumni profiles"}.`
+                : "No matched alumni skill examples are available yet.";
+        }
+
+        const skillCounts = new Map();
+        matches.forEach((match) => {
+            (match.skills_mastered || []).forEach((skill) => {
+                const label = String(skill || "").trim();
+                if (!label) return;
+
+                const key = label.toLowerCase();
+                const record = skillCounts.get(key) || { label, count: 0 };
+                record.count += 1;
+                skillCounts.set(key, record);
+            });
+        });
+
+        const rankedSkills = Array.from(skillCounts.values())
+            .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label))
+            .slice(0, 12);
+
+        if (!rankedSkills.length) {
+            const emptyMessage = document.createElement("span");
+            emptyMessage.className = "card-subtext";
+            emptyMessage.textContent = "No skill examples were returned for the matched alumni. You can still enter your own skills below.";
+            quickSkillsContainer.appendChild(emptyMessage);
+            return;
+        }
+
+        rankedSkills.forEach(({ label }) => {
+            const pill = document.createElement("button");
+            pill.type = "button";
+            pill.className = "skill-pill";
+            pill.dataset.skill = label;
+            pill.textContent = label;
+            quickSkillsContainer.appendChild(pill);
+        });
+
+        syncSkillPills();
+    };
 
     const renderMatches = (data) => {
         if (!data) return;
@@ -127,6 +177,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
+    renderSkillOptions(sec4Data);
     renderMatches(sec4Data);
 
     // Skill Pills Click Handlers
@@ -206,6 +257,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (res.ok) {
                     const data = await res.json();
                     QuizApp.saveSectionData(4, data);
+                    renderSkillOptions(data);
                     renderMatches(data);
                 }
             } catch (err) {
@@ -217,10 +269,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-    // Proceed Button
-    const btnNext = document.getElementById("btn-next-to-section-5");
-    if (btnNext) {
-        btnNext.addEventListener("click", () => {
+    const btnViewAlumni = document.getElementById("btn-view-related-alumni");
+    btnViewAlumni?.addEventListener("click", () => {
             if (!skillsInput?.value.trim() || (!internshipsInput?.value.trim() && !noPriorExperienceCheckbox?.checked)) {
                 if (professionalError) {
                     professionalError.textContent = "Enter at least one skill and add work history, or confirm that you do not have prior experience yet.";
@@ -230,6 +280,26 @@ document.addEventListener("DOMContentLoaded", async () => {
                 else internshipsInput?.focus();
                 return;
             }
+            QuizApp.updateUserData({
+                skills: skillsInput.value.trim(),
+                internships: internshipsInput?.value.trim() || "",
+                noPriorExperience: Boolean(noPriorExperienceCheckbox?.checked),
+            });
+            if (skillsPage) skillsPage.hidden = true;
+            if (alumniPage) alumniPage.hidden = false;
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+
+    document.getElementById("btn-back-to-skills")?.addEventListener("click", () => {
+        if (alumniPage) alumniPage.hidden = true;
+        if (skillsPage) skillsPage.hidden = false;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    // Proceed from the alumni profiles to Section 5.
+    const btnNext = document.getElementById("btn-next-to-section-5");
+    if (btnNext) {
+        btnNext.addEventListener("click", () => {
             QuizApp.stopAllSpeech();
             window.location.href = "/loading?next=5";
         });
