@@ -1,7 +1,7 @@
 .required-indicator {
     display: inline-block;
     margin-left: 0.35rem;
-    color: #fca5a5;
+    color: #9f3030;
     font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -24,7 +24,7 @@
 
 .required-error {
     margin: 0.75rem 0 0;
-    color: #fca5a5;
+    color: var(--error-red);
     font-size: 0.88rem;
 }
 
@@ -32,21 +32,22 @@
     display: none;
 }
 :root {
-    --bg-primary: #0d1219;
-    --bg-surface: #141c27;
-    --bg-elevated: #1a2433;
-    --bg-input: #0f1620;
-    --border-subtle: rgba(255, 255, 255, 0.09);
-    --border-hover: rgba(197, 168, 128, 0.45);
-    --border-focus: #c5a880;
-    --text-primary: #f3f4f6;
-    --text-secondary: #9ca3af;
-    --text-muted: #6b7280;
-    --accent-gold: #c5a880;
-    --accent-gold-hover: #d4b992;
-    --accent-gold-subtle: rgba(197, 168, 128, 0.12);
-    --accent-emerald: #34d399;
-    --error-red: #f87171;
+    --bg-primary: #CACDC4;
+    --bg-surface: #E4E7DF;
+    --bg-elevated: #F0F2EC;
+    --bg-input: #F8F9F6;
+    --bg-inset: #D9DED5;
+    --border-subtle: rgba(37, 46, 40, 0.18);
+    --border-hover: rgba(112, 84, 35, 0.48);
+    --border-focus: #536754;
+    --text-primary: #252E28;
+    --text-secondary: #46534A;
+    --text-muted: #4F5B52;
+    --accent-gold: #684E27;
+    --accent-gold-hover: #62491F;
+    --accent-gold-subtle: rgba(116, 90, 46, 0.14);
+    --accent-emerald: #20583E;
+    --error-red: #9f3030;
 
     /* Distinct 4 Avatar Colors */
     --avatar-blue: #3b82f6;
@@ -86,10 +87,7 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    background:
-        radial-gradient(circle at 50% 0%, rgba(197, 168, 128, 0.08) 0%, transparent 60%),
-        radial-gradient(circle at 85% 30%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
-        var(--bg-primary);
+    background-color: var(--bg-primary);
     padding: 2rem 1.5rem;
 }
 
@@ -155,7 +153,7 @@ body {
 .progress-track {
     width: 140px;
     height: 5px;
-    background-color: rgba(255, 255, 255, 0.08);
+    background-color: rgba(37, 46, 40, 0.12);
     border-radius: 999px;
     overflow: hidden;
 }
@@ -183,7 +181,7 @@ body {
     border: 1px solid var(--border-subtle);
     border-radius: 12px;
     padding: 2.75rem 2.75rem;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+    box-shadow: 0 18px 40px rgba(37, 46, 40, 0.14);
     position: relative;
 }
 
@@ -250,7 +248,7 @@ body {
     gap: 1.5rem;
     margin-bottom: 1.5rem;
     padding: 0.65rem 1rem;
-    background-color: rgba(13, 18, 25, 0.5);
+    background-color: var(--bg-surface);
     border: 1px solid var(--border-subtle);
     border-radius: 999px;
     width: fit-content;
@@ -538,7 +536,7 @@ body {
     letter-spacing: 0.06em;
     padding: 0.15rem 0.45rem;
     border-radius: 999px;
-    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    border: 1.5px solid rgba(37, 46, 40, 0.28);
 }
 
 .avatar-name-tag {
@@ -581,11 +579,11 @@ body {
 
 .thought-bubble {
     position: relative;
-    background: linear-gradient(145deg, rgba(26, 36, 51, 0.95), rgba(18, 25, 36, 0.95));
-    border: 1px solid rgba(197, 168, 128, 0.3);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
     border-radius: 16px;
     padding: 1.35rem 1.6rem;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 10px 24px rgba(37, 46, 40, 0.12);
     min-height: 100px;
     display: flex;
     flex-direction: column;
@@ -602,8 +600,8 @@ body {
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background-color: rgba(26, 36, 51, 0.95);
-    border: 1px solid rgba(197, 168, 128, 0.3);
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
 }
 
 .thought-bubble::after {
@@ -614,8 +612,8 @@ body {
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background-color: rgba(26, 36, 51, 0.95);
-    border: 1px solid rgba(197, 168, 128, 0.3);
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
 }
 
 .thought-header {
@@ -800,7 +798,7 @@ body {
     flex-direction: column;
     justify-content: space-between;
     transition: transform 0.2s ease, border-color 0.2s ease;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 6px 16px rgba(37, 46, 40, 0.1);
 }
 
 .alumni-card:hover {
@@ -830,7 +828,7 @@ body {
     font-size: 0.78rem;
     font-weight: 700;
     color: var(--accent-emerald);
-    background-color: rgba(52, 211, 153, 0.12);
+    background-color: rgba(39, 104, 74, 0.1);
     padding: 0.15rem 0.5rem;
     border-radius: 4px;
 }
@@ -852,7 +850,7 @@ body {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0.5rem;
-    background-color: rgba(0, 0, 0, 0.25);
+    background-color: var(--bg-inset);
     padding: 0.65rem 0.75rem;
     border-radius: 6px;
     margin-bottom: 0.75rem;
@@ -880,7 +878,7 @@ body {
 
 .highlight-tag {
     font-size: 0.7rem;
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: rgba(255, 255, 255, 0.42);
     border: 1px solid var(--border-subtle);
     padding: 0.15rem 0.5rem;
     border-radius: 999px;
@@ -920,7 +918,7 @@ body {
     display: flex;
     align-items: flex-start;
     gap: 0.75rem;
-    background-color: rgba(13, 18, 25, 0.75);
+    background-color: var(--bg-input);
     border: 1px solid var(--border-subtle);
     border-radius: 8px;
     padding: 0.85rem 1rem;
@@ -936,8 +934,8 @@ body {
 
 .course-check-item.checked {
     border-color: var(--accent-emerald);
-    background-color: rgba(16, 185, 129, 0.12);
-    box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
+    background-color: rgba(39, 104, 74, 0.1);
+    box-shadow: 0 0 10px rgba(39, 104, 74, 0.12);
 }
 
 .course-chk-box {
@@ -945,7 +943,7 @@ body {
     height: 20px;
     border-radius: 4px;
     border: 1.5px solid var(--border-subtle);
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--bg-inset);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -990,7 +988,7 @@ body {
     font-size: 0.72rem;
     font-weight: 600;
     color: var(--accent-gold);
-    background: rgba(197, 168, 128, 0.12);
+    background: var(--accent-gold-subtle);
     padding: 0.1rem 0.4rem;
     border-radius: 4px;
 }
@@ -999,7 +997,7 @@ body {
     font-size: 0.7rem;
     font-weight: 600;
     color: var(--text-secondary);
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.5);
     padding: 0.1rem 0.4rem;
     border-radius: 4px;
 }
@@ -1022,7 +1020,7 @@ body {
     font-size: 0.7rem;
     font-weight: 700;
     color: var(--accent-emerald);
-    background: rgba(52, 211, 153, 0.12);
+    background: rgba(39, 104, 74, 0.1);
     padding: 0.1rem 0.45rem;
     border-radius: 4px;
 }
@@ -1042,7 +1040,7 @@ body {
     padding: 1.35rem 1.45rem;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 6px 18px rgba(37, 46, 40, 0.1);
     transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
@@ -1056,7 +1054,7 @@ body {
     justify-content: space-between;
     margin-bottom: 0.85rem;
     padding-bottom: 0.6rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    border-bottom: 1px solid var(--border-subtle);
 }
 
 .analysis-card-title {
@@ -1110,7 +1108,7 @@ body {
     font-size: 0.78rem;
     padding: 0.3rem 0.65rem;
     border-radius: 6px;
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(255, 255, 255, 0.4);
     border: 1px solid var(--border-subtle);
     display: flex;
     align-items: center;
@@ -1118,27 +1116,27 @@ body {
 }
 
 .analysis-course-pill.pill-green {
-    border-color: rgba(16, 185, 129, 0.35);
-    background: rgba(16, 185, 129, 0.08);
-    color: #a7f3d0;
+    border-color: rgba(39, 104, 74, 0.35);
+    background: rgba(39, 104, 74, 0.08);
+    color: #20583E;
 }
 
 .analysis-course-pill.pill-amber {
-    border-color: rgba(245, 158, 11, 0.35);
-    background: rgba(245, 158, 11, 0.08);
-    color: #fde68a;
+    border-color: rgba(143, 99, 25, 0.35);
+    background: rgba(143, 99, 25, 0.08);
+    color: #68480F;
 }
 
 .analysis-course-pill.pill-purple {
-    border-color: rgba(168, 85, 247, 0.35);
-    background: rgba(168, 85, 247, 0.08);
-    color: #e9d5ff;
+    border-color: rgba(112, 75, 137, 0.35);
+    background: rgba(112, 75, 137, 0.08);
+    color: #59366F;
 }
 
 .analysis-course-pill.pill-blue {
-    border-color: rgba(59, 130, 246, 0.35);
-    background: rgba(59, 130, 246, 0.08);
-    color: #bfdbfe;
+    border-color: rgba(48, 91, 137, 0.35);
+    background: rgba(48, 91, 137, 0.08);
+    color: #2D527D;
 }
 
 /* Involvement & Skill Pills */
@@ -1162,7 +1160,7 @@ body {
     align-items: center;
     gap: 0.45rem;
     padding: 0.5rem 0.95rem;
-    background-color: rgba(13, 18, 25, 0.7);
+    background-color: var(--bg-elevated);
     border: 1px solid var(--border-subtle);
     border-radius: 999px;
     color: var(--text-secondary);
@@ -1182,7 +1180,7 @@ body {
     background-color: var(--accent-gold-subtle);
     border-color: var(--accent-gold);
     color: var(--text-primary);
-    box-shadow: 0 0 0 1px rgba(197, 168, 128, 0.3);
+    box-shadow: 0 0 0 1px rgba(116, 90, 46, 0.22);
 }
 
 .involvement-pill-meta {
@@ -1191,9 +1189,9 @@ body {
 }
 
 .skill-pill.active {
-    background-color: rgba(139, 92, 246, 0.15);
+    background-color: rgba(112, 75, 137, 0.12);
     border-color: var(--avatar-purple);
-    color: #c4b5fd;
+    color: #59366F;
 }
 
 /* Final Summary Matrix */
@@ -1251,13 +1249,13 @@ body {
 
 .year-btn:hover {
     border-color: var(--border-hover);
-    background-color: rgba(197, 168, 128, 0.05);
+    background-color: rgba(116, 90, 46, 0.06);
 }
 
 .year-btn.selected {
     border-color: var(--accent-gold);
     background-color: var(--accent-gold-subtle);
-    box-shadow: 0 0 0 2px rgba(197, 168, 128, 0.25);
+    box-shadow: 0 0 0 2px rgba(116, 90, 46, 0.18);
 }
 
 .year-title {
@@ -1280,7 +1278,7 @@ body {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    background-color: rgba(255, 255, 255, 0.02);
+    background-color: var(--bg-surface);
 }
 
 .form-grid {
@@ -1425,8 +1423,8 @@ body {
 .btn-spinner {
     width: 14px;
     height: 14px;
-    border: 2px solid rgba(13, 18, 25, 0.25);
-    border-top-color: #0d1219;
+    border: 2px solid rgba(37, 46, 40, 0.2);
+    border-top-color: #252E28;
     border-radius: 50%;
     animation: spin 0.7s linear infinite;
 }
@@ -1446,8 +1444,8 @@ body {
 .save-confirmation-card {
     margin-top: 1.25rem;
     padding: 1rem 1.25rem;
-    background-color: rgba(52, 211, 153, 0.12);
-    border: 1px solid rgba(52, 211, 153, 0.35);
+    background-color: rgba(39, 104, 74, 0.1);
+    border: 1px solid rgba(39, 104, 74, 0.28);
     border-radius: 6px;
     color: var(--accent-emerald);
     font-size: 0.88rem;
@@ -1583,7 +1581,7 @@ body {
     border: 1px solid var(--border-subtle);
     border-radius: 16px;
     padding: 1.75rem 2rem;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 12px 30px rgba(37, 46, 40, 0.12);
     margin-bottom: 2.25rem;
     text-align: left;
 }
@@ -1616,7 +1614,7 @@ body {
     justify-content: space-between;
     margin-bottom: 1rem;
     padding-bottom: 0.75rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    border-bottom: 1px solid var(--border-subtle);
 }
 
 .intro-speaker-tag {
@@ -1639,7 +1637,7 @@ body {
     padding: 0.95rem 2.5rem;
     font-size: 0.92rem;
     letter-spacing: 0.06em;
-    box-shadow: 0 8px 24px rgba(197, 168, 128, 0.3);
+    box-shadow: 0 6px 18px rgba(116, 90, 46, 0.2);
 }
 
 .pill-option {
