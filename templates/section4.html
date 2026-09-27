@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Section 4 &bull; Skills &amp; Experience &bull; Legacy Advisory{% endblock %}
+
+{% block progress_label %}Section 4 of 5 &bull; Skills &amp; Experience{% endblock %}
+{% block progress_percent %}80%{% endblock %}
+
+{% block content %}
+<!-- =========================================================================
+     STAGE A: STANDALONE AVATAR INTRODUCTION SCREEN
+     Avatar with Dialogue Bubble introducing themself before asking questions
+     ========================================================================= -->
+<div id="section-intro-stage" class="section-intro-stage" data-section="4">
+    <div class="intro-avatar-wrapper">
+        <div class="intro-avatar-circle avatar-4-purple">
+            <span class="intro-avatar-glyph">🚀</span>
+            <span class="intro-avatar-badge">A4</span>
+        </div>
+        <h2 class="intro-persona-title">Avatar 4 (Purple)</h2>
+        <span class="intro-role-subtitle">Career &amp; Industry Strategist</span>
+    </div>
+
+    <div class="intro-dialogue-bubble">
+        <div class="intro-dialogue-header">
+            <div class="intro-speaker-tag" style="color:var(--avatar-purple);">
+                <span class="thought-badge-dot"
+                    style="background-color:var(--avatar-purple); box-shadow:0 0 6px var(--avatar-purple);"></span>
+                <span>Strategist Introduction</span>
+            </div>
+            <div class="thought-audio-controls">
+                <div class="audio-waves" hidden aria-hidden="true">
+                    <span></span><span></span><span></span><span></span>
+                </div>
+                <button type="button" class="voice-replay-btn" id="intro-replay-voice-btn" title="Replay Voice">
+                    <span class="voice-icon" aria-hidden="true">🔊</span>
+                    <span>Replay Voice</span>
+                </button>
+            </div>
+        </div>
+        <p id="advisor-intro-message" class="intro-dialogue-text">
+            Greetings! I am Avatar 4, your Career &amp; Industry Strategist. I benchmark your technical proficiencies,
+            certifications, and internship milestones against top salary earners in your field.
+        </p>
+    </div>
+
+    <button type="button" class="submit-btn intro-continue-btn" id="btn-start-section-questions">
+        Continue to Skills &amp; Experience &rarr;
+    </button>
+</div>
+
+<!-- =========================================================================
+     STAGE B: SECTION 4 QUESTIONS & SKILLS
+     Appears after user clicks "Continue to Skills & Experience"
+     ========================================================================= -->
+<div id="section-questions-stage" class="section-questions-stage" hidden>
+    <!-- Top Avatar Dock & Thought Bubble -->
+    <div id="avatar-stage" class="avatar-stage-wrapper">
+        <div class="avatar-dock" aria-label="Advisory Council Avatars">
+            <div class="dock-avatar-indicator" data-avatar="1">
+                <div class="dock-circle dock-blue"></div>
+                <span class="dock-label">Foundations</span>
+            </div>
+            <div class="dock-avatar-indicator" data-avatar="2">
+                <div class="dock-circle dock-green"></div>
+                <span class="dock-label">Courses</span>
+            </div>
+            <div class="dock-avatar-indicator" data-avatar="3">
+                <div class="dock-circle dock-orange"></div>
+                <span class="dock-label">Involvement</span>
+            </div>
+            <div class="dock-avatar-indicator active" data-avatar="4">
+                <div class="dock-circle dock-purple"></div>
+                <span class="dock-label">Career</span>
+            </div>
+        </div>
+
+        <div class="advisor-interaction-row">
+            <div class="avatar-container">
+                <div id="active-avatar-circle" class="avatar-circle avatar-4-purple">
+                    <span class="avatar-glyph">🚀</span>
+                    <span class="avatar-number-badge">A4</span>
+                </div>
+                <span class="avatar-name-tag">Avatar 4 (Purple)</span>
+            </div>
+
+            <div class="thought-bubble-container">
+                <div class="thought-bubble" id="thought-bubble">
+                    <div class="thought-header">
+                        <div class="thought-speaker-info">
+                            <span class="thought-badge-dot"
+                                style="background-color:var(--avatar-purple); box-shadow:0 0 6px var(--avatar-purple);"></span>
+                            <span class="thought-persona-title" style="color:var(--avatar-purple);">Career &amp;
+                                Industry Strategist</span>
+                        </div>
+                        <div class="thought-audio-controls">
+                            <div class="audio-waves" hidden aria-hidden="true">
+                                <span></span><span></span><span></span><span></span>
+                            </div>
+                            <button type="button" class="voice-replay-btn" id="voice-replay-btn"
+                                title="Play / Replay Voice">
+                                <span class="voice-icon" aria-hidden="true">🔊</span>
+                                <span id="voice-btn-label">Play Voice</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="thought-body">
+                        <p id="thought-bubble-text" class="thought-text">
+                            Avatar 4 is assessing your technical proficiencies, certifications, and internship readiness
+                            against competitive market baselines.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="section-4-container" class="interactive-screen">
+        <p class="eyebrow">Section 4 of 5 &bull; Skills &amp; Experience</p>
+        <h2 class="step-heading">Technical Skills, Certifications &amp; Internships</h2>
+        <p class="step-description">
+            Avatar 4 (Purple) maps your technical toolchain and internship trajectory against top salary graduates in
+            your domain.
+        </p>
+
+        <!-- Skills & Experience Card -->
+        <div class="course-planner-card" style="margin-bottom: 1.5rem;">
+            <h4 class="card-subtitle">Technical Skills &amp; Toolchain</h4>
+            <p class="card-subtext">Click key skills to add them to your profile or type directly below:</p>
+
+            <div id="quick-skills-container" class="skill-pills-wrap"
+                style="display:flex; flex-wrap:wrap; gap:0.5rem; margin:1rem 0;">
+                <button type="button" class="skill-pill" data-skill="Python">Python</button>
+                <button type="button" class="skill-pill" data-skill="Java">Java</button>
+                <button type="button" class="skill-pill" data-skill="C / C++">C / C++</button>
+                <button type="button" class="skill-pill" data-skill="JavaScript / TypeScript">JavaScript /
+                    TypeScript</button>
+                <button type="button" class="skill-pill" data-skill="React">React</button>
+                <button type="button" class="skill-pill" data-skill="SQL">SQL</button>
+                <button type="button" class="skill-pill" data-skill="AWS Cloud">AWS Cloud</button>
+                <button type="button" class="skill-pill" data-skill="Docker">Docker</button>
+                <button type="button" class="skill-pill" data-skill="Git">Git / GitHub</button>
+                <button type="button" class="skill-pill" data-skill="Linux">Linux CLI</button>
+                <button type="button" class="skill-pill" data-skill="Machine Learning">Machine Learning /
+                    PyTorch</button>
+                <button type="button" class="skill-pill" data-skill="Cybersecurity">Cybersecurity / Network
+                    Security</button>
+                <button type="button" class="skill-pill" data-skill="Agile / Scrum">Agile / Scrum</button>
+            </div>
+
+            <div style="margin-top: 1rem;">
+                <label class="field-label" for="user-skills-input">Technical Proficiencies &amp; Certifications (Comma
+                    Separated)</label>
+                <input type="text" id="user-skills-input" class="text-input"
+                    placeholder="e.g. Python, AWS, Docker, React, PostgreSQL" />
+            </div>
+
+            <div style="margin-top: 1rem;">
+                <label class="field-label" for="user-internships-input">Internships, Part-Time Industry Roles, or Prior
+                    Work History</label>
+                <textarea id="user-internships-input" class="text-input" rows="3"
+                    placeholder="e.g., Summer 2025 Software Engineering Intern at Northrop Grumman; Undergrad Research Assistant"></textarea>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:1rem; margin-top:1rem;">
+                <button type="button" class="secondary-btn" id="btn-update-professional">
+                    🔄 Recalculate Career Trajectory Benchmarks
+                </button>
+                <span id="spinner-section-4" class="spinner" hidden aria-hidden="true"></span>
+            </div>
+        </div>
+
+        <!-- Visual Matches Container for Section 4 -->
+        <div id="section-4-matches-container" class="matches-data-container">
+            <div class="matches-header">
+                <h3 class="matches-title">Top Alumni Skills Profiles &amp; Industry Outcomes</h3>
+                <span class="matches-subtitle">Skill combinations and internship timelines that led to highest
+                    compensation</span>
+            </div>
+            <div id="section-4-matches-grid" class="alumni-match-grid"></div>
+
+            <div class="nav-button-row" style="display: flex; justify-content: flex-end; margin-top: 2rem;">
+                <button type="button" class="submit-btn" id="btn-next-to-section-5">
+                    Proceed to Section 5: Synthesis &amp; Final Report &rarr;
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/section4.js', v='35') }}"></script>
+{% endblock %}

@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Section 5 &bull; Synthesis &amp; Final Blueprint &bull; Legacy Advisory{% endblock %}
+
+{% block progress_label %}Section 5 of 5 &bull; Synthesis &amp; Final Report{% endblock %}
+{% block progress_percent %}100%{% endblock %}
+
+{% block content %}
+<!-- =========================================================================
+     STAGE A: STANDALONE AVATAR INTRODUCTION SCREEN
+     Avatar with Dialogue Bubble introducing themself before showing report
+     ========================================================================= -->
+<div id="section-intro-stage" class="section-intro-stage" data-section="5">
+    <div class="intro-avatar-wrapper">
+        <div class="intro-avatar-circle avatar-1-blue">
+            <span class="intro-avatar-glyph">🎓</span>
+            <span class="intro-avatar-badge">A1</span>
+        </div>
+        <h2 class="intro-persona-title">Avatar 1 (Lead Advisor)</h2>
+        <span class="intro-role-subtitle">Synthesis &amp; Advisory Council Lead</span>
+    </div>
+
+    <div class="intro-dialogue-bubble">
+        <div class="intro-dialogue-header">
+            <div class="intro-speaker-tag" style="color:var(--avatar-blue);">
+                <span class="thought-badge-dot"
+                    style="background-color:var(--avatar-blue); box-shadow:0 0 6px var(--avatar-blue);"></span>
+                <span>Council Synthesis</span>
+            </div>
+            <div class="thought-audio-controls">
+                <div class="audio-waves" hidden aria-hidden="true">
+                    <span></span><span></span><span></span><span></span>
+                </div>
+                <button type="button" class="voice-replay-btn" id="intro-replay-voice-btn" title="Replay Voice">
+                    <span class="voice-icon" aria-hidden="true">🔊</span>
+                    <span>Replay Voice</span>
+                </button>
+            </div>
+        </div>
+        <p id="advisor-intro-message" class="intro-dialogue-text">
+            Congratulations! The Advisory Council has converged and synthesized your complete multi-dimensional career
+            blueprint. Review your personalized 4-year trajectory and matched alumni below, and save your record to
+            Tiger Data.
+        </p>
+    </div>
+
+    <button type="button" class="submit-btn intro-continue-btn" id="btn-start-section-questions">
+        View Final Blueprint &amp; Report &rarr;
+    </button>
+</div>
+
+<!-- =========================================================================
+     STAGE B: SECTION 5 FINAL BLUEPRINT & TIGER DATA SAVE
+     Appears after user clicks "View Final Blueprint & Report"
+     ========================================================================= -->
+<div id="section-questions-stage" class="section-questions-stage" hidden>
+    <!-- Top Avatar Dock & Thought Bubble -->
+    <div id="avatar-stage" class="avatar-stage-wrapper">
+        <div class="avatar-dock" aria-label="Advisory Council Avatars">
+            <div class="dock-avatar-indicator active" data-avatar="1">
+                <div class="dock-circle dock-blue"></div>
+                <span class="dock-label">Foundations</span>
+            </div>
+            <div class="dock-avatar-indicator" data-avatar="2">
+                <div class="dock-circle dock-green"></div>
+                <span class="dock-label">Courses</span>
+            </div>
+            <div class="dock-avatar-indicator" data-avatar="3">
+                <div class="dock-circle dock-orange"></div>
+                <span class="dock-label">Involvement</span>
+            </div>
+            <div class="dock-avatar-indicator" data-avatar="4">
+                <div class="dock-circle dock-purple"></div>
+                <span class="dock-label">Career</span>
+            </div>
+        </div>
+
+        <div class="advisor-interaction-row">
+            <div class="avatar-container">
+                <div id="active-avatar-circle" class="avatar-circle avatar-1-blue">
+                    <span class="avatar-glyph">🎓</span>
+                    <span class="avatar-number-badge">A1</span>
+                </div>
+                <span class="avatar-name-tag">Avatar 1 (Lead Advisor)</span>
+            </div>
+
+            <div class="thought-bubble-container">
+                <div class="thought-bubble" id="thought-bubble">
+                    <div class="thought-header">
+                        <div class="thought-speaker-info">
+                            <span class="thought-badge-dot"
+                                style="background-color:var(--avatar-blue); box-shadow:0 0 6px var(--avatar-blue);"></span>
+                            <span class="thought-persona-title" style="color:var(--avatar-blue);">Executive Pathway
+                                Director</span>
+                        </div>
+                        <div class="thought-audio-controls">
+                            <div class="audio-waves" hidden aria-hidden="true">
+                                <span></span><span></span><span></span><span></span>
+                            </div>
+                            <button type="button" class="voice-replay-btn" id="voice-replay-btn"
+                                title="Play / Replay Voice">
+                                <span class="voice-icon" aria-hidden="true">🔊</span>
+                                <span id="voice-btn-label">Play Voice</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="thought-body">
+                        <p id="thought-bubble-text" class="thought-text">
+                            Avatar 1 and the Advisory Council have synthesized your complete multi-dimensional career
+                            blueprint and aligned it against historical alumni milestones.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="section-5-container" class="interactive-screen">
+        <p class="eyebrow">Section 5 of 5 &bull; Synthesis &amp; Final Report</p>
+        <h2 class="step-heading">Comprehensive 4-Year Career Trajectory Blueprint</h2>
+        <p class="step-description">
+            Your complete profile has been synthesized across Academic Foundations, Course Planning, Campus Involvement,
+            and
+            Industry Readiness.
+        </p>
+
+        <!-- Student Matrix Summary -->
+        <div class="course-planner-card" style="margin-bottom: 1.5rem;">
+            <h4 class="card-subtitle">Synthesized Student Profile Matrix</h4>
+            <div id="final-summary-matrix" class="summary-matrix-grid"
+                style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-top:1rem;">
+            </div>
+        </div>
+
+        <!-- Visual Matches Container for Section 5 -->
+        <div id="section-5-matches-container" class="matches-data-container">
+            <div class="matches-header">
+                <h3 class="matches-title">Top 3 Most Similar Alumni Career Blueprints</h3>
+                <span class="matches-subtitle">Historical graduates with your exact major, career targets, and activity
+                    patterns</span>
+            </div>
+            <div id="section-5-matches-grid" class="alumni-match-grid"></div>
+
+            <!-- Persistence & Action Callout -->
+            <div class="action-card"
+                style="background:linear-gradient(135deg, rgba(30,41,59,0.8), rgba(15,23,42,0.9)); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:1.5rem; margin-top:2rem;">
+                <h4 style="color:#f8fafc; font-size:1.1rem; margin-bottom:0.5rem;">Tiger Data Archival &amp; Next Steps
+                </h4>
+                <p style="color:var(--text-secondary); font-size:0.88rem; margin-bottom:1.25rem;">
+                    Save this customized 4-year graduation and career roadmap directly to the Tiger Data repository to
+                    maintain your milestones and track your degree trajectory.
+                </p>
+
+                <div id="save-confirmation-msg" class="success-banner"
+                    style="background:rgba(16,185,129,0.15); border:1px solid #10b981; color:#34d399; padding:0.75rem 1rem; border-radius:8px; margin-bottom:1rem; font-size:0.9rem;"
+                    hidden></div>
+
+                <div style="display:flex; flex-wrap:wrap; align-items:center; gap:1rem;">
+                    <button type="button" class="submit-btn" id="btn-save-to-db">
+                        💾 Save Full Blueprint to Tiger Data
+                    </button>
+                    <span id="spinner-save-db" class="spinner" hidden aria-hidden="true"></span>
+                    <button type="button" class="secondary-btn" id="btn-restart-quiz">
+                        🔄 Start New Assessment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/section5.js', v='35') }}"></script>
+{% endblock %}

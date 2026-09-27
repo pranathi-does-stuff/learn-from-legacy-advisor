@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}Section 3 &bull; Campus Involvement &bull; Legacy Advisory{% endblock %}
+
+{% block progress_label %}Section 3 of 5 &bull; Campus Involvement{% endblock %}
+{% block progress_percent %}60%{% endblock %}
+
+{% block content %}
+<!-- =========================================================================
+     STAGE A: STANDALONE AVATAR INTRODUCTION SCREEN
+     Avatar with Dialogue Bubble introducing themself before asking questions
+     ========================================================================= -->
+<div id="section-intro-stage" class="section-intro-stage" data-section="3">
+    <div class="intro-avatar-wrapper">
+        <div class="intro-avatar-circle avatar-3-orange">
+            <span class="intro-avatar-glyph">🏛️</span>
+            <span class="intro-avatar-badge">A3</span>
+        </div>
+        <h2 class="intro-persona-title">Avatar 3 (Orange)</h2>
+        <span class="intro-role-subtitle">Student Engagement Mentor</span>
+    </div>
+
+    <div class="intro-dialogue-bubble">
+        <div class="intro-dialogue-header">
+            <div class="intro-speaker-tag" style="color:var(--avatar-orange);">
+                <span class="thought-badge-dot"
+                    style="background-color:var(--avatar-orange); box-shadow:0 0 6px var(--avatar-orange);"></span>
+                <span>Mentor Introduction</span>
+            </div>
+            <div class="thought-audio-controls">
+                <div class="audio-waves" hidden aria-hidden="true">
+                    <span></span><span></span><span></span><span></span>
+                </div>
+                <button type="button" class="voice-replay-btn" id="intro-replay-voice-btn" title="Replay Voice">
+                    <span class="voice-icon" aria-hidden="true">🔊</span>
+                    <span>Replay Voice</span>
+                </button>
+            </div>
+        </div>
+        <p id="advisor-intro-message" class="intro-dialogue-text">
+            Welcome! I am Avatar 3, your Student Engagement Mentor. Technical ability alone doesn't guarantee top
+            offers. I evaluate which student organizations, campus hackathons, and leadership roles will give your
+            profile a competitive edge.
+        </p>
+    </div>
+
+    <button type="button" class="submit-btn intro-continue-btn" id="btn-start-section-questions">
+        Continue to Campus Involvement &rarr;
+    </button>
+</div>
+
+<!-- =========================================================================
+     STAGE B: SECTION 3 QUESTIONS & INVOLVEMENT
+     Appears after user clicks "Continue to Campus Involvement"
+     ========================================================================= -->
+<div id="section-questions-stage" class="section-questions-stage" hidden>
+    <!-- Top Avatar Dock & Thought Bubble -->
+    <div id="avatar-stage" class="avatar-stage-wrapper">
+        <div class="avatar-dock" aria-label="Advisory Council Avatars">
+            <div class="dock-avatar-indicator" data-avatar="1">
+                <div class="dock-circle dock-blue"></div>
+                <span class="dock-label">Foundations</span>
+            </div>
+            <div class="dock-avatar-indicator" data-avatar="2">
+                <div class="dock-circle dock-green"></div>
+                <span class="dock-label">Courses</span>
+            </div>
+            <div class="dock-avatar-indicator active" data-avatar="3">
+                <div class="dock-circle dock-orange"></div>
+                <span class="dock-label">Involvement</span>
+            </div>
+            <div class="dock-avatar-indicator" data-avatar="4">
+                <div class="dock-circle dock-purple"></div>
+                <span class="dock-label">Career</span>
+            </div>
+        </div>
+
+        <div class="advisor-interaction-row">
+            <div class="avatar-container">
+                <div id="active-avatar-circle" class="avatar-circle avatar-3-orange">
+                    <span class="avatar-glyph">🏛️</span>
+                    <span class="avatar-number-badge">A3</span>
+                </div>
+                <span class="avatar-name-tag">Avatar 3 (Orange)</span>
+            </div>
+
+            <div class="thought-bubble-container">
+                <div class="thought-bubble" id="thought-bubble">
+                    <div class="thought-header">
+                        <div class="thought-speaker-info">
+                            <span class="thought-badge-dot"
+                                style="background-color:var(--avatar-orange); box-shadow:0 0 6px var(--avatar-orange);"></span>
+                            <span class="thought-persona-title" style="color:var(--avatar-orange);">Student Engagement
+                                Mentor</span>
+                        </div>
+                        <div class="thought-audio-controls">
+                            <div class="audio-waves" hidden aria-hidden="true">
+                                <span></span><span></span><span></span><span></span>
+                            </div>
+                            <button type="button" class="voice-replay-btn" id="voice-replay-btn"
+                                title="Play / Replay Voice">
+                                <span class="voice-icon" aria-hidden="true">🔊</span>
+                                <span id="voice-btn-label">Play Voice</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="thought-body">
+                        <p id="thought-bubble-text" class="thought-text">
+                            Avatar 3 is analyzing your student organization involvement, leadership roles, and
+                            hackathons against high-impact alumni outcomes.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="section-3-container" class="interactive-screen">
+        <p class="eyebrow">Section 3 of 5 &bull; Campus Involvement</p>
+        <h2 class="step-heading">Campus Involvement &amp; Co-Curricular Strategy</h2>
+        <p class="step-description">
+            Avatar 3 (Orange) benchmarks your student organization memberships, technical teams, and leadership
+            positions against top-tier alumni trajectories.
+        </p>
+
+        <!-- Involvement Selector Card -->
+        <div class="course-planner-card" style="margin-bottom: 1.5rem;">
+            <h4 class="card-subtitle">Select Active or Planned Organizations &amp; Activities</h4>
+            <p class="card-subtext">Click any organization to toggle your involvement on/off:</p>
+
+            <div id="involvement-pills-container" class="involvement-pills-wrap"
+                style="display:flex; flex-wrap:wrap; gap:0.5rem; margin:1rem 0;">
+                <button type="button" class="involvement-pill" data-name="HackUMBC">HackUMBC</button>
+                <button type="button" class="involvement-pill" data-name="ACM Student Chapter">ACM Student
+                    Chapter</button>
+                <button type="button" class="involvement-pill" data-name="Cyber Security Club">Cyber Security
+                    Club</button>
+                <button type="button" class="involvement-pill" data-name="IEEE Student Branch">IEEE Student
+                    Branch</button>
+                <button type="button" class="involvement-pill"
+                    data-name="Society of Hispanic Professional Engineers (SHPE)">SHPE</button>
+                <button type="button" class="involvement-pill"
+                    data-name="National Society of Black Engineers (NSBE)">NSBE</button>
+                <button type="button" class="involvement-pill" data-name="Women in Tech / Cyber (CWIT)">CWIT / Women in
+                    Tech</button>
+                <button type="button" class="involvement-pill" data-name="Data Science Club">Data Science Club</button>
+                <button type="button" class="involvement-pill" data-name="Game Developers Club">Game Developers
+                    Club</button>
+                <button type="button" class="involvement-pill" data-name="Retriever Robotics">Retriever
+                    Robotics</button>
+                <button type="button" class="involvement-pill"
+                    data-name="Undergraduate Research / Lab Assistant">Undergrad Research / Lab Assistant</button>
+                <button type="button" class="involvement-pill" data-name="Teaching Assistant (TA) / Peer Mentor">TA /
+                    Peer Mentor</button>
+                <button type="button" class="involvement-pill" data-name="Student Government Association (SGA)">Student
+                    Government (SGA)</button>
+                <button type="button" class="involvement-pill" data-name="Club Sports / Campus Recreation">Club Sports /
+                    Campus Rec</button>
+            </div>
+
+            <div style="margin-top: 1rem;">
+                <label class="field-label" for="custom-activity-input">Other Activities, Leadership Positions, or
+                    Personal Projects</label>
+                <input type="text" id="custom-activity-input" class="text-input"
+                    placeholder="e.g., Hackathon Lead Organizer, Open Source Contributor, Lab Lead" />
+            </div>
+
+            <div style="display:flex; align-items:center; gap:1rem; margin-top:1rem;">
+                <button type="button" class="secondary-btn" id="btn-update-involvement">
+                    🔄 Recalculate Involvement Benchmarks
+                </button>
+                <span id="spinner-section-3" class="spinner" hidden aria-hidden="true"></span>
+            </div>
+        </div>
+
+        <!-- Visual Matches Container for Section 3 -->
+        <div id="section-3-matches-container" class="matches-data-container">
+            <div class="matches-header">
+                <h3 class="matches-title">Top Alumni Involvement Profiles &amp; Leadership Impact</h3>
+                <span class="matches-subtitle">Extracurricular paths of alumni who achieved top-tier early-career
+                    roles</span>
+            </div>
+            <div id="section-3-matches-grid" class="alumni-match-grid"></div>
+
+            <div class="nav-button-row" style="display: flex; justify-content: flex-end; margin-top: 2rem;">
+                <button type="button" class="submit-btn" id="btn-next-to-section-4">
+                    Proceed to Section 4: Skills &amp; Experience &rarr;
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/section3.js', v='35') }}"></script>
+{% endblock %}

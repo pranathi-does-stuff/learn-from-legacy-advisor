@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Section 2 &bull; Course Advising &bull; Legacy Advisory{% endblock %}
+
+{% block progress_label %}Section 2 of 5 &bull; Course Advising{% endblock %}
+{% block progress_percent %}40%{% endblock %}
+
+{% block content %}
+<!-- =========================================================================
+     STAGE A: STANDALONE AVATAR INTRODUCTION SCREEN
+     Avatar with Dialogue Bubble introducing themself before asking questions
+     ========================================================================= -->
+<div id="section-intro-stage" class="section-intro-stage" data-section="2">
+    <div class="intro-avatar-wrapper">
+        <div class="intro-avatar-circle avatar-2-green">
+            <span class="intro-avatar-glyph">📚</span>
+            <span class="intro-avatar-badge">A2</span>
+        </div>
+        <h2 class="intro-persona-title">Avatar 2 (Green)</h2>
+        <span class="intro-role-subtitle">Course Advising Specialist</span>
+    </div>
+
+    <div class="intro-dialogue-bubble">
+        <div class="intro-dialogue-header">
+            <div class="intro-speaker-tag" style="color:var(--avatar-green);">
+                <span class="thought-badge-dot"
+                    style="background-color:var(--avatar-green); box-shadow:0 0 6px var(--avatar-green);"></span>
+                <span>Advisor Introduction</span>
+            </div>
+            <div class="thought-audio-controls">
+                <div class="audio-waves" hidden aria-hidden="true">
+                    <span></span><span></span><span></span><span></span>
+                </div>
+                <button type="button" class="voice-replay-btn" id="intro-replay-voice-btn" title="Replay Voice">
+                    <span class="voice-icon" aria-hidden="true">🔊</span>
+                    <span>Replay Voice</span>
+                </button>
+            </div>
+        </div>
+        <p id="advisor-intro-message" class="intro-dialogue-text">
+            Hello! I am Avatar 2, your Course Advising Specialist. I evaluate your major course sequence and highlight
+            high-yield electives taken by top-earning alumni in your target industry.
+        </p>
+    </div>
+
+    <button type="button" class="submit-btn intro-continue-btn" id="btn-start-section-questions">
+        Continue to Course Advising &rarr;
+    </button>
+</div>
+
+<!-- =========================================================================
+     STAGE B: SECTION 2 QUESTIONS & CHECKLIST
+     Appears after user clicks "Continue to Course Advising"
+     ========================================================================= -->
+<div id="section-questions-stage" class="section-questions-stage" hidden>
+    <!-- Top Avatar Dock & Thought Bubble -->
+    <div id="avatar-stage" class="avatar-stage-wrapper">
+        <div class="avatar-dock" aria-label="Advisory Council Avatars">
+            <div class="dock-avatar-indicator" data-avatar="1">
+                <div class="dock-circle dock-blue"></div>
+                <span class="dock-label">Foundations</span>
+            </div>
+            <div class="dock-avatar-indicator active" data-avatar="2">
+                <div class="dock-circle dock-green"></div>
+                <span class="dock-label">Courses</span>
+            </div>
+            <div class="dock-avatar-indicator" data-avatar="3">
+                <div class="dock-circle dock-orange"></div>
+                <span class="dock-label">Involvement</span>
+            </div>
+            <div class="dock-avatar-indicator" data-avatar="4">
+                <div class="dock-circle dock-purple"></div>
+                <span class="dock-label">Career</span>
+            </div>
+        </div>
+
+        <div class="advisor-interaction-row">
+            <div class="avatar-container">
+                <div id="active-avatar-circle" class="avatar-circle avatar-2-green">
+                    <span class="avatar-glyph">📚</span>
+                    <span class="avatar-number-badge">A2</span>
+                </div>
+                <span class="avatar-name-tag">Avatar 2 (Green)</span>
+            </div>
+
+            <div class="thought-bubble-container">
+                <div class="thought-bubble" id="thought-bubble">
+                    <div class="thought-header">
+                        <div class="thought-speaker-info">
+                            <span class="thought-badge-dot"
+                                style="background-color:var(--avatar-green); box-shadow:0 0 6px var(--avatar-green);"></span>
+                            <span class="thought-persona-title" style="color:var(--avatar-green);">Course Advising
+                                Specialist</span>
+                        </div>
+                        <div class="thought-audio-controls">
+                            <div class="audio-waves" hidden aria-hidden="true">
+                                <span></span><span></span><span></span><span></span>
+                            </div>
+                            <button type="button" class="voice-replay-btn" id="voice-replay-btn"
+                                title="Play / Replay Voice">
+                                <span class="voice-icon" aria-hidden="true">🔊</span>
+                                <span id="voice-btn-label">Play Voice</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="thought-body">
+                        <p id="thought-bubble-text" class="thought-text">
+                            Avatar 2 is analyzing your course trajectories and high-yield elective sequences against
+                            top-earning alumni.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="section-2-container" class="interactive-screen">
+        <p class="eyebrow">Section 2 of 5 &bull; Course Advising</p>
+        <h2 class="step-heading">Course Advising &amp; Elective Strategy</h2>
+        <p class="step-description">
+            Avatar 2 (Green) benchmarks your major course sequence against top-earning alumni in your target industry.
+        </p>
+
+        <!-- Visual Course Matches Container for Section 2 -->
+        <div id="section-2-matches-container" class="matches-data-container">
+            <div class="matches-header">
+                <h3 class="matches-title">Top 3 Alumni Course Trajectories &amp; Electives</h3>
+                <span class="matches-subtitle">High-yield courses taken by successful graduates in your target
+                    industry</span>
+            </div>
+            <div id="section-2-matches-grid" class="alumni-match-grid"></div>
+
+            <!-- Interactive Course Checklist -->
+            <div class="course-planner-card">
+                <h4 class="card-subtitle">Recommended Elective &amp; Core Course Checklist</h4>
+                <p class="card-subtext">Click any course to mark it as completed or planned:</p>
+                <div id="interactive-course-checklist" class="course-checklist-grid"></div>
+            </div>
+
+            <div class="nav-button-row" style="display: flex; justify-content: flex-end; margin-top: 2rem;">
+                <button type="button" class="submit-btn" id="btn-next-to-section-3">
+                    Proceed to Section 3: Campus Involvement &rarr;
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/section2.js', v='35') }}"></script>
+{% endblock %}

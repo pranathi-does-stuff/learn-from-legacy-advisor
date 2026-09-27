@@ -88,8 +88,51 @@ def add_no_cache_headers(response):
 
 @app.route("/", methods=["GET"])
 def index():
-    """Render the multi-step Career & Academic Advisory application."""
-    return render_template("index.html")
+    """Entrypoint: Section 1 (Academic Foundations)."""
+    return render_template("section1.html")
+
+
+@app.route("/section/1", methods=["GET"])
+@app.route("/section/1/intro", methods=["GET"])
+def section1():
+    """Section 1: Academic Foundations Advisor Intro & Questions."""
+    return render_template("section1.html")
+
+
+@app.route("/loading", methods=["GET"])
+def loading():
+    """Dedicated Asynchronous Loading Screen."""
+    next_sec = request.args.get("next", "2")
+    return render_template("loading.html", next_sec=next_sec)
+
+
+@app.route("/section/2", methods=["GET"])
+@app.route("/section/2/intro", methods=["GET"])
+def section2():
+    """Section 2: Course Advising Specialist Intro & Checklist."""
+    return render_template("section2.html")
+
+
+@app.route("/section/3", methods=["GET"])
+@app.route("/section/3/intro", methods=["GET"])
+def section3():
+    """Section 3: Student Engagement Mentor Intro & Co-Curriculars."""
+    return render_template("section3.html")
+
+
+@app.route("/section/4", methods=["GET"])
+@app.route("/section/4/intro", methods=["GET"])
+def section4():
+    """Section 4: Career & Industry Strategist Intro & Tech Stacks."""
+    return render_template("section4.html")
+
+
+@app.route("/section/5", methods=["GET"])
+@app.route("/section/5/intro", methods=["GET"])
+def section5():
+    """Section 5: Council Synthesis Intro & Comprehensive Final Report."""
+    return render_template("section5.html")
+
 
 
 @app.route("/api/academic-options", methods=["GET"])
@@ -882,33 +925,18 @@ Guidelines:
 # ELEVENLABS TEXT-TO-SPEECH (TTS) INTEGRATION
 # ==============================================================================
 
-def generate_elevenlabs_tts(text: str, section_name: str = "basic_info") -> str:
+def generate_elevenlabs_tts(text: str) -> str:
     """
     Pass the generated Gemini response string into the ElevenLabs SDK
     to generate the TTS audio stream, and return it as a Base64 encoded audio string.
-    Maps distinct persona voices per advisory council avatar.
     """
     if not elevenlabs_client or not text:
         return ""
 
-    # Distinct voice IDs per Council Avatar:
-    # Avatar 1 (Blue / Sec 1 & 5): George (JBFqnCBsd6RMkjVDRZzb)
-    # Avatar 2 (Green / Sec 2): Sarah (EXAVITQu4vr4xnSDxMaL)
-    # Avatar 3 (Yellow / Sec 3): Liam (TX3LPaxmHKxFdv7VOQHJ)
-    # Avatar 4 (Purple / Sec 4): Daniel (onwK4e9ZLuTAKqWW03F9)
-    voice_map = {
-        "basic_info": "JBFqnCBsd6RMkjVDRZzb",
-        "course_advising": "EXAVITQu4vr4xnSDxMaL",
-        "campus_involvement": "TX3LPaxmHKxFdv7VOQHJ",
-        "professional_involvement": "onwK4e9ZLuTAKqWW03F9",
-        "final_report": "JBFqnCBsd6RMkjVDRZzb",
-    }
-    clean_sec = section_name.lower().replace(" ", "_").replace("-", "_")
-    selected_voice = voice_map.get(clean_sec, "JBFqnCBsd6RMkjVDRZzb")
-
     try:
+        # Default authoritative advisor voice ID (George: 'JBFqnCBsd6RMkjVDRZzb' or customizable)
         audio_stream = elevenlabs_client.text_to_speech.convert(
-            voice_id=selected_voice,
+            voice_id="JBFqnCBsd6RMkjVDRZzb",
             text=text,
             model_id="eleven_turbo_v2_5",
             output_format="mp3_44100_128",
@@ -922,7 +950,7 @@ def generate_elevenlabs_tts(text: str, section_name: str = "basic_info") -> str:
             audio_bytes = b"".join(audio_chunks)
             return base64.b64encode(audio_bytes).decode("utf-8")
     except Exception as exc:
-        print(f"ElevenLabs TTS generation warning ({selected_voice}): {exc}")
+        print(f"ElevenLabs TTS generation warning: {exc}")
 
     return ""
 
@@ -974,7 +1002,7 @@ def generate_report():
     gemini_text = generate_gemini_advice(section_name, user_data, matches)
 
     # Step C: ElevenLabs TTS Audio
-    base64_audio = generate_elevenlabs_tts(gemini_text, section_name)
+    base64_audio = generate_elevenlabs_tts(gemini_text)
 
     return jsonify({
         "section_name": section_name,
@@ -1107,4 +1135,13 @@ def submit_quiz():
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5001))
     print(f"Starting Legacy Career & Academic Advisory server at http://127.0.0.1:{port}")
-    app.run(host="127.0.0.1", port=port, debug=True)
+    try:
+        app.run(host="127.0.0.1", port=port, debug=True)
+    except OSError as e:
+        if "Address already in use" in str(e) or e.errno == 48:
+            fallback_port = 5002
+            print(f"Port {port} busy, starting on fallback port http://127.0.0.1:{fallback_port}")
+            app.run(host="127.0.0.1", port=fallback_port, debug=True)
+        else:
+            raise e
+

@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}Section 1 &bull; Academic Foundations &bull; Legacy Advisory{% endblock %}
+
+{% block progress_label %}Section 1 of 5 &bull; Academic Foundations{% endblock %}
+{% block progress_percent %}20%{% endblock %}
+
+{% block content %}
+<!-- =========================================================================
+     STAGE A: STANDALONE AVATAR INTRODUCTION SCREEN
+     Avatar with Dialogue Bubble introducing themself before asking questions
+     ========================================================================= -->
+<div id="section-intro-stage" class="section-intro-stage" data-section="1">
+    <div class="intro-avatar-wrapper">
+        <div class="intro-avatar-circle avatar-1-blue">
+            <span class="intro-avatar-glyph">🎓</span>
+            <span class="intro-avatar-badge">A1</span>
+        </div>
+        <h2 class="intro-persona-title">Avatar 1 (Blue)</h2>
+        <span class="intro-role-subtitle">Academic Foundations Advisor</span>
+    </div>
+
+    <div class="intro-dialogue-bubble">
+        <div class="intro-dialogue-header">
+            <div class="intro-speaker-tag" style="color:var(--avatar-blue);">
+                <span class="thought-badge-dot"
+                    style="background-color:var(--avatar-blue); box-shadow:0 0 6px var(--avatar-blue);"></span>
+                <span>Advisor Introduction</span>
+            </div>
+            <div class="thought-audio-controls">
+                <div class="audio-waves" hidden aria-hidden="true">
+                    <span></span><span></span><span></span><span></span>
+                </div>
+                <button type="button" class="voice-replay-btn" id="intro-replay-voice-btn" title="Replay Voice">
+                    <span class="voice-icon" aria-hidden="true">🔊</span>
+                    <span>Replay Voice</span>
+                </button>
+            </div>
+        </div>
+        <p id="advisor-intro-message" class="intro-dialogue-text">
+            Welcome to the Legacy Academic &amp; Career Advisory. I am Avatar 1, your Foundations Advisor. I will
+            benchmark your major, academic standing, and salary aspirations against historical alumni records in Tiger
+            Data to build your baseline profile.
+        </p>
+    </div>
+
+    <button type="button" class="submit-btn intro-continue-btn" id="btn-start-section-questions">
+        Begin Section 1: Questions &rarr;
+    </button>
+</div>
+
+<!-- =========================================================================
+     STAGE B: SECTION 1 QUESTIONS & BENCHMARKS
+     Appears after user clicks "Begin Section 1: Questions"
+     ========================================================================= -->
+<div id="section-questions-stage" class="section-questions-stage" hidden>
+    <!-- Top Avatar Dock & Thought Bubble -->
+    <div id="avatar-stage" class="avatar-stage-wrapper">
+        <div class="avatar-dock" aria-label="Advisory Council Avatars">
+            <div class="dock-avatar-indicator active" data-avatar="1">
+                <div class="dock-circle dock-blue"></div>
+                <span class="dock-label">Foundations</span>
+            </div>
+            <div class="dock-avatar-indicator" data-avatar="2">
+                <div class="dock-circle dock-green"></div>
+                <span class="dock-label">Courses</span>
+            </div>
+            <div class="dock-avatar-indicator" data-avatar="3">
+                <div class="dock-circle dock-orange"></div>
+                <span class="dock-label">Involvement</span>
+            </div>
+            <div class="dock-avatar-indicator" data-avatar="4">
+                <div class="dock-circle dock-purple"></div>
+                <span class="dock-label">Career</span>
+            </div>
+        </div>
+
+        <div class="advisor-interaction-row">
+            <div class="avatar-container">
+                <div id="active-avatar-circle" class="avatar-circle avatar-1-blue">
+                    <span class="avatar-glyph">🎓</span>
+                    <span class="avatar-number-badge">A1</span>
+                </div>
+                <span class="avatar-name-tag">Avatar 1 (Blue)</span>
+            </div>
+
+            <div class="thought-bubble-container">
+                <div class="thought-bubble" id="thought-bubble">
+                    <div class="thought-header">
+                        <div class="thought-speaker-info">
+                            <span class="thought-badge-dot"
+                                style="background-color:var(--avatar-blue); box-shadow:0 0 6px var(--avatar-blue);"></span>
+                            <span class="thought-persona-title" style="color:var(--avatar-blue);">Academic Foundations
+                                Advisor</span>
+                        </div>
+                        <div class="thought-audio-controls">
+                            <div class="audio-waves" hidden aria-hidden="true">
+                                <span></span><span></span><span></span><span></span>
+                            </div>
+                            <button type="button" class="voice-replay-btn" id="voice-replay-btn"
+                                title="Play / Replay Voice">
+                                <span class="voice-icon" aria-hidden="true">🔊</span>
+                                <span id="voice-btn-label">Play Voice</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="thought-body">
+                        <p id="thought-bubble-text" class="thought-text">
+                            Select your college standing and academic background so we can ground your benchmark against
+                            Tiger Data.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="section-1-container" class="interactive-screen">
+        <!-- SUB-STEP 1: College Standing -->
+        <div id="substep-standing" class="substep-block">
+            <p class="eyebrow">Section 1 of 5 &bull; Academic Foundations</p>
+            <h2 class="step-heading">What is your current college standing?</h2>
+            <p class="step-description">Avatar 1 (Blue) tailors all advice and timeline benchmarks to your exact
+                academic progression stage.</p>
+
+            <div class="pill-group" role="radiogroup" aria-label="College Standing">
+                <button type="button" class="pill-option active" data-name="classYear"
+                    data-value="Freshman">Freshman</button>
+                <button type="button" class="pill-option" data-name="classYear"
+                    data-value="Sophomore">Sophomore</button>
+                <button type="button" class="pill-option" data-name="classYear" data-value="Junior">Junior</button>
+                <button type="button" class="pill-option" data-name="classYear" data-value="Senior">Senior</button>
+                <button type="button" class="pill-option" data-name="classYear" data-value="More than 4 years">5th Year
+                    / Alum</button>
+            </div>
+
+            <div class="nav-button-row" style="margin-top: 1.5rem;">
+                <button type="button" class="submit-btn" id="btn-to-substep-major">Continue to Major Selection
+                    &rarr;</button>
+            </div>
+        </div>
+
+        <!-- SUB-STEP 2: Major, Track & Minor -->
+        <div id="substep-major" class="substep-block" hidden>
+            <p class="eyebrow">Section 1 of 5 &bull; Academic Foundations</p>
+            <h2 class="step-heading">Select your Major, Track, and Minor</h2>
+            <p class="step-description">Dynamic options synchronized directly with the Tiger Data database.</p>
+
+            <div class="form-grid">
+                <div class="form-field">
+                    <label class="field-label" for="user-name-input">Full Name (Optional)</label>
+                    <input type="text" id="user-name-input" class="text-input" placeholder="e.g. Alex Rivera" />
+                </div>
+
+                <div class="form-field">
+                    <label class="field-label" for="major-select">Primary Major</label>
+                    <select id="major-select" class="dropdown-select">
+                        <option value="">Loading majors from database...</option>
+                    </select>
+                </div>
+
+                <div class="form-field">
+                    <label class="field-label" for="track-select">Specialized Concentration / Major Track</label>
+                    <select id="track-select" class="dropdown-select">
+                        <option value="General">General Track</option>
+                    </select>
+                </div>
+
+                <div class="form-field">
+                    <label class="field-label" for="minor-select">Minor or Secondary Field</label>
+                    <select id="minor-select" class="dropdown-select">
+                        <option value="None">None</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="nav-button-row" style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                <button type="button" class="secondary-btn" id="btn-back-to-standing">&larr; Back</button>
+                <button type="button" class="submit-btn" id="btn-to-substep-gpa">Continue to GPA &amp; Credits
+                    &rarr;</button>
+            </div>
+        </div>
+
+        <!-- SUB-STEP 3: GPA & Credits -->
+        <div id="substep-gpa" class="substep-block" hidden>
+            <p class="eyebrow">Section 1 of 5 &bull; Academic Foundations</p>
+            <h2 class="step-heading">Cumulative GPA &amp; Completed Credits</h2>
+            <p class="step-description">Avatar 1 computes your trajectory against historical alumni graduating
+                distributions.</p>
+
+            <div class="form-grid">
+                <div class="form-field">
+                    <label class="field-label" for="gpa-input">Current Cumulative GPA (0.00 &ndash; 4.00)</label>
+                    <input type="number" id="gpa-input" class="text-input" step="0.01" min="0.0" max="4.0"
+                        placeholder="e.g. 3.65" value="3.65" />
+                </div>
+
+                <div class="form-field">
+                    <label class="field-label" for="credits-input">Total Earned Credits</label>
+                    <input type="number" id="credits-input" class="text-input" min="0" max="180" placeholder="e.g. 45"
+                        value="45" />
+                </div>
+            </div>
+
+            <div class="nav-button-row" style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                <button type="button" class="secondary-btn" id="btn-back-to-major">&larr; Back</button>
+                <button type="button" class="submit-btn" id="btn-to-substep-aspirations">Continue to Career Aspirations
+                    &rarr;</button>
+            </div>
+        </div>
+
+        <!-- SUB-STEP 4: Career Goals & Baseline Matches -->
+        <div id="substep-aspirations" class="substep-block" hidden>
+            <p class="eyebrow">Section 1 of 5 &bull; Academic Foundations</p>
+            <h2 class="step-heading">Career Goals &amp; Industry Alignment</h2>
+            <p class="step-description">Define your industry targets and target starting compensation.</p>
+
+            <div class="form-grid">
+                <div class="form-field">
+                    <label class="field-label" for="target-industry-input">Target Industry or Dream Employers</label>
+                    <input type="text" id="target-industry-input" class="text-input"
+                        placeholder="e.g., Software Products, Amazon, Google, Defense, Cloud"
+                        value="Software Products" />
+                </div>
+
+                <div class="form-field">
+                    <label class="field-label" for="target-salary-input">Target Starting Annual Salary ($ USD)</label>
+                    <input type="text" id="target-salary-input" class="text-input" placeholder="e.g., $105,000"
+                        value="$105,000" />
+                </div>
+
+                <div class="form-field full-width">
+                    <label class="field-label" for="career-goals-input">Primary Career Aspirations or Target Job
+                        Title</label>
+                    <input type="text" id="career-goals-input" class="text-input"
+                        placeholder="e.g., Full-Stack Software Engineer, Cloud Architect, ML Engineer"
+                        value="Software Engineer" />
+                </div>
+            </div>
+
+            <!-- Visual Alumni Matches Container for Section 1 -->
+            <div id="section-1-matches-container" class="matches-data-container" style="margin-top: 1.5rem;">
+                <div class="matches-header">
+                    <h3 class="matches-title">Top 3 Matched Historical Alumni Profiles</h3>
+                    <span class="matches-subtitle">Benchmarked in real-time from Tiger Data</span>
+                </div>
+                <div id="section-1-matches-grid" class="alumni-match-grid"></div>
+            </div>
+
+            <div class="nav-button-row" style="margin-top: 2rem; display: flex; justify-content: space-between;">
+                <button type="button" class="secondary-btn" id="btn-back-to-gpa">&larr; Back</button>
+                <button type="button" class="submit-btn" id="btn-next-to-section-2">
+                    Proceed to Section 2: Course Advising &rarr;
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/section1.js', v='35') }}"></script>
+{% endblock %}

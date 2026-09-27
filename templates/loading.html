@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Analyzing Profile &bull; Legacy Advisory{% endblock %}
+
+{% block progress_label %}Analyzing Pathways &bull; Synchronizing Advisory Council...{% endblock %}
+{% block progress_percent %}50%{% endblock %}
+
+{% block content %}
+<div id="loading-screen" class="loading-screen" data-next-sec="{{ next_sec }}">
+    <div class="loading-content">
+        <!-- Multi-layered glowing pulsar -->
+        <div class="loading-animation-wrapper" aria-hidden="true">
+            <div class="pulse-ring ring-1"></div>
+            <div class="pulse-ring ring-2"></div>
+            <div class="pulse-ring ring-3"></div>
+            <div class="spinner-dual-ring"></div>
+            <div class="loading-center-avatar">
+                <span class="loading-glyph">🏛️</span>
+            </div>
+        </div>
+
+        <h3 id="loading-title" class="loading-title">Analyzing Your Profile</h3>
+        <p id="loading-status" class="loading-status">Querying Tiger Data &bull; Benchmarking historical alumni
+            pathways...</p>
+
+        <div class="loading-bar-wrapper">
+            <div class="loading-bar-indeterminate"></div>
+        </div>
+
+        <div class="loading-council-tags">
+            <span class="council-tag tag-blue">Foundations</span>
+            <span class="council-tag tag-green">Courses</span>
+            <span class="council-tag tag-orange">Involvement</span>
+            <span class="council-tag tag-purple">Industry</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/loading.js', v='20') }}"></script>
+{% endblock %}
