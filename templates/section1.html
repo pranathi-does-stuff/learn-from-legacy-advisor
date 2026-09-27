@@ -140,11 +140,11 @@
             </div>
         </div>
 
-        <!-- SUB-STEP 2: Major, Track & Minor -->
+        <!-- SUB-STEP 2: Major, Track, Minor & Career Alignment -->
         <div id="substep-major" class="substep-block" hidden>
             <p class="eyebrow">Section 1 of 5 &bull; Academic Foundations</p>
-            <h2 class="step-heading">Select your Major, Track, and Minor</h2>
-            <p class="step-description">Dynamic options synchronized directly with the Tiger Data database.</p>
+            <h2 class="step-heading">Select your Major, Track, Minor, and Career Goals</h2>
+            <p class="step-description">Choose your academic profile and align it with your target industry, salary, and role goals.</p>
 
             <div class="form-grid">
                 <div class="form-field">
@@ -155,22 +155,44 @@
                 <div class="form-field">
                     <label class="field-label" for="major-select">Primary Major</label>
                     <select id="major-select" class="dropdown-select">
-                        <option value="">Loading majors from database...</option>
+                        <option value="" selected disabled>Choose one</option>
                     </select>
                 </div>
 
                 <div class="form-field">
                     <label class="field-label" for="track-select">Specialized Concentration / Major Track</label>
                     <select id="track-select" class="dropdown-select">
-                        <option value="General">General Track</option>
+                        <option value="" selected disabled>Choose one</option>
                     </select>
                 </div>
 
                 <div class="form-field">
                     <label class="field-label" for="minor-select">Minor or Secondary Field</label>
                     <select id="minor-select" class="dropdown-select">
+                        <option value="" selected>Choose one</option>
                         <option value="None">None</option>
                     </select>
+                </div>
+
+                <div class="form-field">
+                    <label class="field-label" for="target-industry-input">Target Industry or Dream Employers</label>
+                    <input type="text" id="target-industry-input" class="text-input"
+                        placeholder="e.g., Software Products, Amazon, Google, Defense, Cloud"
+                        value="Software Products" />
+                </div>
+
+                <div class="form-field">
+                    <label class="field-label" for="target-salary-input">Target Starting Annual Salary ($ USD)</label>
+                    <input type="text" id="target-salary-input" class="text-input" placeholder="e.g., $105,000"
+                        value="" />
+                </div>
+
+                <div class="form-field full-width">
+                    <label class="field-label" for="career-goals-input">Primary Career Aspirations or Target Job
+                        Title</label>
+                    <input type="text" id="career-goals-input" class="text-input"
+                        placeholder="e.g., Full-Stack Software Engineer, Cloud Architect, ML Engineer"
+                        value="" />
                 </div>
             </div>
 
@@ -209,42 +231,15 @@
             </div>
         </div>
 
-        <!-- SUB-STEP 4: Career Goals & Baseline Matches -->
+        <!-- SUB-STEP 4: Thank You -->
         <div id="substep-aspirations" class="substep-block" hidden>
             <p class="eyebrow">Section 1 of 5 &bull; Academic Foundations</p>
-            <h2 class="step-heading">Career Goals &amp; Industry Alignment</h2>
-            <p class="step-description">Define your industry targets and target starting compensation.</p>
+            <h2 class="step-heading">Thank you for supplying your information</h2>
+            <p class="step-description">Your academic profile, goals, and background are now recorded. Our avatar team is excited to help you explore your options and build a personalized plan.</p>
 
-            <div class="form-grid">
-                <div class="form-field">
-                    <label class="field-label" for="target-industry-input">Target Industry or Dream Employers</label>
-                    <input type="text" id="target-industry-input" class="text-input"
-                        placeholder="e.g., Software Products, Amazon, Google, Defense, Cloud"
-                        value="Software Products" />
-                </div>
-
-                <div class="form-field">
-                    <label class="field-label" for="target-salary-input">Target Starting Annual Salary ($ USD)</label>
-                    <input type="text" id="target-salary-input" class="text-input" placeholder="e.g., $105,000"
-                        value="$105,000" />
-                </div>
-
-                <div class="form-field full-width">
-                    <label class="field-label" for="career-goals-input">Primary Career Aspirations or Target Job
-                        Title</label>
-                    <input type="text" id="career-goals-input" class="text-input"
-                        placeholder="e.g., Full-Stack Software Engineer, Cloud Architect, ML Engineer"
-                        value="Software Engineer" />
-                </div>
-            </div>
-
-            <!-- Visual Alumni Matches Container for Section 1 -->
-            <div id="section-1-matches-container" class="matches-data-container" style="margin-top: 1.5rem;">
-                <div class="matches-header">
-                    <h3 class="matches-title">Top 3 Matched Historical Alumni Profiles</h3>
-                    <span class="matches-subtitle">Benchmarked in real-time from Tiger Data</span>
-                </div>
-                <div id="section-1-matches-grid" class="alumni-match-grid"></div>
+            <div class="course-planner-card" style="margin-top: 1.5rem;">
+                <h3 class="card-subtitle">What happens next?</h3>
+                <p class="card-subtext">Once your full pathway is complete, the final report will synthesize your profile and highlight the strongest match and next steps.</p>
             </div>
 
             <div class="nav-button-row" style="margin-top: 2rem; display: flex; justify-content: space-between;">

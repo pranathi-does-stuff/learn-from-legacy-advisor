@@ -59,10 +59,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const renderMatches = (data) => {
         if (!data) return;
 
-        if (data.text) {
-            QuizApp.avatarSayTextOnly(data.text, 3);
-        }
-
         const grid = document.getElementById("section-3-matches-grid");
         const matches = data.matches || [];
 
@@ -172,7 +168,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                     const data = await res.json();
                     QuizApp.saveSectionData(3, data);
                     renderMatches(data);
-                    QuizApp.playReportAudio(data.text, data.audio, 3);
                 }
             } catch (err) {
                 console.error("Update involvement error:", err);

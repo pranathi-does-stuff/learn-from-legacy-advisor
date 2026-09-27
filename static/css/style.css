@@ -1128,7 +1128,7 @@ body {
 }
 
 .text-input,
-.text-area {
+.text-area, select {
     width: 100%;
     background-color: var(--bg-input);
     border: 1px solid var(--border-subtle);
@@ -1456,4 +1456,28 @@ body {
     font-size: 0.92rem;
     letter-spacing: 0.06em;
     box-shadow: 0 8px 24px rgba(197, 168, 128, 0.3);
+}
+
+.pill-option {
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 0.78rem 0.95rem;
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+}
+
+.pill-option:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-1px);
+}
+
+.pill-option.active {
+    background-color: var(--accent-gold-subtle);
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 0 2px rgba(197, 168, 128, 0.2);
+    color: var(--text-primary);
 }

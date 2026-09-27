@@ -64,11 +64,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Populate initial inputs from state
     if (nameInput) nameInput.value = state.user.name || "";
-    if (gpaInput) gpaInput.value = state.user.gpa || "3.65";
-    if (creditsInput) creditsInput.value = state.user.creditsCompleted || "45";
-    if (industryInput) industryInput.value = state.user.targetCompanyIndustry || "Software Products";
-    if (salaryInput) salaryInput.value = state.user.targetSalary || "$105,000";
-    if (goalsInput) goalsInput.value = state.user.careerGoals || "Software Engineer";
+    if (gpaInput) gpaInput.value = state.user.gpa || "";
+    if (creditsInput) creditsInput.value = state.user.creditsCompleted || "";
+    if (industryInput) industryInput.value = state.user.targetCompanyIndustry || "";
+    if (salaryInput) salaryInput.value = state.user.targetSalary || "";
+    if (goalsInput) goalsInput.value = state.user.careerGoals || "";
 
     // Highlight standing pill
     document.querySelectorAll('#substep-standing .pill-option[data-name="classYear"]').forEach((pill) => {
@@ -87,51 +87,83 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (res.ok) {
             const data = await res.json();
             tracksByMajor = data.tracks_by_major || {};
+            const allTracks = (data.tracks || []).filter(Boolean);
+            const majorByTrack = Object.entries(tracksByMajor).reduce((acc, [major, tracks]) => {
+                tracks.forEach((track) => {
+                    if (track && !acc[track]) {
+                        acc[track] = major;
+                    }
+                });
+                return acc;
+            }, {});
 
             if (majorSelect) {
-                majorSelect.innerHTML = "";
-                (data.majors || ["Computer Science", "Data Science", "Information Systems"]).forEach((m) => {
+                majorSelect.innerHTML = '<option value="" selected disabled>Choose one</option>';
+                (data.majors || []).forEach((m) => {
                     const opt = document.createElement("option");
                     opt.value = m;
                     opt.textContent = m;
-                    if (m === state.user.major) opt.selected = true;
                     majorSelect.appendChild(opt);
                 });
             }
 
-            const updateTracks = (selMajor) => {
+            const updateTracks = (selMajor = "") => {
                 if (!trackSelect) return;
-                trackSelect.innerHTML = '<option value="General">General Track</option>';
-                const tList = tracksByMajor[selMajor] || [];
-                tList.forEach((t) => {
-                    if (t && t !== "General") {
-                        const opt = document.createElement("option");
-                        opt.value = t;
-                        opt.textContent = t;
-                        if (t === state.user.majorTrack) opt.selected = true;
-                        trackSelect.appendChild(opt);
+                trackSelect.innerHTML = '<option value="" selected>Choose one</option>';
+
+                const tList = selMajor ? (tracksByMajor[selMajor] || []) : allTracks;
+                const options = tList.length ? tList : allTracks;
+
+                options.forEach((t) => {
+                    if (!t || t === "General" && selMajor) {
+                        return;
                     }
+                    const opt = document.createElement("option");
+                    opt.value = t;
+                    opt.textContent = t;
+                    if (state.user.majorTrack === t) opt.selected = true;
+                    trackSelect.appendChild(opt);
                 });
+
+                if (!state.user.majorTrack || !options.includes(state.user.majorTrack)) {
+                    trackSelect.value = "";
+                }
             };
 
-            updateTracks(majorSelect.value || state.user.major);
+            updateTracks("");
 
             if (minorSelect) {
-                minorSelect.innerHTML = '<option value="None">None</option>';
-                (data.minors || ["Cybersecurity", "Data Science", "Economics", "Mathematics"]).forEach((min) => {
+                minorSelect.innerHTML = '<option value="" selected>Choose one</option><option value="None">None</option>';
+                (data.minors || []).forEach((min) => {
                     const opt = document.createElement("option");
                     opt.value = min;
                     opt.textContent = min;
-                    if (min === state.user.minor) opt.selected = true;
                     minorSelect.appendChild(opt);
                 });
             }
 
             majorSelect.addEventListener("change", (e) => {
                 const sel = e.target.value;
-                QuizApp.updateUserData({ major: sel, majorTrack: "General" });
+                QuizApp.updateUserData({ major: sel, majorTrack: "" });
                 updateTracks(sel);
-                QuizApp.avatarSayTextOnly(QuizApp.HARDCODED_REACTIONS.major(sel), 1);
+                if (sel) {
+                    QuizApp.avatarSayTextOnly(QuizApp.HARDCODED_REACTIONS.major(sel), 1);
+                }
+            });
+
+            trackSelect.addEventListener("change", (e) => {
+                const selectedTrack = e.target.value;
+                if (!selectedTrack) {
+                    return;
+                }
+
+                const matchedMajor = majorByTrack[selectedTrack] || "";
+                if (matchedMajor) {
+                    majorSelect.value = matchedMajor;
+                    QuizApp.updateUserData({ major: matchedMajor, majorTrack: selectedTrack });
+                } else {
+                    QuizApp.updateUserData({ majorTrack: selectedTrack });
+                }
             });
         }
     } catch (e) {
@@ -173,8 +205,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         QuizApp.updateUserData({
             name: nameInput?.value || "",
             major: majorSelect?.value || "Computer Science",
-            majorTrack: trackSelect?.value || "General",
-            minor: minorSelect?.value || "None",
+            majorTrack: trackSelect?.value || "",
+            minor: minorSelect?.value || "",
+            targetCompanyIndustry: industryInput?.value || "Software Products",
+            targetSalary: salaryInput?.value || "$105,000",
+            careerGoals: goalsInput?.value || "Software Engineer",
         });
         showSubstep(subGpa);
         QuizApp.avatarSayTextOnly("Let's record your cumulative GPA and earned credit total.", 1);
@@ -243,7 +278,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const data = await res.json();
                 QuizApp.saveSectionData(1, data);
                 if (data.matches) renderMatches(data.matches);
-                if (data.text) QuizApp.avatarSayTextOnly(data.text, 1);
             }
         } catch (e) {
             console.warn("Could not generate baseline report:", e);

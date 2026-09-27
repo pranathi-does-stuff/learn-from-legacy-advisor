@@ -411,101 +411,90 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const HARDCODED_REACTIONS = {
         classYear: {
-            Freshman: "Welcome! As a Freshman, you're building your foundation—focusing on core programming and calculus early unlocks high-paying junior internships.",
-            Sophomore: "Sophomore year is the pivotal gateway stage—time to lock down Data Structures and Systems prerequisites for recruitment.",
-            Junior: "Junior year is prime time! You should be targeting upper-level electives in AI, Cloud, or Security and securing your major summer internship.",
-            Senior: "Senior year is capstone and career launch! Let's optimize your remaining electives and convert your experience into top-tier offers.",
-            "More than 4 years": "Extended academic progression allows you to tailor a high-impact trajectory and maximize hands-on co-ops and industry experience.",
+            Freshman: "Freshman selected.",
+            Sophomore: "Sophomore selected.",
+            Junior: "Junior selected.",
+            Senior: "Senior selected.",
+            "More than 4 years": "5th year or alum status selected.",
         },
         major: {
-            "Computer Science": "Computer Science has our largest alumni dataset—graduates excel in Software Engineering, Cloud Architecture, and Defense roles.",
-            "Data Science": "Data Science is in high demand! Our alumni frequently land quantitative developer and machine learning engineering positions.",
-            "Information Systems": "Information Systems graduates excel in Cloud Consulting, Enterprise Architecture, and Systems Integration.",
-            "Cybersecurity": "Cybersecurity is a massive growth sector with prominent alumni placement across federal defense and security contractors.",
-            "Computer Engineering": "Computer Engineering offers a powerful blend of embedded hardware and low-level software systems engineering.",
+            "Computer Science": "Computer Science selected.",
+            "Data Science": "Data Science selected.",
+            "Information Systems": "Information Systems selected.",
+            "Cybersecurity": "Cybersecurity selected.",
+            "Computer Engineering": "Computer Engineering selected.",
         },
         track: (trackName) => {
             if (!trackName || trackName === "Not Applicable") {
-                return "General Track selected—gives you maximum flexibility to tailor electives across multiple software disciplines.";
+                return "General track selected.";
             }
-            return `${trackName} concentration selected—this specialized track aligns directly with high-demand industry engineering roles.`;
+            return `${trackName} selected.`;
         },
         minor: (minorName) => {
             if (!minorName || minorName === "Not Applicable") {
-                return "No minor selected—focusing 100% of your elective bandwidth on your primary major requirements.";
+                return "No minor selected.";
             }
-            return `Adding a ${minorName} minor strengthens your interdisciplinary profile and creates a distinctive resume differentiator.`;
+            return `${minorName} minor selected.`;
         },
         name: (val) => {
-            if (!val) return "Welcome! Let's build your personalized academic and career trajectory.";
-            return `Nice to meet you, ${val}! Let's customize your degree roadmap and benchmark your career path against Tiger Data.`;
+            if (!val) return "Name field cleared.";
+            return `${val} saved.`;
         },
         gpa: (val) => {
-            const num = parseFloat(val) || 3.5;
-            if (num >= 3.8) return `A ${num.toFixed(2)} GPA places you in the top tier! That gives you strong leverage for selective tech fellowships and research roles.`;
-            if (num >= 3.4) return `A ${num.toFixed(2)} GPA is very strong! You meet the GPA benchmark for over 90% of top technology and defense employers.`;
-            return `A ${num.toFixed(2)} GPA gives you a solid base. We will emphasize your technical project portfolio and practical skill tags.`;
+            const num = parseFloat(val) || 0;
+            if (!val) return "GPA cleared.";
+            return `GPA entered: ${num.toFixed(2)}.`;
         },
         credits: (val) => {
             const cr = parseInt(val, 10) || 0;
-            if (cr < 30) return `${cr} credits completed: You're in your foundation phase (Year 1 pace). Focus on prerequisite gateway sequences.`;
-            if (cr < 60) return `${cr} credits completed: Sophomore pacing. Ideal time to declare specialized tracks and prepare for hackathons.`;
-            if (cr < 90) return `${cr} credits completed: Junior pacing! You are in the prime window for high-yield electives and recruiting.`;
-            return `${cr} credits completed: Senior standing! You are nearing graduation—focus on capstone completion and full-time placement.`;
+            if (!val) return "Credits cleared.";
+            return `${cr} credits recorded.`;
         },
         targetCompanies: (val) => {
-            if (!val) return "Tell us which industry or target employers you are aiming for.";
-            return `Targeting "${val}": Our alumni network has extensive placement and historical hiring data across this sector!`;
+            if (!val) return "Industry field cleared.";
+            return `Target industry set to ${val}.`;
         },
         salary: (val) => {
-            if (!val) return "Enter your compensation goal so we can benchmark against alumni starting offers.";
-            return `Target salary of ${val}: We will compare your course and internship selections against alumni who hit this salary tier.`;
+            if (!val) return "Salary field cleared.";
+            return `Target salary set to ${val}.`;
         },
         location: (val) => {
-            if (!val) return "Let us know your preferred work regions (e.g., DC/Baltimore Metro, West Coast, Remote).";
-            return `Preferred location "${val}": We'll benchmark regional cost-of-living and top employer hubs in this market.`;
+            if (!val) return "Location field cleared.";
+            return `Location set to ${val}.`;
         },
         gradYear: (val) => {
-            if (!val) return "Enter your expected graduation year.";
-            return `Target graduation in ${val}: We will calibrate your remaining semesters into a semester-by-semester milestone plan.`;
+            if (!val) return "Graduation year cleared.";
+            return `Graduation year set to ${val}.`;
         },
         careerGoals: (val) => {
-            if (!val) return "Summarize your long-term career aspirations.";
-            return `Career vision noted: We will match your trajectory with alumni who successfully achieved similar goals.`;
+            if (!val) return "Career goal cleared.";
+            return `Career goal recorded: ${val}.`;
         },
         courseCheck: (courseId, courseTitle, isChecked) => {
             if (isChecked) {
-                return `Added ${courseId} (${courseTitle}) to your plan! Alumni who completed this course gained critical technical interview mastery.`;
+                return `${courseId} marked as planned.`;
             }
-            return `Removed ${courseId} from your active plan.`;
+            return `${courseId} removed from your plan.`;
         },
         activity: (name) => {
-            const map = {
-                HackUMBC: "HackUMBC is fantastic! Alumni who participated reported building high-impact portfolio projects that impressed tech recruiters.",
-                "ACM Student Chapter": "ACM membership builds a strong peer network and provides hands-on workshops in systems and web architecture.",
-                "Data Science Collective": "Data Science Collective connects you with analytics challenges and machine learning workshops.",
-                "Capture The Flag Team": "CTF competition directly proves hands-on offensive/defensive security skills to defense & tech recruiters.",
-                "Undergraduate Research Assistant": "Undergraduate research establishes deep domain mastery and opens doors to top R&D engineering roles.",
-                "Computing Peer Mentor": "Peer mentoring demonstrates leadership and communication—qualities highly rated in hiring loops.",
-                "Game Developers Club": "Game Dev is a distinctive 12% outlier activity! Recruiters value the full-cycle project design experience.",
-                "Entrepreneurship Club": "Entrepreneurship involvement shows initiative, product sense, and cross-functional leadership.",
-            };
-            return map[name] || `Involvement in ${name} adds distinctive leadership and teamwork stories to your career portfolio.`;
+            if (!name) return "Activity cleared.";
+            return `${name} selected.`;
         },
         customActivity: (val) => {
-            if (!val) return "Enter any unusual hobbies or unique creative passions you pursue.";
-            return `"${val}" added! Niche activities make for memorable personal narratives during behavioral recruiter screens.`;
+            if (!val) return "Custom activity cleared.";
+            return `${val} saved to your activities.`;
         },
         skill: (name) => {
-            return `Skill "${name}" added! This is one of the top-ranked skill tags in alumni job descriptions.`;
+            if (!name) return "Skill cleared.";
+            return `${name} added to your skills.`;
         },
         skillsInput: (val) => {
-            if (!val) return "List your primary programming languages, frameworks, tools, and technical competencies.";
-            return `Technical stack updated: These skills will be benchmarked against alumni who landed in your target industry.`;
+            if (!val) return "Skills field cleared.";
+            return `Skills updated.`;
         },
         internshipsInput: (val) => {
-            if (!val) return "Describe any internships, research roles, co-ops, or campus jobs you have held or are targeting.";
-            return `Experience record updated: Internships are the #1 predictor of top-tier starting compensation in our dataset.`;
+            if (!val) return "Experience field cleared.";
+            return `Experience updated.`;
         },
     };
 

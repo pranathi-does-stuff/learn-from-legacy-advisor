@@ -64,10 +64,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const renderMatches = (data) => {
         if (!data) return;
 
-        if (data.text) {
-            QuizApp.avatarSayTextOnly(data.text, 4);
-        }
-
         const grid = document.getElementById("section-4-matches-grid");
         const matches = data.matches || [];
 
@@ -191,7 +187,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                     const data = await res.json();
                     QuizApp.saveSectionData(4, data);
                     renderMatches(data);
-                    QuizApp.playReportAudio(data.text, data.audio, 4);
                 }
             } catch (err) {
                 console.error("Update professional error:", err);
