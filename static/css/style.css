@@ -1664,7 +1664,7 @@ select {
 .primary-btn,
 .submit-btn {
     background-color: var(--accent-gold);
-    color: #0d1219;
+    color: white;
     border: none;
     min-width: 150px;
 }

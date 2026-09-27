@@ -301,35 +301,35 @@ document.addEventListener("DOMContentLoaded", () => {
             className: "avatar-1-blue",
             glyph: "🎓",
             numberBadge: "A1",
-            nameTag: "Avatar 1 (Blue)",
+            nameTag: "John (Blue)",
             persona: "Academic Foundations Advisor",
         },
         2: {
             className: "avatar-2-green",
             glyph: "📚",
             numberBadge: "A2",
-            nameTag: "Avatar 2 (Green)",
+            nameTag: "Ashley (Green)",
             persona: "Course Advising Specialist",
         },
         3: {
             className: "avatar-3-orange",
             glyph: "⚡",
             numberBadge: "A3",
-            nameTag: "Avatar 3 (Orange)",
+            nameTag: "Lisa (Orange)",
             persona: "Student Engagement Mentor",
         },
         4: {
             className: "avatar-4-purple",
             glyph: "💼",
             numberBadge: "A4",
-            nameTag: "Avatar 4 (Purple)",
+            nameTag: "David (Purple)",
             persona: "Career & Industry Strategist",
         },
         5: {
             className: "avatar-1-blue",
             glyph: "🏆",
             numberBadge: "A1",
-            nameTag: "Avatar 1 (Blue)",
+            nameTag: "John (Blue)",
             persona: "Executive Pathway Director",
         },
     };
@@ -423,15 +423,15 @@ document.addEventListener("DOMContentLoaded", () => {
             avatar: 1,
         },
         5: {
-            text: "Avatar 2 is reviewing your major course sequences and high-yield electives against top-earning alumni.",
+            text: "Ashley is reviewing your major course sequences and high-yield electives against top-earning alumni.",
             avatar: 2,
         },
         6: {
-            text: "Avatar 3 is matching your credits completed to high-impact campus organizations and creative activities.",
+            text: "Lisa is matching your credits completed to high-impact campus organizations and creative activities.",
             avatar: 3,
         },
         7: {
-            text: "Avatar 4 here! Tell me about the technical skills and frameworks you have built or are learning.",
+            text: "David here! Tell me about the technical skills and frameworks you have built or are learning.",
             avatar: 4,
         },
         8: {
@@ -439,7 +439,7 @@ document.addEventListener("DOMContentLoaded", () => {
             avatar: 4,
         },
         9: {
-            text: "Avatar 1 is synthesizing your coursework, campus involvement, and professional skills into your comprehensive report.",
+            text: "John is synthesizing your coursework, campus involvement, and professional skills into your comprehensive report.",
             avatar: 1,
         },
     };

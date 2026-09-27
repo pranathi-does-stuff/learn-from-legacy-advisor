@@ -108,6 +108,22 @@ document.addEventListener("DOMContentLoaded", async () => {
         const error = document.getElementById(id);
         if (error) error.hidden = true;
     };
+    if (shouldClearInputsOnReload) {
+        const clearedSection1Answers = {
+            classYear: "",
+            name: "",
+            major: "",
+            majorTrack: "",
+            minor: "",
+            gpa: "",
+            creditsCompleted: "",
+            targetCompanyIndustry: "",
+            targetSalary: "",
+            careerGoals: "",
+        };
+        Object.assign(state.user, clearedSection1Answers);
+        QuizApp.updateUserData(clearedSection1Answers);
+    }
     const getGpaRangeMessage = (value) => {
         if (!String(value || "").trim()) return "";
         const gpa = Number(value);

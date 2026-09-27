@@ -7,6 +7,24 @@
  */
 document.addEventListener("DOMContentLoaded", async () => {
     const state = QuizApp.getQuizState();
+    const shouldClearSelectionsOnReload = QuizApp.shouldResetFormInputsOnReload();
+    if (shouldClearSelectionsOnReload) {
+        const clearedSection2Answers = {
+            takenRequiredCourses: [],
+            noRequiredCourses: false,
+            interestedElectives: [],
+            customInterestedElectives: "",
+            noInterestedElectives: false,
+            takenElectives: [],
+            customElectives: "",
+            noElectives: false,
+            plannedCourses: [],
+            customPlannedCourses: "",
+            noPlannedCourses: false,
+        };
+        Object.assign(state.user, clearedSection2Answers);
+        QuizApp.updateUserData(clearedSection2Answers);
+    }
 
     // Stage Containers
     const introStage = document.getElementById("section-intro-stage");
@@ -75,13 +93,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // Initialize course tracking sets
-    const takenRequired = new Set(state.user.takenRequiredCourses || []);
+    const takenRequired = new Set(shouldClearSelectionsOnReload ? [] : (state.user.takenRequiredCourses || []));
     const electiveResponseMode = isEarlyCreditStudent ? "interest" : "completed";
-    const selectedElectives = new Set(isEarlyCreditStudent ? (state.user.interestedElectives || []) : (state.user.takenElectives || []));
-    const plannedCourses = new Set(state.user.plannedCourses || []);
-    if (noneRequiredCheckbox) noneRequiredCheckbox.checked = Boolean(state.user.noRequiredCourses);
-    if (noneElectivesCheckbox) noneElectivesCheckbox.checked = Boolean(isEarlyCreditStudent ? state.user.noInterestedElectives : state.user.noElectives);
-    if (customElectivesInput) customElectivesInput.value = isEarlyCreditStudent ? (state.user.customInterestedElectives || "") : (state.user.customElectives || "");
+    const selectedElectives = new Set(shouldClearSelectionsOnReload ? [] : (isEarlyCreditStudent ? (state.user.interestedElectives || []) : (state.user.takenElectives || [])));
+    const plannedCourses = new Set(shouldClearSelectionsOnReload ? [] : (state.user.plannedCourses || []));
+    if (noneRequiredCheckbox) noneRequiredCheckbox.checked = !shouldClearSelectionsOnReload && Boolean(state.user.noRequiredCourses);
+    if (noneElectivesCheckbox) noneElectivesCheckbox.checked = !shouldClearSelectionsOnReload && Boolean(isEarlyCreditStudent ? state.user.noInterestedElectives : state.user.noElectives);
+    if (customElectivesInput) customElectivesInput.value = shouldClearSelectionsOnReload ? "" : (isEarlyCreditStudent ? (state.user.customInterestedElectives || "") : (state.user.customElectives || ""));
+    if (shouldClearSelectionsOnReload && searchInput) searchInput.value = "";
+    if (shouldClearSelectionsOnReload && dropdownMenu) dropdownMenu.hidden = true;
 
     const saveElectiveAnswer = () => {
         const customValue = customElectivesInput?.value || "";

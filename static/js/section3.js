@@ -16,6 +16,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     const state = QuizApp.getQuizState();
     let sec3Data = QuizApp.getSectionData(3);
     const shouldClearInputsOnReload = QuizApp.shouldResetFormInputsOnReload();
+    if (shouldClearInputsOnReload) {
+        const clearedSection3Answers = {
+            selectedActivities: [],
+            otherOrganizations: [],
+            customActivity: "",
+            noPopularActivities: false,
+            noOtherOrganizations: false,
+            campusImpact: "",
+            impactStatement: "",
+            noImpactStatement: false,
+            noCurrentActivities: false,
+        };
+        Object.assign(state.user, clearedSection3Answers);
+        QuizApp.updateUserData(clearedSection3Answers);
+    }
 
     // Stage Containers
     const introStage = document.getElementById("section-intro-stage");
@@ -250,7 +265,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!popularGrid) return;
         popularGrid.innerHTML = "";
 
-        const listToRender = (activities && activities.length > 0) ? activities : STATIC_FALLBACK_ACTIVITIES;
+        //const listToRender = (activities && activities.length > 0) ? activities : STATIC_FALLBACK_ACTIVITIES;
+        const listToRender = (activities) ? activities : [];
 
         listToRender.forEach((act) => {
             const isChecked = selectedActivities.has(act.name);

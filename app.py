@@ -2027,7 +2027,7 @@ Student Professional Profile:
 - Campus Involvement: {', '.join(user_data.get('selectedActivities', [])) or 'Exploring clubs'}
 - Professional Experience: {user_data.get('internships', 'None')}"""
 
-    prompt = f"""Act as an expert academic advisor. Based on this user data and these database matches, write a 2 to 3 sentence message giving the student targeted advice for their {section_title}. Base your tone strictly on their class year.
+    prompt = f"""Act as an expert academic advisor. Based on this user data and these database matches, write a 2 to 3 sentence message giving the student targeted advice for their {section_title}. Base your tone strictly on their class year. NEVER mention Tiger Data.
 
 Student Context:
 - Class Standing: {class_year}
@@ -2042,7 +2042,7 @@ Guidelines:
 1. Write EXACTLY 2 to 3 concise, impactful sentences.
 2. {tone_instruction}
 3. Ground your advice directly in the alumni matches and the student's stated path. Do not include markdown headers or bullet points.
-4. Never name data sources, AI systems, voice services, or other internal tools in the student-facing response."""
+4. Never name data sources, AI systems, voice services, or other internal tools in the student-facing response. DO NOT MENTION Tiger Data at all."""
 
     if gemini_client:
         candidate_models = [

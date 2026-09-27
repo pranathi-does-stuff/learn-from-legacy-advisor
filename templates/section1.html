@@ -14,10 +14,10 @@
 <div id="section-intro-stage" class="section-intro-stage" data-section="1">
     <div class="intro-avatar-wrapper">
         <div class="intro-avatar-circle avatar-1-blue avatar-image-frame">
-            <img src="/Users/owenpennington/Desktop/Hackathon/career_quiz/static/images/Avatar1.PNG" alt="Avatar 1"
+            <img src="/Users/owenpennington/Desktop/Hackathon/career_quiz/static/images/Avatar1.PNG" alt="John, Academic Foundations Advisor"
                 class="avatar-portrait" onerror="this.src='{{ url_for('static', filename='images/Avatar1.PNG') }}'" />
         </div>
-        <span class="intro-role-subtitle">Academic Foundations Advisor</span>
+        <span class="intro-role-subtitle">John &bull; Academic Foundations Advisor</span>
     </div>
 
     <div class="intro-dialogue-bubble">
@@ -38,9 +38,8 @@
             </div>
         </div>
         <p id="advisor-intro-message" class="intro-dialogue-text">
-            Welcome to the Legacy Academic &amp; Career Advisory. I am Avatar 1, your Foundations Advisor. I will
-            benchmark your major, academic standing, and salary aspirations against historical alumni records in Tiger
-            Data to build your baseline profile.
+            Welcome to the Legacy Academic &amp; Career Advisory. I am John, your Foundations Advisor. I will
+            benchmark your major, academic standing, and salary aspirations against historical alumni records to build your baseline profile.
         </p>
     </div>
 
@@ -54,9 +53,9 @@
      Appears after user clicks "Begin Section 1: Questions"
      ========================================================================= -->
 <div id="section-questions-stage" class="section-questions-stage section1-fullscreen" hidden>
-    <aside id="avatar-stage" class="section1-avatar-panel" aria-label="Avatar 1, Academic Foundations Advisor">
+    <aside id="avatar-stage" class="section1-avatar-panel" aria-label="John, Academic Foundations Advisor">
         <div id="active-avatar-circle" class="avatar-circle avatar-1-blue avatar-image-frame">
-            <img src="/Users/owenpennington/Desktop/Hackathon/career_quiz/static/images/Avatar1.PNG" alt="Avatar 1"
+            <img src="/Users/owenpennington/Desktop/Hackathon/career_quiz/static/images/Avatar1.PNG" alt="John, Academic Foundations Advisor"
                 class="avatar-portrait" onerror="this.src='{{ url_for('static', filename='images/Avatar1.PNG') }}'" />
         </div>
     </aside>
@@ -88,8 +87,8 @@
                         <div class="thought-speaker-info">
                             <span class="thought-badge-dot"
                                 style="background-color:var(--avatar-blue); box-shadow:0 0 6px var(--avatar-blue);"></span>
-                            <span class="thought-persona-title" style="color:var(--avatar-blue);">Academic Foundations
-                                Advisor</span>
+                            <span class="thought-persona-title" style="color:var(--avatar-blue);">John &bull; Academic
+                                Foundations Advisor</span>
                         </div>
                         <div class="thought-audio-controls">
                             <div class="audio-waves" hidden aria-hidden="true">
@@ -212,7 +211,7 @@
             <div id="substep-gpa" class="substep-block" hidden>
                 <p class="eyebrow">Section 1 of 5 &bull; Academic Foundations</p>
                 <h2 class="step-heading">Cumulative GPA &amp; Completed Credits</h2>
-                <p class="step-description">Avatar 1 computes your trajectory against historical alumni graduating
+                <p class="step-description">John computes your trajectory against historical alumni graduating
                     distributions.</p>
 
                 <div class="form-grid">
@@ -268,5 +267,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/section1.js', v='132') }}"></script>
+<script src="{{ url_for('static', filename='js/section1.js', v='133') }}"></script>
 {% endblock %}

@@ -6,6 +6,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     const state = QuizApp.getQuizState();
     let sec4Data = QuizApp.getSectionData(4);
     const shouldClearInputsOnReload = QuizApp.shouldResetFormInputsOnReload();
+    if (shouldClearInputsOnReload) {
+        const clearedSection4Answers = {
+            skills: "",
+            skillsList: [],
+            experienceCategories: [],
+            categoryDetails: {},
+            jobRoles: [],
+            internships: "",
+            noPriorExperience: false,
+            noPriorJobExperience: false,
+        };
+        Object.assign(state.user, clearedSection4Answers);
+        QuizApp.updateUserData(clearedSection4Answers);
+    }
 
     // =========================================================================
     // CATEGORY METADATA DEFINITIONS (7 EXACT CATEGORIES)
