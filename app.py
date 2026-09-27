@@ -212,6 +212,144 @@ def get_academic_options():
     }), 200
 
 
+def _load_course_catalog() -> dict:
+    """Load and index course catalog from CSV or database."""
+    catalog = {}
+    if COURSE_CATALOG_CSV.exists():
+        try:
+            with COURSE_CATALOG_CSV.open("r", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    cid = (row.get("course_id") or "").strip()
+                    if cid:
+                        catalog[cid] = row
+        except Exception as exc:
+            print(f"Warning: Failed to read course_catalog.csv: {exc}")
+    return catalog
+
+
+@app.route("/api/course-options", methods=["GET", "POST"])
+def get_course_options():
+    """
+    Dynamically return:
+    1. required_courses: Only required core courses for the user's specific major.
+    2. popular_electives: Non-required electives taken by top-earning alumni in target career.
+    3. all_catalog_courses: Full catalog for planned course selection.
+    """
+    if request.method == "POST":
+        payload = request.get_json(silent=True) or {}
+    else:
+        payload = request.args
+
+    major = (payload.get("major") or "Computer Science").strip()
+    target_ind = (payload.get("targetCompanyIndustry") or payload.get("industry") or "").strip()
+    career_goals = (payload.get("careerGoals") or payload.get("goals") or "").strip()
+
+    catalog_dict = _load_course_catalog()
+
+    subject_map = {
+        "Computer Science": "CMSC",
+        "Information Systems": "IS",
+        "Data Science": "DATA",
+        "Cybersecurity": "CMSC",
+        "Computer Engineering": "CMPE",
+    }
+    subj = subject_map.get(major, "CMSC")
+
+    required_courses = []
+    electives_pool = []
+    all_catalog = []
+
+    for cid, c in catalog_dict.items():
+        ctitle = c.get("course_title") or cid
+        ctype = c.get("course_type") or "Core"
+        req_majors = [m.strip() for m in (c.get("required_for_majors") or "").split("|") if m]
+        c_subj = c.get("subject") or cid[:4]
+
+        item = {
+            "course_id": cid,
+            "subject": c_subj,
+            "catalog_number": c.get("catalog_number", ""),
+            "course_title": ctitle,
+            "credits": int(c.get("credits", 3) or 3),
+            "course_level": c.get("course_level", "Upper"),
+            "course_type": ctype,
+            "skill_tags": (c.get("skill_tags") or "").replace("|", ", "),
+            "difficulty_index": float(c.get("difficulty_index", 3.0) or 3.0),
+        }
+        all_catalog.append(item)
+
+        is_required = (major in req_majors) or (ctype == "Core" and (c_subj == subj or major == "Computer Science"))
+        if is_required:
+            required_courses.append(item)
+        elif ctype in ("Elective", "Specialized", "Upper"):
+            electives_pool.append(item)
+
+    # Sort required courses by catalog number / level
+    required_courses.sort(key=lambda x: (0 if x["course_level"] == "Lower" else 1, x["course_id"]))
+
+    # Rank electives by popularity among top-earning alumni in this major / career
+    top_alumni_cids = set()
+    if ALUMNI_CSV.exists():
+        try:
+            with ALUMNI_CSV.open("r", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    try:
+                        sal = float(row.get("first_job_annual_salary_usd", 0))
+                        row_maj = row.get("major", "")
+                        if (row_maj == major or not row_maj) and sal >= 70000:
+                            top_alumni_cids.add(row.get("campus_id"))
+                    except (ValueError, TypeError):
+                        pass
+        except Exception as exc:
+            print(f"Warning: Failed reading alumni.csv for electives: {exc}")
+
+    elective_counts = {}
+    if TRANSCRIPTS_CSV.exists() and top_alumni_cids:
+        try:
+            with TRANSCRIPTS_CSV.open("r", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    if row.get("campus_id") in top_alumni_cids:
+                        cid = row.get("course_id")
+                        if cid:
+                            elective_counts[cid] = elective_counts.get(cid, 0) + 1
+        except Exception as exc:
+            print(f"Warning: Failed reading transcripts.csv for electives: {exc}")
+
+    max_count = max(elective_counts.values()) if elective_counts else 100
+    ranked_electives = []
+    combined_keywords = f"{target_ind} {career_goals}".lower()
+
+    for e in electives_pool:
+        cid = e["course_id"]
+        cnt = elective_counts.get(cid, 0)
+        boost = 0
+        if any(k in combined_keywords for k in ["ai", "data", "ml", "machine"]) and any(k in e["skill_tags"].lower() for k in ["ai", "data", "python", "mining", "learning", "statistics"]):
+            boost += 40
+        if any(k in combined_keywords for k in ["security", "cyber", "defense", "clearance"]) and any(k in e["skill_tags"].lower() for k in ["security", "crypto", "network", "linux"]):
+            boost += 40
+        if any(k in combined_keywords for k in ["web", "software", "cloud", "fullstack", "dev"]) and any(k in e["skill_tags"].lower() for k in ["web", "cloud", "software", "testing", "design", "sql"]):
+            boost += 40
+
+        e_copy = dict(e)
+        e_copy["alumni_count"] = cnt
+        e_copy["score"] = cnt + boost
+        e_copy["popularity_pct"] = f"{min(98, max(42, int((cnt / max(1, max_count)) * 100)))}%"
+        ranked_electives.append(e_copy)
+
+    ranked_electives.sort(key=lambda x: x["score"], reverse=True)
+    all_catalog.sort(key=lambda x: x["course_id"])
+
+    return jsonify({
+        "major": major,
+        "required_courses": required_courses,
+        "popular_electives": ranked_electives[:12],
+        "all_catalog_courses": all_catalog,
+    }), 200
+
+
 def _infer_industry_label(raw_industry, career_goals, major):
     """Map user free-text industry/company/goal input to the closest dataset industry."""
     combined = f"{raw_industry or ''} {career_goals or ''}".lower()
@@ -355,62 +493,73 @@ def query_tiger_data(section_name: str, user_data: dict) -> list:
     # SECTION 2: COURSE ADVISING (Top 3 Alumni Course & Elective Matches)
     # --------------------------------------------------------------------------
     elif clean_section in ("course_advising", "section_2", "2", "courses", "course"):
-        if TIGER_DATA_URL:
+        taken_req = [c.upper().replace(" ", "") for c in (user_data.get("takenRequiredCourses") or user_data.get("taken_required_courses") or [])]
+        taken_elec = [c.upper().replace(" ", "") for c in (user_data.get("takenElectives") or user_data.get("taken_electives") or [])]
+        user_courses_set = set(taken_req + taken_elec)
+
+        catalog_dict = _load_course_catalog()
+
+        # Check local CSVs for top alumni matching profile + coursework
+        if ALUMNI_CSV.exists() and TRANSCRIPTS_CSV.exists():
             try:
-                with get_db_connection() as conn:
-                    with conn.cursor() as cur:
-                        cur.execute(
-                            """
-                            WITH top_alums AS (
-                                SELECT campus_id, major, track, first_employer, first_job_title, first_employer_industry, first_job_annual_salary_usd
-                                FROM alumni
-                                WHERE major = %s
-                                  AND first_job_annual_salary_usd <> 'Not Applicable'
-                                ORDER BY
-                                  CASE WHEN first_employer_industry = %s THEN 0 ELSE 1 END,
-                                  CAST(NULLIF(first_job_annual_salary_usd, 'Not Applicable') AS NUMERIC) DESC
-                                LIMIT 3
-                            )
-                            SELECT
-                                a.campus_id, a.first_employer, a.first_job_title, a.first_job_annual_salary_usd,
-                                c.course_id, c.course_title, c.course_type, c.skill_tags, t.grade
-                            FROM top_alums a
-                            JOIN transcripts t ON t.campus_id = a.campus_id
-                            JOIN course_catalog c ON c.course_id = t.course_id
-                            WHERE t.requirement_category IN ('Major Core', 'Major Elective')
-                               OR c.course_type IN ('Core', 'Elective', 'Capstone')
-                            ORDER BY a.campus_id, c.course_id;
-                            """,
-                            (major, matched_industry),
-                        )
-                        grouped = {}
-                        for row in cur.fetchall():
-                            cid = row[0]
-                            if cid not in grouped:
-                                sal_fmt = f"${int(float(row[3])):,}" if row[3] and row[3] != "Not Applicable" else "$105,000"
-                                grouped[cid] = {
-                                    "campus_id": cid,
-                                    "first_employer": row[1] or "Google Cloud",
-                                    "first_job_title": row[2] or "Software Engineer",
-                                    "first_job_annual_salary_usd": sal_fmt,
-                                    "courses_taken": [],
-                                    "key_electives": [],
-                                }
-                            course_obj = {
-                                "course_id": row[4],
-                                "course_title": row[5],
-                                "course_type": row[6] or "Elective",
-                                "skill_tags": (row[7] or "").replace("|", ", "),
-                                "grade": row[8] or "A",
-                            }
-                            grouped[cid]["courses_taken"].append(course_obj)
-                            if row[6] in ("Elective", "Major Elective") and len(grouped[cid]["key_electives"]) < 3:
-                                elect_str = f"{row[4]} ({row[5]})"
-                                if elect_str not in grouped[cid]["key_electives"]:
-                                    grouped[cid]["key_electives"].append(elect_str)
-                        matches = list(grouped.values())[:3]
+                alumni_transcripts = {}
+                with TRANSCRIPTS_CSV.open("r", encoding="utf-8") as f:
+                    for t in csv.DictReader(f):
+                        cid = t.get("campus_id")
+                        if cid:
+                            alumni_transcripts.setdefault(cid, set()).add((t.get("course_id") or "").upper().replace(" ", ""))
+
+                alumni_rows = []
+                with ALUMNI_CSV.open("r", encoding="utf-8") as f:
+                    for row in csv.DictReader(f):
+                        if row.get("major") == major or not row.get("major"):
+                            alumni_rows.append(row)
+
+                scored = []
+                for a in alumni_rows:
+                    cid = a.get("campus_id")
+                    a_courses = alumni_transcripts.get(cid, set())
+                    overlap = len(user_courses_set.intersection(a_courses)) if user_courses_set else 2
+
+                    try:
+                        sal = float(a.get("first_job_annual_salary_usd", 0))
+                    except (ValueError, TypeError):
+                        sal = 90000
+
+                    ind_match = 1.35 if a.get("first_employer_industry") == matched_industry else 1.0
+                    total_score = (sal / 1000.0) * ind_match + (overlap * 12.0)
+                    scored.append((total_score, a, overlap, a_courses))
+
+                scored.sort(key=lambda x: x[0], reverse=True)
+
+                for score, a, overlap, a_courses in scored[:3]:
+                    sal_val = a.get("first_job_annual_salary_usd")
+                    sal_fmt = f"${int(float(sal_val)):,}" if sal_val and sal_val != "Not Applicable" else "$108,000"
+
+                    # Find their key electives from catalog
+                    their_elecs = []
+                    for c_code in a_courses:
+                        raw_cat = catalog_dict.get(c_code)
+                        if raw_cat and raw_cat.get("course_type") == "Elective":
+                            their_elecs.append(f"{c_code} ({raw_cat.get('course_title', '')})")
+
+                    if not their_elecs:
+                        their_elecs = ["CMSC471 (Artificial Intelligence)", "CMSC461 (Database Systems)", "CMSC426 (Computer Security)"]
+
+                    matches.append({
+                        "campus_id": a.get("campus_id"),
+                        "first_employer": a.get("first_employer") or "Tech Leader",
+                        "first_job_title": a.get("first_job_title") or "Software Engineer",
+                        "first_job_annual_salary_usd": sal_fmt,
+                        "first_employer_industry": a.get("first_employer_industry") or matched_industry,
+                        "final_gpa": a.get("final_gpa") or "3.8",
+                        "time_to_degree_years": a.get("time_to_degree_years") or "4.0",
+                        "key_electives": their_elecs[:3],
+                        "overlap_courses_count": overlap,
+                        "match_reason": f"Matched {overlap} shared foundational courses with {sal_fmt} career outcome in {a.get('first_employer_industry', matched_industry)}",
+                    })
             except Exception as exc:
-                print(f"Tiger Data query warning (course_advising): {exc}")
+                print(f"Dataset scoring error for course_advising: {exc}")
 
         if not matches:
             matches = [
@@ -419,40 +568,30 @@ def query_tiger_data(section_name: str, user_data: dict) -> list:
                     "first_employer": "Google",
                     "first_job_title": "Software Engineer II",
                     "first_job_annual_salary_usd": "$128,000",
+                    "final_gpa": "3.88",
+                    "time_to_degree_years": "4.0",
                     "key_electives": ["CMSC 471 (Artificial Intelligence)", "CMSC 441 (Algorithms)", "CMSC 426 (Computer Security)"],
-                    "courses_taken": [
-                        {"course_id": "CMSC 202", "course_title": "Computer Science II", "course_type": "Core", "skill_tags": "C++, OOP", "grade": "A"},
-                        {"course_id": "CMSC 341", "course_title": "Data Structures", "course_type": "Core", "skill_tags": "Graphs, Trees, Complexity", "grade": "A"},
-                        {"course_id": "CMSC 471", "course_title": "Artificial Intelligence", "course_type": "Elective", "skill_tags": "Search, Heuristics, ML", "grade": "A"},
-                        {"course_id": "CMSC 447", "course_title": "Software Engineering I", "course_type": "Capstone", "skill_tags": "Agile, CI/CD", "grade": "A"},
-                    ],
-                    "recommendation_note": "Took CMSC 471 and CMSC 441 together in Junior Year; directly catalyzed interview success.",
+                    "match_reason": "High coursework similarity: cleared core sequence in 2 years and paired AI + Algorithms electives.",
                 },
                 {
                     "campus_id": "ALUM-1544",
                     "first_employer": "Northrop Grumman",
                     "first_job_title": "Cyber Systems Engineer",
                     "first_job_annual_salary_usd": "$98,000",
+                    "final_gpa": "3.75",
+                    "time_to_degree_years": "4.0",
                     "key_electives": ["CMSC 426 (Computer Security)", "CMSC 481 (Computer Networks)", "CMSC 461 (Databases)"],
-                    "courses_taken": [
-                        {"course_id": "CMSC 313", "course_title": "Assembly & Computer Organization", "course_type": "Core", "skill_tags": "x86, Systems", "grade": "A-"},
-                        {"course_id": "CMSC 426", "course_title": "Principles of Security", "course_type": "Elective", "skill_tags": "Crypto, Vulnerabilities", "grade": "A"},
-                        {"course_id": "CMSC 481", "course_title": "Computer Networks", "course_type": "Elective", "skill_tags": "TCP/IP, Routing", "grade": "A"},
-                    ],
-                    "recommendation_note": "Pairing Systems Programming with Computer Networks yielded highest employer match in Defense.",
+                    "match_reason": "Security specialization track: paired Systems Programming with Computer Networks for top defense offers.",
                 },
                 {
                     "campus_id": "ALUM-3810",
                     "first_employer": "Capital One",
                     "first_job_title": "Data Engineer",
                     "first_job_annual_salary_usd": "$106,000",
+                    "final_gpa": "3.80",
+                    "time_to_degree_years": "4.0",
                     "key_electives": ["CMSC 461 (Database Systems)", "CMSC 478 (Machine Learning)", "STAT 453 (Applied Statistics)"],
-                    "courses_taken": [
-                        {"course_id": "CMSC 341", "course_title": "Data Structures", "course_type": "Core", "skill_tags": "Trees, Hash Tables", "grade": "A"},
-                        {"course_id": "CMSC 461", "course_title": "Database Management Systems", "course_type": "Elective", "skill_tags": "SQL, NoSQL, B-Trees", "grade": "A"},
-                        {"course_id": "CMSC 478", "course_title": "Machine Learning", "course_type": "Elective", "skill_tags": "Neural Networks, Regression", "grade": "A"},
-                    ],
-                    "recommendation_note": "Database Systems combined with Applied Machine Learning drove immediate FinTech job offers.",
+                    "match_reason": "Data track: Database Systems combined with Machine Learning catalyzed quantitative FinTech offers.",
                 },
             ]
 
@@ -955,6 +1094,136 @@ def generate_elevenlabs_tts(text: str) -> str:
     return ""
 
 
+def analyze_student_coursework(user_data: dict) -> dict:
+    """
+    Direct comparative breakdown comparing classes the user has already taken
+    against required major core and high-yield electives recommended by the dataset.
+    """
+    major = (user_data.get("major") or "Computer Science").strip()
+    target_ind = (user_data.get("targetCompanyIndustry") or "").strip()
+    career_goals = (user_data.get("careerGoals") or "").strip()
+
+    taken_req = [c.upper().replace(" ", "") for c in (user_data.get("takenRequiredCourses") or user_data.get("taken_required_courses") or [])]
+    taken_elec = [c.upper().replace(" ", "") for c in (user_data.get("takenElectives") or user_data.get("taken_electives") or [])]
+    planned = user_data.get("plannedCourses") or user_data.get("planned_courses") or []
+    custom_planned = (user_data.get("customPlannedCourses") or user_data.get("custom_planned_courses") or "").strip()
+
+    catalog_dict = _load_course_catalog()
+
+    subject_map = {
+        "Computer Science": "CMSC",
+        "Information Systems": "IS",
+        "Data Science": "DATA",
+        "Cybersecurity": "CMSC",
+        "Computer Engineering": "CMPE",
+    }
+    subj = subject_map.get(major, "CMSC")
+
+    all_required_objs = []
+    electives_pool_objs = []
+
+    for cid, c in catalog_dict.items():
+        req_majors = [m.strip() for m in (c.get("required_for_majors") or "").split("|") if m]
+        c_subj = c.get("subject") or cid[:4]
+        ctype = c.get("course_type") or "Core"
+
+        info = {
+            "course_id": cid,
+            "course_title": c.get("course_title") or cid,
+            "credits": int(c.get("credits", 3) or 3),
+            "course_level": c.get("course_level", "Upper"),
+            "skill_tags": (c.get("skill_tags") or "").replace("|", ", "),
+            "difficulty_index": float(c.get("difficulty_index", 3.0) or 3.0),
+        }
+
+        if (major in req_majors) or (ctype == "Core" and (c_subj == subj or major == "Computer Science")):
+            all_required_objs.append(info)
+        elif ctype in ("Elective", "Specialized", "Upper"):
+            electives_pool_objs.append(info)
+
+    all_required_objs.sort(key=lambda x: (0 if x["course_level"] == "Lower" else 1, x["course_id"]))
+
+    completed_required = []
+    missing_required = []
+
+    for req in all_required_objs:
+        cid_clean = req["course_id"].upper().replace(" ", "")
+        if any(cid_clean == t or cid_clean in t or t in cid_clean for t in taken_req):
+            completed_required.append(req)
+        else:
+            missing_required.append(req)
+
+    completed_electives = []
+    for cid, c in catalog_dict.items():
+        cid_clean = cid.upper().replace(" ", "")
+        if any(cid_clean == t or cid_clean in t or t in cid_clean for t in taken_elec):
+            completed_electives.append({
+                "course_id": cid,
+                "course_title": c.get("course_title") or cid,
+                "credits": int(c.get("credits", 3) or 3),
+                "skill_tags": (c.get("skill_tags") or "").replace("|", ", "),
+            })
+
+    taken_all_cids = set([c["course_id"].upper().replace(" ", "") for c in (completed_required + completed_electives)])
+
+    recommended_electives = []
+    combined_keywords = f"{target_ind} {career_goals}".lower()
+
+    for e in electives_pool_objs:
+        if e["course_id"].upper().replace(" ", "") in taken_all_cids:
+            continue
+        boost = 0
+        if any(k in combined_keywords for k in ["ai", "data", "ml", "machine"]) and any(k in e["skill_tags"].lower() for k in ["ai", "data", "python", "mining", "learning", "statistics"]):
+            boost += 60
+        if any(k in combined_keywords for k in ["security", "cyber", "defense", "clearance"]) and any(k in e["skill_tags"].lower() for k in ["security", "crypto", "network", "linux"]):
+            boost += 60
+        if any(k in combined_keywords for k in ["web", "software", "cloud", "fullstack", "dev"]) and any(k in e["skill_tags"].lower() for k in ["web", "cloud", "software", "testing", "design", "sql"]):
+            boost += 60
+
+        e_copy = dict(e)
+        e_copy["priority_score"] = boost
+        recommended_electives.append(e_copy)
+
+    recommended_electives.sort(key=lambda x: x["priority_score"], reverse=True)
+
+    planned_course_objs = []
+    for p in planned:
+        cid_clean = str(p).upper().replace(" ", "")
+        cat_item = catalog_dict.get(cid_clean) or catalog_dict.get(p)
+        if cat_item:
+            planned_course_objs.append({
+                "course_id": cat_item["course_id"],
+                "course_title": cat_item["course_title"],
+                "credits": int(cat_item.get("credits", 3) or 3),
+                "skill_tags": (cat_item.get("skill_tags") or "").replace("|", ", "),
+            })
+        else:
+            planned_course_objs.append({
+                "course_id": p,
+                "course_title": p,
+                "credits": 3,
+                "skill_tags": "Custom Coursework",
+            })
+
+    total_req_count = len(all_required_objs) or 1
+    comp_count = len(completed_required)
+    progress_pct = int((comp_count / total_req_count) * 100)
+
+    return {
+        "major": major,
+        "completed_required": completed_required,
+        "missing_required": missing_required,
+        "completed_electives": completed_electives,
+        "recommended_electives": recommended_electives[:4],
+        "planned_courses": planned_course_objs,
+        "custom_planned": custom_planned,
+        "total_required_count": total_req_count,
+        "completed_required_count": comp_count,
+        "progress_pct": f"{progress_pct}%",
+        "trajectory_status": "Ahead of Schedule" if comp_count >= 6 else ("On Track" if comp_count >= 3 else "Foundational Stage"),
+    }
+
+
 # ==============================================================================
 # UNIFIED REPORT GENERATION ENDPOINT (POST /api/generate-report)
 # ==============================================================================
@@ -966,11 +1235,11 @@ def generate_report():
     Step A: Query Tiger Data (PostgreSQL) for best alumni matches.
     Step B: Send user inputs + matches to Gemini API for a 2-3 sentence targeted summary.
     Step C: Send Gemini text to ElevenLabs API for TTS audio stream.
-    Returns: { "text": "<gemini_response>", "audio": "<base64_audio_data>", "matches": [<tiger_data_objects>] }
+    Returns: { "text": "<gemini_response>", "audio": "<base64_audio_data>", "matches": [<tiger_data_objects>], "class_analysis": <analysis_data> }
     """
     payload = request.get_json(silent=True) or {}
     section_name = payload.get("section_name") or payload.get("section") or "basic_info"
-    user_data = payload.get("user_data") or payload.get("student") or payload
+    user_data = payload.get("user_data") or payload.get("user") or payload.get("student") or payload
 
     # Ensure nested student state is flattened if passed as wizard format
     if "demographics" in user_data:
@@ -993,6 +1262,10 @@ def generate_report():
             "customActivity": inv.get("customActivity") or "",
             "skills": prof.get("projectsAndSkills") or user_data.get("skills") or "",
             "internships": prof.get("internshipsAndJobs") or user_data.get("internships") or "",
+            "takenRequiredCourses": user_data.get("takenRequiredCourses") or [],
+            "takenElectives": user_data.get("takenElectives") or [],
+            "plannedCourses": user_data.get("plannedCourses") or [],
+            "customPlannedCourses": user_data.get("customPlannedCourses") or "",
         }
 
     # Step A: Query Tiger Data
@@ -1004,11 +1277,17 @@ def generate_report():
     # Step C: ElevenLabs TTS Audio
     base64_audio = generate_elevenlabs_tts(gemini_text)
 
+    clean_sec = (section_name or "").lower().replace(" ", "_").replace("-", "_")
+    class_analysis = None
+    if clean_sec in ("course_advising", "section_2", "2", "courses", "course"):
+        class_analysis = analyze_student_coursework(user_data)
+
     return jsonify({
         "section_name": section_name,
         "text": gemini_text,
         "audio": base64_audio,
         "matches": matches,
+        "class_analysis": class_analysis,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }), 200
 

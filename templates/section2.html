@@ -8,7 +8,7 @@
 {% block content %}
 <!-- =========================================================================
      STAGE A: STANDALONE AVATAR INTRODUCTION SCREEN
-     Avatar with Dialogue Bubble introducing themself before asking questions
+     Avatar 2 (Green) introduces Course Advising
      ========================================================================= -->
 <div id="section-intro-stage" class="section-intro-stage" data-section="2">
     <div class="intro-avatar-wrapper">
@@ -38,22 +38,147 @@
             </div>
         </div>
         <p id="advisor-intro-message" class="intro-dialogue-text">
-            Hello! I am Avatar 2, your Course Advising Specialist. I evaluate your major course sequence and highlight
-            high-yield electives taken by top-earning alumni in your target industry.
+            Hello! I am Avatar 2, your Course Advising Specialist. Let's evaluate your coursework progression against
+            your major's required core curriculum and the high-impact electives taken by top alumni in your field.
         </p>
     </div>
 
     <button type="button" class="submit-btn intro-continue-btn" id="btn-start-section-questions">
-        Continue to Course Advising &rarr;
+        Begin Section 2: Questions &rarr;
     </button>
 </div>
 
 <!-- =========================================================================
-     STAGE B: SECTION 2 QUESTIONS & CHECKLIST
-     Appears after user clicks "Continue to Course Advising"
+     STAGE B: SEQUENTIAL 3-QUESTION FLOW (One Question per Screen)
+     Recommendations & matches suppressed until final report!
      ========================================================================= -->
 <div id="section-questions-stage" class="section-questions-stage" hidden>
-    <!-- Top Avatar Dock & Thought Bubble -->
+    <div id="section-2-container" class="interactive-screen">
+
+        <!-- =================================================================
+             SCREEN 1: REQUIRED COURSES CHECKLIST
+             ================================================================= -->
+        <div id="substep-required-courses" class="substep-block">
+            <div class="step-badge-row">
+                <span class="step-pill">Section 2 of 5</span>
+                <span class="step-pill active-pill">Question 1 of 3</span>
+            </div>
+            <h2 class="step-heading">Have you taken any of these required courses?</h2>
+            <p class="step-description">
+                Check off all core courses you have completed or are currently taking for <strong
+                    id="student-major-label" style="color:var(--accent-gold);">your major</strong>:
+            </p>
+
+            <div id="required-loading-spinner" class="loading-state-container"
+                style="display:flex; align-items:center; gap:0.75rem; padding:1.5rem 0;">
+                <span class="spinner"></span>
+                <span style="color:var(--text-secondary); font-size:0.9rem;">Loading required core curriculum from Tiger
+                    Data...</span>
+            </div>
+
+            <div id="required-courses-grid" class="course-checklist-grid" style="margin-top: 1rem;"></div>
+
+            <div class="nav-button-row" style="margin-top: 2rem; display: flex; justify-content: flex-end;">
+                <button type="button" class="submit-btn" id="btn-to-electives">
+                    Continue to Electives &rarr;
+                </button>
+            </div>
+        </div>
+
+        <!-- =================================================================
+             SCREEN 2: POPULAR ELECTIVES CHECKLIST
+             ================================================================= -->
+        <div id="substep-electives" class="substep-block" hidden>
+            <div class="step-badge-row">
+                <span class="step-pill">Section 2 of 5</span>
+                <span class="step-pill active-pill">Question 2 of 3</span>
+            </div>
+            <h2 class="step-heading">Have you taken any of these electives?</h2>
+            <p class="step-description">
+                Select any non-required electives you have taken from the most popular courses among successful alumni
+                in <strong id="student-industry-label" style="color:var(--accent-emerald);">your target field</strong>:
+            </p>
+
+            <div id="electives-loading-spinner" class="loading-state-container"
+                style="display:none; align-items:center; gap:0.75rem; padding:1.5rem 0;">
+                <span class="spinner"></span>
+                <span style="color:var(--text-secondary); font-size:0.9rem;">Benchmarking popular electives...</span>
+            </div>
+
+            <div id="popular-electives-grid" class="course-checklist-grid" style="margin-top: 1rem;"></div>
+
+            <div class="course-planner-card"
+                style="margin-top: 1.5rem; background:rgba(15, 23, 42, 0.6); padding:1.25rem; border-radius:8px; border:1px solid var(--border-subtle);">
+                <label class="field-label" for="custom-electives-input"
+                    style="font-weight:600; margin-bottom:0.4rem; display:block;">Other Electives or Special Topics
+                    Taken (Comma-separated)</label>
+                <input type="text" id="custom-electives-input" class="text-input"
+                    placeholder="e.g. CMSC 491 (Deep Learning), MATH 221, ENGL 393" />
+            </div>
+
+            <div class="nav-button-row" style="margin-top: 2rem; display: flex; justify-content: space-between;">
+                <button type="button" class="secondary-btn" id="btn-back-to-required">&larr; Back to Required</button>
+                <button type="button" class="submit-btn" id="btn-to-planned">
+                    Continue to Planned Courses &rarr;
+                </button>
+            </div>
+        </div>
+
+        <!-- =================================================================
+             SCREEN 3: PLANNED COURSES SELECTION
+             ================================================================= -->
+        <div id="substep-planned" class="substep-block" hidden>
+            <div class="step-badge-row">
+                <span class="step-pill">Section 2 of 5</span>
+                <span class="step-pill active-pill">Question 3 of 3</span>
+            </div>
+            <h2 class="step-heading">What classes are you planning on taking?</h2>
+            <p class="step-description">
+                Select upcoming courses from the catalog below or enter specific future classes to complete your
+                graduation roadmap:
+            </p>
+
+            <div class="course-planner-card"
+                style="margin-top: 1rem; background:rgba(15, 23, 42, 0.6); padding:1.25rem; border-radius:8px; border:1px solid var(--border-subtle);">
+                <h4 class="card-subtitle" style="margin-bottom:0.4rem; color:var(--accent-gold);">Select Upcoming
+                    Coursework from Catalog</h4>
+                <p class="card-subtext" style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:0.75rem;">
+                    Click course pills to toggle them in your planned schedule:</p>
+                <div id="catalog-course-pills" class="skill-pills-wrap"
+                    style="display:flex; flex-wrap:wrap; gap:0.5rem; max-height:220px; overflow-y:auto; padding:0.75rem; background:rgba(0,0,0,0.3); border-radius:6px; border:1px solid var(--border-subtle);">
+                </div>
+            </div>
+
+            <div class="course-planner-card"
+                style="margin-top: 1rem; background:rgba(15, 23, 42, 0.6); padding:1.25rem; border-radius:8px; border:1px solid var(--border-subtle);">
+                <label class="field-label" for="custom-planned-input"
+                    style="font-weight:600; margin-bottom:0.4rem; display:block;">Planned Future Courses, Senior
+                    Electives &amp; Capstones</label>
+                <textarea id="custom-planned-input" class="text-input" rows="3"
+                    placeholder="e.g. CMSC 447 (Software Engineering Capstone), CMSC 471 (AI), CMSC 441 (Algorithms)"></textarea>
+            </div>
+
+            <div class="nav-button-row"
+                style="margin-top: 2rem; display: flex; justify-content: space-between; align-items:center;">
+                <button type="button" class="secondary-btn" id="btn-back-to-electives">&larr; Back to Electives</button>
+                <div style="display:flex; align-items:center; gap:1rem;">
+                    <span id="spinner-generate-report" class="spinner" hidden aria-hidden="true"></span>
+                    <button type="button" class="submit-btn" id="btn-submit-course-report">
+                        Submit &amp; Generate Course Report &rarr;
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- =========================================================================
+     STAGE C: SECTION 2 FINAL REPORT
+     Rendered ONLY after Question 3 is submitted
+     ========================================================================= -->
+<div id="section-report-stage" class="section-report-stage" hidden>
+    <!-- Top Avatar Dock & Advisor Thought Bubble -->
     <div id="avatar-stage" class="avatar-stage-wrapper">
         <div class="avatar-dock" aria-label="Advisory Council Avatars">
             <div class="dock-avatar-indicator" data-avatar="1">
@@ -105,8 +230,8 @@
                     </div>
                     <div class="thought-body">
                         <p id="thought-bubble-text" class="thought-text">
-                            Avatar 2 is analyzing your course trajectories and high-yield elective sequences against
-                            top-earning alumni.
+                            Avatar 2 is evaluating your completed and planned courses against required degree milestones
+                            and top alumni outcomes.
                         </p>
                     </div>
                 </div>
@@ -114,28 +239,24 @@
         </div>
     </div>
 
-    <div id="section-2-container" class="interactive-screen">
-        <p class="eyebrow">Section 2 of 5 &bull; Course Advising</p>
-        <h2 class="step-heading">Course Advising &amp; Elective Strategy</h2>
+    <div class="interactive-screen">
+        <p class="eyebrow">Section 2 of 5 &bull; Course Advising Report</p>
+        <h2 class="step-heading">Course Trajectory &amp; Curriculum Analysis</h2>
         <p class="step-description">
-            Avatar 2 (Green) benchmarks your major course sequence against top-earning alumni in your target industry.
+            Direct comparative breakdown of your coursework against historical alumni records in Tiger Data:
         </p>
 
-        <!-- Visual Course Matches Container for Section 2 -->
-        <div id="section-2-matches-container" class="matches-data-container">
+        <!-- Dynamic 5-Card Class Analysis Breakdown -->
+        <div id="class-analysis-container" class="class-analysis-container" style="margin-top: 1.5rem;"></div>
+
+        <!-- Top 3 Alumni Matches Display at the Very Bottom -->
+        <div id="section-2-matches-container" class="matches-data-container" style="margin-top: 2.5rem;">
             <div class="matches-header">
-                <h3 class="matches-title">Top 3 Alumni Course Trajectories &amp; Electives</h3>
-                <span class="matches-subtitle">High-yield courses taken by successful graduates in your target
+                <h3 class="matches-title">Top 3 Student &amp; Alumni Coursework Matches</h3>
+                <span class="matches-subtitle">Graduates who shared your exact foundational course sequence and target
                     industry</span>
             </div>
             <div id="section-2-matches-grid" class="alumni-match-grid"></div>
-
-            <!-- Interactive Course Checklist -->
-            <div class="course-planner-card">
-                <h4 class="card-subtitle">Recommended Elective &amp; Core Course Checklist</h4>
-                <p class="card-subtext">Click any course to mark it as completed or planned:</p>
-                <div id="interactive-course-checklist" class="course-checklist-grid"></div>
-            </div>
 
             <div class="nav-button-row" style="display: flex; justify-content: flex-end; margin-top: 2rem;">
                 <button type="button" class="submit-btn" id="btn-next-to-section-3">
@@ -148,5 +269,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/section2.js', v='35') }}"></script>
+<script src="{{ url_for('static', filename='js/section2.js', v='50') }}"></script>
 {% endblock %}
