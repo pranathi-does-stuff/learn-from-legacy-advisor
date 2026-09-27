@@ -4,6 +4,7 @@
 document.addEventListener("DOMContentLoaded", async () => {
     const state = QuizApp.getQuizState();
     let sec3Data = QuizApp.getSectionData(3);
+    const shouldClearInputsOnReload = QuizApp.shouldResetFormInputsOnReload();
 
     // Introduction Stage Elements
     const introStage = document.getElementById("section-intro-stage");
@@ -46,14 +47,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     const customInput = document.getElementById("custom-activity-input");
+    const noActivitiesCheckbox = document.getElementById("no-activities-yet");
+    const activitiesError = document.getElementById("activities-required-error");
     if (customInput) {
-        customInput.value = state.user.customActivity || "";
+        customInput.value = shouldClearInputsOnReload ? "" : (state.user.customActivity || "");
+    }
+    if (noActivitiesCheckbox) {
+        noActivitiesCheckbox.checked = !shouldClearInputsOnReload && Boolean(state.user.noCurrentActivities);
     }
 
     // Set initial active pills
     document.querySelectorAll("#involvement-pills-container .involvement-pill").forEach((pill) => {
         const name = pill.getAttribute("data-name");
-        pill.classList.toggle("active", (state.user.selectedActivities || []).includes(name));
+        pill.classList.toggle("active", !shouldClearInputsOnReload && (state.user.selectedActivities || []).includes(name));
     });
 
     const renderMatches = (data) => {
@@ -120,6 +126,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.querySelectorAll("#involvement-pills-container .involvement-pill").forEach((pill) => {
         pill.addEventListener("click", () => {
             pill.classList.toggle("active");
+            if (pill.classList.contains("active") && noActivitiesCheckbox) noActivitiesCheckbox.checked = false;
             const name = pill.getAttribute("data-name");
             let list = state.user.selectedActivities || [];
 
@@ -131,13 +138,19 @@ document.addEventListener("DOMContentLoaded", async () => {
                 QuizApp.avatarSayTextOnly(`Removed ${name} from your active involvement list.`, 3);
             }
             state.user.selectedActivities = list;
-            QuizApp.updateUserData({ selectedActivities: list });
+            state.user.noCurrentActivities = false;
+            QuizApp.updateUserData({ selectedActivities: list, noCurrentActivities: false });
+            if (activitiesError) activitiesError.hidden = true;
         });
     });
 
     if (customInput) {
         customInput.addEventListener("input", (e) => {
-            QuizApp.updateUserData({ customActivity: e.target.value });
+            if (e.target.value.trim() && noActivitiesCheckbox) noActivitiesCheckbox.checked = false;
+            state.user.customActivity = e.target.value;
+            state.user.noCurrentActivities = false;
+            QuizApp.updateUserData({ customActivity: e.target.value, noCurrentActivities: false });
+            if (activitiesError) activitiesError.hidden = true;
         });
         customInput.addEventListener("blur", (e) => {
             if (e.target.value.trim()) {
@@ -145,6 +158,21 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         });
     }
+
+    noActivitiesCheckbox?.addEventListener("change", () => {
+        if (noActivitiesCheckbox.checked) {
+            document.querySelectorAll("#involvement-pills-container .involvement-pill.active").forEach((pill) => pill.classList.remove("active"));
+            if (customInput) customInput.value = "";
+            state.user.selectedActivities = [];
+            state.user.customActivity = "";
+            state.user.noCurrentActivities = true;
+            QuizApp.updateUserData({ selectedActivities: [], customActivity: "", noCurrentActivities: true });
+        } else {
+            state.user.noCurrentActivities = false;
+            QuizApp.updateUserData({ noCurrentActivities: false });
+        }
+        if (activitiesError) activitiesError.hidden = true;
+    });
 
     // Update Involvement Matches Button
     const btnUpdate = document.getElementById("btn-update-involvement");
@@ -182,6 +210,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     const btnNext = document.getElementById("btn-next-to-section-4");
     if (btnNext) {
         btnNext.addEventListener("click", () => {
+            const hasSelectedActivity = Boolean(document.querySelector("#involvement-pills-container .involvement-pill.active"));
+            if (!hasSelectedActivity && !customInput?.value.trim() && !noActivitiesCheckbox?.checked) {
+                if (activitiesError) {
+                    activitiesError.textContent = "Select an activity, enter another activity or project, or confirm that you do not have any yet.";
+                    activitiesError.hidden = false;
+                }
+                return;
+            }
             QuizApp.stopAllSpeech();
             window.location.href = "/loading?next=4";
         });

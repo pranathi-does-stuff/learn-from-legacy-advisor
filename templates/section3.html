@@ -125,8 +125,8 @@
 
         <!-- Involvement Selector Card -->
         <div class="course-planner-card" style="margin-bottom: 1.5rem;">
-            <h4 class="card-subtitle">Select Active or Planned Organizations &amp; Activities</h4>
-            <p class="card-subtext">Click any organization to toggle your involvement on/off:</p>
+            <h4 class="card-subtitle">Select Active or Planned Organizations &amp; Activities <span class="required-indicator">Required response</span></h4>
+            <p class="card-subtext">Choose one or more, add another activity or project, or confirm that you have none yet.</p>
 
             <div id="involvement-pills-container" class="involvement-pills-wrap"
                 style="display:flex; flex-wrap:wrap; gap:0.5rem; margin:1rem 0;">
@@ -160,10 +160,12 @@
 
             <div style="margin-top: 1rem;">
                 <label class="field-label" for="custom-activity-input">Other Activities, Leadership Positions, or
-                    Personal Projects</label>
+                    Personal Projects (Optional if selecting above)</label>
                 <input type="text" id="custom-activity-input" class="text-input"
                     placeholder="e.g., Hackathon Lead Organizer, Open Source Contributor, Lab Lead" />
             </div>
+            <label class="required-response"><input type="checkbox" id="no-activities-yet"> I do not have any current or planned activities or projects yet.</label>
+            <p id="activities-required-error" class="required-error" role="alert" hidden></p>
 
             <div style="display:flex; align-items:center; gap:1rem; margin-top:1rem;">
                 <button type="button" class="secondary-btn" id="btn-update-involvement">
@@ -193,5 +195,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/section3.js', v='35') }}"></script>
+<script src="{{ url_for('static', filename='js/section3.js', v='36') }}"></script>
 {% endblock %}

@@ -62,22 +62,26 @@ document.addEventListener("DOMContentLoaded", async () => {
     const salaryInput = document.getElementById("target-salary-input");
     const goalsInput = document.getElementById("career-goals-input");
 
-    // Populate initial inputs from state
-    if (nameInput) nameInput.value = state.user.name || "";
-    if (gpaInput) gpaInput.value = state.user.gpa || "";
-    if (creditsInput) creditsInput.value = state.user.creditsCompleted || "";
-    if (industryInput) industryInput.value = state.user.targetCompanyIndustry || "";
-    if (salaryInput) salaryInput.value = state.user.targetSalary || "";
-    if (goalsInput) goalsInput.value = state.user.careerGoals || "";
-
-    // Highlight standing pill
-    document.querySelectorAll('#substep-standing .pill-option[data-name="classYear"]').forEach((pill) => {
-        if (pill.getAttribute("data-value") === state.user.classYear) {
-            pill.classList.add("active");
-        } else {
-            pill.classList.remove("active");
+    const shouldClearInputsOnReload = QuizApp.shouldResetFormInputsOnReload();
+    const showRequiredError = (id, message) => {
+        const error = document.getElementById(id);
+        if (error) {
+            error.textContent = message;
+            error.hidden = false;
         }
-    });
+    };
+    const clearRequiredError = (id) => {
+        const error = document.getElementById(id);
+        if (error) error.hidden = true;
+    };
+
+    // Keep the saved quiz state intact, but clear the visible form on reload so users can re-enter answers.
+    if (nameInput) nameInput.value = shouldClearInputsOnReload ? "" : (state.user.name || "");
+    if (gpaInput) gpaInput.value = shouldClearInputsOnReload ? "" : (state.user.gpa || "");
+    if (creditsInput) creditsInput.value = shouldClearInputsOnReload ? "" : (state.user.creditsCompleted || "");
+    if (industryInput) industryInput.value = shouldClearInputsOnReload ? "" : (state.user.targetCompanyIndustry || "");
+    if (salaryInput) salaryInput.value = shouldClearInputsOnReload ? "" : (state.user.targetSalary || "");
+    if (goalsInput) goalsInput.value = shouldClearInputsOnReload ? "" : (state.user.careerGoals || "");
 
     let tracksByMajor = {};
 
@@ -103,8 +107,15 @@ document.addEventListener("DOMContentLoaded", async () => {
                     const opt = document.createElement("option");
                     opt.value = m;
                     opt.textContent = m;
+                    if (!shouldClearInputsOnReload && state.user.major === m) {
+                        opt.selected = true;
+                    }
                     majorSelect.appendChild(opt);
                 });
+
+                if (shouldClearInputsOnReload) {
+                    majorSelect.value = "";
+                }
             }
 
             const updateTracks = (selMajor = "") => {
@@ -121,11 +132,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                     const opt = document.createElement("option");
                     opt.value = t;
                     opt.textContent = t;
-                    if (state.user.majorTrack === t) opt.selected = true;
+                    if (!shouldClearInputsOnReload && state.user.majorTrack === t) {
+                        opt.selected = true;
+                    }
                     trackSelect.appendChild(opt);
                 });
 
-                if (!state.user.majorTrack || !options.includes(state.user.majorTrack)) {
+                if (shouldClearInputsOnReload || !state.user.majorTrack || !options.includes(state.user.majorTrack)) {
                     trackSelect.value = "";
                 }
             };
@@ -138,8 +151,15 @@ document.addEventListener("DOMContentLoaded", async () => {
                     const opt = document.createElement("option");
                     opt.value = min;
                     opt.textContent = min;
+                    if (!shouldClearInputsOnReload && state.user.minor === min) {
+                        opt.selected = true;
+                    }
                     minorSelect.appendChild(opt);
                 });
+
+                if (shouldClearInputsOnReload) {
+                    minorSelect.value = "";
+                }
             }
 
             majorSelect.addEventListener("change", (e) => {
@@ -188,28 +208,42 @@ document.addEventListener("DOMContentLoaded", async () => {
             pill.classList.add("active");
             const val = pill.getAttribute("data-value");
             QuizApp.updateUserData({ classYear: val });
+            clearRequiredError("standing-required-error");
             QuizApp.avatarSayTextOnly(QuizApp.HARDCODED_REACTIONS.classYear(val), 1);
         });
     });
 
     document.getElementById("btn-to-substep-major")?.addEventListener("click", () => {
+        if (!document.querySelector('#substep-standing .pill-option[data-name="classYear"].active')) {
+            showRequiredError("standing-required-error", "Choose your college standing before continuing.");
+            return;
+        }
+        clearRequiredError("standing-required-error");
         showSubstep(subMajor);
         QuizApp.avatarSayTextOnly("Select your primary major and track to load curriculum pathways.", 1);
     });
 
     document.getElementById("btn-back-to-standing")?.addEventListener("click", () => {
         showSubstep(subStanding);
+        QuizApp.avatarSayTextOnly("Review or update your college standing. Choose the option that best describes your current status.", 1);
     });
 
     document.getElementById("btn-to-substep-gpa")?.addEventListener("click", () => {
+        if (!majorSelect?.value || !industryInput?.value.trim()) {
+            showRequiredError("major-required-error", "Choose a primary major and enter a target industry or dream employer before continuing.");
+            if (!majorSelect?.value) majorSelect?.focus();
+            else industryInput?.focus();
+            return;
+        }
+        clearRequiredError("major-required-error");
         QuizApp.updateUserData({
             name: nameInput?.value || "",
-            major: majorSelect?.value || "Computer Science",
+            major: majorSelect.value,
             majorTrack: trackSelect?.value || "",
             minor: minorSelect?.value || "",
-            targetCompanyIndustry: industryInput?.value || "Software Products",
-            targetSalary: salaryInput?.value || "$105,000",
-            careerGoals: goalsInput?.value || "Software Engineer",
+            targetCompanyIndustry: industryInput.value.trim(),
+            targetSalary: salaryInput?.value || "",
+            careerGoals: goalsInput?.value || "",
         });
         showSubstep(subGpa);
         QuizApp.avatarSayTextOnly("Let's record your cumulative GPA and earned credit total.", 1);
@@ -217,11 +251,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     document.getElementById("btn-back-to-major")?.addEventListener("click", () => {
         showSubstep(subMajor);
+        QuizApp.avatarSayTextOnly("Review or update your major, track, minor, and career goals before continuing.", 1);
     });
 
     // Real-time reactions for GPA and Credits
     gpaInput?.addEventListener("input", (e) => {
         QuizApp.updateUserData({ gpa: e.target.value });
+        clearRequiredError("gpa-required-error");
     });
     gpaInput?.addEventListener("blur", (e) => {
         QuizApp.avatarSayTextOnly(QuizApp.HARDCODED_REACTIONS.gpa(e.target.value), 1);
@@ -229,6 +265,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     creditsInput?.addEventListener("input", (e) => {
         QuizApp.updateUserData({ creditsCompleted: e.target.value });
+        clearRequiredError("gpa-required-error");
     });
     creditsInput?.addEventListener("blur", (e) => {
         QuizApp.avatarSayTextOnly(QuizApp.HARDCODED_REACTIONS.credits(e.target.value), 1);
@@ -285,16 +322,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
     document.getElementById("btn-to-substep-aspirations")?.addEventListener("click", () => {
+        if (!gpaInput?.value || !gpaInput.checkValidity() || !creditsInput?.value || !creditsInput.checkValidity()) {
+            showRequiredError("gpa-required-error", "Enter a valid GPA from 0.00 to 4.00 and total earned credits before continuing.");
+            if (!gpaInput?.value || !gpaInput.checkValidity()) gpaInput?.focus();
+            else creditsInput?.focus();
+            return;
+        }
+        clearRequiredError("gpa-required-error");
         QuizApp.updateUserData({
-            gpa: gpaInput?.value || "3.65",
-            creditsCompleted: creditsInput?.value || "45",
+            gpa: gpaInput.value,
+            creditsCompleted: creditsInput.value,
         });
         showSubstep(subAspirations);
+        const thankYouMessage = "Thank you for sharing your academic profile, goals, and background. Our advisor team is excited to help you explore your options and build a personalized plan.";
+        QuizApp.avatarSayTextOnly(thankYouMessage, 1);
+        QuizApp.speakWebSpeech(thankYouMessage, 1);
         loadBaselineReport();
     });
 
     document.getElementById("btn-back-to-gpa")?.addEventListener("click", () => {
         showSubstep(subGpa);
+        QuizApp.avatarSayTextOnly("Review or update your GPA and completed credits before continuing.", 1);
     });
 
     industryInput?.addEventListener("input", (e) => {
@@ -321,11 +369,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Proceed to Section 2 Loading Screen
     document.getElementById("btn-next-to-section-2")?.addEventListener("click", () => {
+        const user = QuizApp.getQuizState().user;
+        if (!user.classYear || !user.major || !user.targetCompanyIndustry?.trim() || !user.gpa || !user.creditsCompleted) {
+            showSubstep(!user.classYear ? subStanding : (!user.gpa || !user.creditsCompleted ? subGpa : subMajor));
+            showRequiredError(!user.classYear ? "standing-required-error" : (!user.gpa || !user.creditsCompleted ? "gpa-required-error" : "major-required-error"), "Complete the required information on this step before continuing.");
+            return;
+        }
         QuizApp.stopAllSpeech();
         QuizApp.updateUserData({
-            targetCompanyIndustry: industryInput?.value || "Software Products",
-            targetSalary: salaryInput?.value || "$105,000",
-            careerGoals: goalsInput?.value || "Software Engineer",
+            targetCompanyIndustry: industryInput?.value.trim() || "",
+            targetSalary: salaryInput?.value || "",
+            careerGoals: goalsInput?.value || "",
         });
         window.location.href = "/loading?next=2";
     });

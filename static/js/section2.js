@@ -29,18 +29,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     const requiredGrid = document.getElementById("required-courses-grid");
     const requiredSpinner = document.getElementById("required-loading-spinner");
     const btnToElectives = document.getElementById("btn-to-electives");
+    const noneRequiredCheckbox = document.getElementById("none-required-courses");
 
     // Screen 2 Elements
     const industryLabel = document.getElementById("student-industry-label");
     const popularGrid = document.getElementById("popular-electives-grid");
     const electivesSpinner = document.getElementById("electives-loading-spinner");
     const customElectivesInput = document.getElementById("custom-electives-input");
+    const noneElectivesCheckbox = document.getElementById("none-electives");
     const btnBackToRequired = document.getElementById("btn-back-to-required");
     const btnToPlanned = document.getElementById("btn-to-planned");
 
     // Screen 3 Elements
     const catalogPills = document.getElementById("catalog-course-pills");
     const customPlannedInput = document.getElementById("custom-planned-input");
+    const noPlannedCoursesCheckbox = document.getElementById("no-planned-courses");
     const btnBackToElectives = document.getElementById("btn-back-to-electives");
     const btnSubmitReport = document.getElementById("btn-submit-course-report");
     const spinnerGenerateReport = document.getElementById("spinner-generate-report");
@@ -57,6 +60,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     const takenRequired = new Set(state.user.takenRequiredCourses || []);
     const takenElectives = new Set(state.user.takenElectives || []);
     const plannedCourses = new Set(state.user.plannedCourses || []);
+    if (noneRequiredCheckbox) noneRequiredCheckbox.checked = Boolean(state.user.noRequiredCourses);
+    if (noneElectivesCheckbox) noneElectivesCheckbox.checked = Boolean(state.user.noElectives);
+    if (noPlannedCoursesCheckbox) noPlannedCoursesCheckbox.checked = Boolean(state.user.noPlannedCourses);
+
+    const showValidationError = (id, message) => {
+        const error = document.getElementById(id);
+        if (error) {
+            error.textContent = message;
+            error.hidden = false;
+        }
+    };
+    const clearValidationError = (id) => {
+        const error = document.getElementById(id);
+        if (error) error.hidden = true;
+    };
 
     // Play Avatar 2 Intro Speech
     setTimeout(async () => {
@@ -145,6 +163,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const nowChecked = !takenRequired.has(c.course_id);
                 if (nowChecked) {
                     takenRequired.add(c.course_id);
+                    if (noneRequiredCheckbox) noneRequiredCheckbox.checked = false;
                     card.classList.add("checked");
                     card.querySelector(".course-chk-box").textContent = "✓";
                 } else {
@@ -152,7 +171,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                     card.classList.remove("checked");
                     card.querySelector(".course-chk-box").textContent = "";
                 }
-                QuizApp.updateUserData({ takenRequiredCourses: Array.from(takenRequired) });
+                QuizApp.updateUserData({ takenRequiredCourses: Array.from(takenRequired), noRequiredCourses: false });
+                clearValidationError("required-courses-error");
             });
             requiredGrid.appendChild(card);
         });
@@ -188,6 +208,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const nowChecked = !takenElectives.has(e.course_id);
                 if (nowChecked) {
                     takenElectives.add(e.course_id);
+                    if (noneElectivesCheckbox) noneElectivesCheckbox.checked = false;
                     card.classList.add("checked");
                     card.querySelector(".course-chk-box").textContent = "✓";
                 } else {
@@ -195,7 +216,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                     card.classList.remove("checked");
                     card.querySelector(".course-chk-box").textContent = "";
                 }
-                QuizApp.updateUserData({ takenElectives: Array.from(takenElectives) });
+                QuizApp.updateUserData({ takenElectives: Array.from(takenElectives), noElectives: false });
+                clearValidationError("electives-error");
             });
             popularGrid.appendChild(card);
         });
@@ -216,16 +238,70 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const nowSelected = !plannedCourses.has(c.course_id);
                 if (nowSelected) {
                     plannedCourses.add(c.course_id);
+                    if (noPlannedCoursesCheckbox) noPlannedCoursesCheckbox.checked = false;
                     pill.classList.add("active");
                 } else {
                     plannedCourses.delete(c.course_id);
                     pill.classList.remove("active");
                 }
-                QuizApp.updateUserData({ plannedCourses: Array.from(plannedCourses) });
+                QuizApp.updateUserData({ plannedCourses: Array.from(plannedCourses), noPlannedCourses: false });
+                clearValidationError("planned-courses-error");
             });
             catalogPills.appendChild(pill);
         });
     };
+
+    const clearChecklist = (grid) => {
+        grid?.querySelectorAll(".course-check-item").forEach((card) => {
+            card.classList.remove("checked");
+            const box = card.querySelector(".course-chk-box");
+            if (box) box.textContent = "";
+        });
+    };
+
+    noneRequiredCheckbox?.addEventListener("change", () => {
+        if (noneRequiredCheckbox.checked) {
+            takenRequired.clear();
+            clearChecklist(requiredGrid);
+        }
+        QuizApp.updateUserData({ takenRequiredCourses: Array.from(takenRequired), noRequiredCourses: noneRequiredCheckbox.checked });
+        clearValidationError("required-courses-error");
+    });
+
+    noneElectivesCheckbox?.addEventListener("change", () => {
+        if (noneElectivesCheckbox.checked) {
+            takenElectives.clear();
+            clearChecklist(popularGrid);
+            if (customElectivesInput) customElectivesInput.value = "";
+        }
+        QuizApp.updateUserData({ takenElectives: Array.from(takenElectives), customElectives: customElectivesInput?.value || "", noElectives: noneElectivesCheckbox.checked });
+        clearValidationError("electives-error");
+    });
+
+    noPlannedCoursesCheckbox?.addEventListener("change", () => {
+        if (noPlannedCoursesCheckbox.checked) {
+            plannedCourses.clear();
+            catalogPills?.querySelectorAll(".skill-pill.active").forEach((pill) => pill.classList.remove("active"));
+            if (customPlannedInput) customPlannedInput.value = "";
+        }
+        QuizApp.updateUserData({ plannedCourses: Array.from(plannedCourses), customPlannedCourses: customPlannedInput?.value || "", noPlannedCourses: noPlannedCoursesCheckbox.checked });
+        clearValidationError("planned-courses-error");
+    });
+
+    customElectivesInput?.addEventListener("input", () => {
+        if (customElectivesInput.value.trim()) {
+            if (noneElectivesCheckbox) noneElectivesCheckbox.checked = false;
+            QuizApp.updateUserData({ customElectives: customElectivesInput.value, noElectives: false });
+        }
+        clearValidationError("electives-error");
+    });
+    customPlannedInput?.addEventListener("input", () => {
+        if (customPlannedInput.value.trim()) {
+            if (noPlannedCoursesCheckbox) noPlannedCoursesCheckbox.checked = false;
+            QuizApp.updateUserData({ customPlannedCourses: customPlannedInput.value, noPlannedCourses: false });
+        }
+        clearValidationError("planned-courses-error");
+    });
 
     // Begin Section Button (Removes intro stage & opens Screen 1)
     if (btnStartQuestions) {
@@ -247,7 +323,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Screen Navigation Listeners
     if (btnToElectives) {
         btnToElectives.addEventListener("click", () => {
-            QuizApp.updateUserData({ takenRequiredCourses: Array.from(takenRequired) });
+            if (!takenRequired.size && !noneRequiredCheckbox?.checked) {
+                showValidationError("required-courses-error", "Select any completed courses or confirm that you have not taken any listed.");
+                return;
+            }
+            QuizApp.updateUserData({ takenRequiredCourses: Array.from(takenRequired), noRequiredCourses: Boolean(noneRequiredCheckbox?.checked) });
             showSubstep(subElectives);
         });
     }
@@ -260,6 +340,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (btnToPlanned) {
         btnToPlanned.addEventListener("click", () => {
+            if (!takenElectives.size && !customElectivesInput?.value.trim() && !noneElectivesCheckbox?.checked) {
+                showValidationError("electives-error", "Select any electives, enter other electives, or confirm that you have not taken any.");
+                return;
+            }
             if (customElectivesInput) {
                 const customVal = customElectivesInput.value.trim();
                 QuizApp.updateUserData({ customElectives: customVal });
@@ -270,7 +354,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     });
                 }
             }
-            QuizApp.updateUserData({ takenElectives: Array.from(takenElectives) });
+            QuizApp.updateUserData({ takenElectives: Array.from(takenElectives), noElectives: Boolean(noneElectivesCheckbox?.checked) });
             showSubstep(subPlanned);
         });
     }
@@ -284,6 +368,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Submit Question 3 -> Generate Section 2 Report
     if (btnSubmitReport) {
         btnSubmitReport.addEventListener("click", async () => {
+            if (!plannedCourses.size && !customPlannedInput?.value.trim() && !noPlannedCoursesCheckbox?.checked) {
+                showValidationError("planned-courses-error", "Select planned courses, enter them below, or confirm that you do not have any planned yet.");
+                return;
+            }
             const spinner = document.getElementById("spinner-generate-report");
             if (spinner) {
                 spinner.hidden = false;
@@ -297,6 +385,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 takenElectives: Array.from(takenElectives),
                 plannedCourses: Array.from(plannedCourses),
                 customPlannedCourses: customPlanned,
+                noPlannedCourses: Boolean(noPlannedCoursesCheckbox?.checked),
             });
 
             const updatedState = QuizApp.getQuizState();

@@ -4,6 +4,7 @@
 document.addEventListener("DOMContentLoaded", async () => {
     const state = QuizApp.getQuizState();
     let sec4Data = QuizApp.getSectionData(4);
+    const shouldClearInputsOnReload = QuizApp.shouldResetFormInputsOnReload();
 
     // Introduction Stage Elements
     const introStage = document.getElementById("section-intro-stage");
@@ -47,9 +48,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const skillsInput = document.getElementById("user-skills-input");
     const internshipsInput = document.getElementById("user-internships-input");
+    const noPriorExperienceCheckbox = document.getElementById("no-prior-experience");
+    const professionalError = document.getElementById("professional-required-error");
 
-    if (skillsInput) skillsInput.value = state.user.skills || "Python, SQL, AWS, Git, Linux";
-    if (internshipsInput) internshipsInput.value = state.user.internships || "";
+    if (skillsInput) skillsInput.value = shouldClearInputsOnReload ? "" : (state.user.skills || "");
+    if (internshipsInput) internshipsInput.value = shouldClearInputsOnReload ? "" : (state.user.internships || "");
+    if (noPriorExperienceCheckbox) {
+        noPriorExperienceCheckbox.checked = !shouldClearInputsOnReload && Boolean(state.user.noPriorExperience);
+    }
 
     const syncSkillPills = () => {
         const currentSkills = (skillsInput?.value || "").split(",").map((s) => s.trim().toLowerCase());
@@ -139,6 +145,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
             if (skillsInput) skillsInput.value = list.join(", ");
             QuizApp.updateUserData({ skills: skillsInput?.value || "" });
+            if (professionalError) professionalError.hidden = true;
         });
     });
 
@@ -146,6 +153,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         skillsInput.addEventListener("input", (e) => {
             QuizApp.updateUserData({ skills: e.target.value });
             syncSkillPills();
+            if (professionalError) professionalError.hidden = true;
         });
         skillsInput.addEventListener("blur", (e) => {
             if (e.target.value.trim()) {
@@ -156,7 +164,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (internshipsInput) {
         internshipsInput.addEventListener("input", (e) => {
-            QuizApp.updateUserData({ internships: e.target.value });
+            if (e.target.value.trim() && noPriorExperienceCheckbox) noPriorExperienceCheckbox.checked = false;
+            QuizApp.updateUserData({ internships: e.target.value, noPriorExperience: false });
+            if (professionalError) professionalError.hidden = true;
         });
         internshipsInput.addEventListener("blur", (e) => {
             if (e.target.value.trim()) {
@@ -164,6 +174,16 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         });
     }
+
+    noPriorExperienceCheckbox?.addEventListener("change", () => {
+        if (noPriorExperienceCheckbox.checked) {
+            if (internshipsInput) internshipsInput.value = "";
+            QuizApp.updateUserData({ internships: "", noPriorExperience: true });
+        } else {
+            QuizApp.updateUserData({ noPriorExperience: false });
+        }
+        if (professionalError) professionalError.hidden = true;
+    });
 
     // Update Professional Matches Button
     const btnUpdate = document.getElementById("btn-update-professional");
@@ -201,6 +221,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     const btnNext = document.getElementById("btn-next-to-section-5");
     if (btnNext) {
         btnNext.addEventListener("click", () => {
+            if (!skillsInput?.value.trim() || (!internshipsInput?.value.trim() && !noPriorExperienceCheckbox?.checked)) {
+                if (professionalError) {
+                    professionalError.textContent = "Enter at least one skill and add work history, or confirm that you do not have prior experience yet.";
+                    professionalError.hidden = false;
+                }
+                if (!skillsInput?.value.trim()) skillsInput?.focus();
+                else internshipsInput?.focus();
+                return;
+            }
             QuizApp.stopAllSpeech();
             window.location.href = "/loading?next=5";
         });

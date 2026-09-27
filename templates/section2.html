@@ -63,7 +63,7 @@
                 <span class="step-pill">Section 2 of 5</span>
                 <span class="step-pill active-pill">Question 1 of 3</span>
             </div>
-            <h2 class="step-heading">Have you taken any of these required courses?</h2>
+            <h2 class="step-heading">Have you taken any of these required courses? <span class="required-indicator">Required response</span></h2>
             <p class="step-description">
                 Check off all core courses you have completed or are currently taking for <strong
                     id="student-major-label" style="color:var(--accent-gold);">your major</strong>:
@@ -77,6 +77,8 @@
             </div>
 
             <div id="required-courses-grid" class="course-checklist-grid" style="margin-top: 1rem;"></div>
+            <label class="required-response"><input type="checkbox" id="none-required-courses"> I have not taken any of these courses.</label>
+            <p id="required-courses-error" class="required-error" role="alert" hidden></p>
 
             <div class="nav-button-row" style="margin-top: 2rem; display: flex; justify-content: flex-end;">
                 <button type="button" class="submit-btn" id="btn-to-electives">
@@ -93,7 +95,7 @@
                 <span class="step-pill">Section 2 of 5</span>
                 <span class="step-pill active-pill">Question 2 of 3</span>
             </div>
-            <h2 class="step-heading">Have you taken any of these electives?</h2>
+            <h2 class="step-heading">Have you taken any of these electives? <span class="required-indicator">Required response</span></h2>
             <p class="step-description">
                 Select any non-required electives you have taken from the most popular courses among successful alumni
                 in <strong id="student-industry-label" style="color:var(--accent-emerald);">your target field</strong>:
@@ -111,10 +113,12 @@
                 style="margin-top: 1.5rem; background:rgba(15, 23, 42, 0.6); padding:1.25rem; border-radius:8px; border:1px solid var(--border-subtle);">
                 <label class="field-label" for="custom-electives-input"
                     style="font-weight:600; margin-bottom:0.4rem; display:block;">Other Electives or Special Topics
-                    Taken (Comma-separated)</label>
+                    Taken (Comma-separated, Optional)</label>
                 <input type="text" id="custom-electives-input" class="text-input"
                     placeholder="e.g. CMSC 491 (Deep Learning), MATH 221, ENGL 393" />
             </div>
+            <label class="required-response"><input type="checkbox" id="none-electives"> I have not taken any of these or other electives.</label>
+            <p id="electives-error" class="required-error" role="alert" hidden></p>
 
             <div class="nav-button-row" style="margin-top: 2rem; display: flex; justify-content: space-between;">
                 <button type="button" class="secondary-btn" id="btn-back-to-required">&larr; Back to Required</button>
@@ -132,7 +136,7 @@
                 <span class="step-pill">Section 2 of 5</span>
                 <span class="step-pill active-pill">Question 3 of 3</span>
             </div>
-            <h2 class="step-heading">What classes are you planning on taking?</h2>
+            <h2 class="step-heading">What classes are you planning on taking? <span class="required-indicator">Required response</span></h2>
             <p class="step-description">
                 Select upcoming courses from the catalog below or enter specific future classes to complete your
                 graduation roadmap:
@@ -140,7 +144,7 @@
 
             <div class="course-planner-card"
                 style="margin-top: 1rem; background:rgba(15, 23, 42, 0.6); padding:1.25rem; border-radius:8px; border:1px solid var(--border-subtle);">
-                <h4 class="card-subtitle" style="margin-bottom:0.4rem; color:var(--accent-gold);">Select Upcoming
+                    <h4 class="card-subtitle" style="margin-bottom:0.4rem; color:var(--accent-gold);">Select Upcoming
                     Coursework from Catalog</h4>
                 <p class="card-subtext" style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:0.75rem;">
                     Click course pills to toggle them in your planned schedule:</p>
@@ -148,12 +152,14 @@
                     style="display:flex; flex-wrap:wrap; gap:0.5rem; max-height:220px; overflow-y:auto; padding:0.75rem; background:rgba(0,0,0,0.3); border-radius:6px; border:1px solid var(--border-subtle);">
                 </div>
             </div>
+            <label class="required-response"><input type="checkbox" id="no-planned-courses"> I do not have any courses planned yet.</label>
+            <p id="planned-courses-error" class="required-error" role="alert" hidden></p>
 
             <div class="course-planner-card"
                 style="margin-top: 1rem; background:rgba(15, 23, 42, 0.6); padding:1.25rem; border-radius:8px; border:1px solid var(--border-subtle);">
                 <label class="field-label" for="custom-planned-input"
                     style="font-weight:600; margin-bottom:0.4rem; display:block;">Planned Future Courses, Senior
-                    Electives &amp; Capstones</label>
+                    Electives &amp; Capstones (Optional if selecting from the catalog)</label>
                 <textarea id="custom-planned-input" class="text-input" rows="3"
                     placeholder="e.g. CMSC 447 (Software Engineering Capstone), CMSC 471 (AI), CMSC 441 (Algorithms)"></textarea>
             </div>
@@ -269,5 +275,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/section2.js', v='50') }}"></script>
+<script src="{{ url_for('static', filename='js/section2.js', v='51') }}"></script>
 {% endblock %}

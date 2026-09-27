@@ -6,22 +6,27 @@ const STORAGE_KEY = "legacy_advisory_state_v2";
 
 const DEFAULT_QUIZ_STATE = {
     user: {
-        classYear: "Freshman",
+        classYear: "",
         name: "",
-        major: "Computer Science",
-        majorTrack: "General",
-        minor: "None",
-        gpa: "3.65",
-        creditsCompleted: "45",
-        targetCompanyIndustry: "Software Products",
-        targetSalary: "$105,000",
-        targetLocation: "Baltimore / Washington DC / Remote",
-        careerGoals: "Software Engineer",
+        major: "",
+        majorTrack: "",
+        minor: "",
+        gpa: "",
+        creditsCompleted: "",
+        targetCompanyIndustry: "",
+        targetSalary: "",
+        targetLocation: "",
+        careerGoals: "",
         expectedGradYear: "2028",
-        selectedActivities: ["HackUMBC", "ACM Student Chapter"],
+        selectedActivities: [],
         customActivity: "",
-        skills: "Python, Java, Git, SQL, Linux",
+        skills: "",
         internships: "",
+        noRequiredCourses: false,
+        noElectives: false,
+        noPlannedCourses: false,
+        noCurrentActivities: false,
+        noPriorExperience: false,
     },
     sections: {
         1: null,
@@ -34,6 +39,19 @@ const DEFAULT_QUIZ_STATE = {
 };
 
 const QuizApp = {
+    shouldResetFormInputsOnReload() {
+        const navEntries = performance.getEntriesByType ? performance.getEntriesByType("navigation") : [];
+        if (navEntries.length > 0) {
+            return navEntries[0].type === "reload";
+        }
+
+        if (window.performance && window.performance.navigation) {
+            return window.performance.navigation.type === 1;
+        }
+
+        return false;
+    },
+
     getQuizState() {
         try {
             const raw = sessionStorage.getItem(STORAGE_KEY);

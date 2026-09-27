@@ -149,17 +149,19 @@
 
             <div style="margin-top: 1rem;">
                 <label class="field-label" for="user-skills-input">Technical Proficiencies &amp; Certifications (Comma
-                    Separated)</label>
+                    Separated) <span class="required-indicator">Required</span></label>
                 <input type="text" id="user-skills-input" class="text-input"
-                    placeholder="e.g. Python, AWS, Docker, React, PostgreSQL" />
+                    placeholder="e.g. Python, AWS, Docker, React, PostgreSQL" required aria-required="true" />
             </div>
 
             <div style="margin-top: 1rem;">
                 <label class="field-label" for="user-internships-input">Internships, Part-Time Industry Roles, or Prior
-                    Work History</label>
+                    Work History <span class="required-indicator">Required response</span></label>
                 <textarea id="user-internships-input" class="text-input" rows="3"
                     placeholder="e.g., Summer 2025 Software Engineering Intern at Northrop Grumman; Undergrad Research Assistant"></textarea>
             </div>
+            <label class="required-response"><input type="checkbox" id="no-prior-experience"> I do not have prior work or internship experience yet.</label>
+            <p id="professional-required-error" class="required-error" role="alert" hidden></p>
 
             <div style="display:flex; align-items:center; gap:1rem; margin-top:1rem;">
                 <button type="button" class="secondary-btn" id="btn-update-professional">
@@ -189,5 +191,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/section4.js', v='35') }}"></script>
+<script src="{{ url_for('static', filename='js/section4.js', v='36') }}"></script>
 {% endblock %}
