@@ -530,6 +530,551 @@ def _infer_industry_label(raw_industry, career_goals, major):
 
 
 # ==============================================================================
+# SECTION 3: CAMPUS INVOLVEMENT & CO-CURRICULARS METADATA & QUERY ENGINE
+# ==============================================================================
+
+CAMPUS_ACTIVITIES_METADATA = {
+    # --- Student Organizations (Clubs & Chapters) ---
+    "Association for Computing Machinery Student Chapter": {
+        "category": "Student Organization",
+        "description": "UMBC's premier computing society hosting technical workshops, tech talks, and collaborative coding sessions.",
+        "skills": ["Algorithms", "Software Engineering", "Tech Networking", "Peer Collaboration"],
+        "departments": ["Computer Science", "Data Science", "Computer Engineering", "Cybersecurity"],
+        "industries": ["Software Products", "Financial Services", "Defense & Aerospace", "Cloud & Infrastructure"],
+    },
+    "Retriever Cyber Club": {
+        "category": "Student Organization",
+        "description": "Hands-on security workshops, blue/red teaming labs, and CTF tournament preparations.",
+        "skills": ["Network Security", "Penetration Testing", "Linux Admin", "Incident Response"],
+        "departments": ["Cybersecurity", "Computer Science", "Information Systems"],
+        "industries": ["Cybersecurity Services", "Defense & Aerospace", "Federal Government", "Federal Contracting"],
+    },
+    "CyberDawgs": {
+        "category": "Student Organization",
+        "description": "UMBC's premier collegiate cyber defense and offensive security student team organization.",
+        "skills": ["Network Hardening", "Penetration Testing", "Security Operations", "Linux"],
+        "departments": ["Cybersecurity", "Computer Science", "Information Systems"],
+        "industries": ["Cybersecurity Services", "Defense & Aerospace", "Federal Government"],
+    },
+    "Data Science Collective": {
+        "category": "Student Organization",
+        "description": "Student community exploring predictive modeling, data visualization, and applied ML pipelines.",
+        "skills": ["Python", "Machine Learning", "Data Wrangling", "Statistical Modeling", "SQL"],
+        "departments": ["Data Science", "Computer Science", "Information Systems"],
+        "industries": ["Financial Services", "Healthcare & Life Sciences", "Software Products", "Consulting & Professional Services"],
+    },
+    "Artificial Intelligence Student Group": {
+        "category": "Student Organization",
+        "description": "Dedicated student group discussing LLMs, neural networks, reinforcement learning, and computer vision.",
+        "skills": ["PyTorch", "Deep Learning", "NLP", "Computer Vision"],
+        "departments": ["Computer Science", "Data Science"],
+        "industries": ["Software Products", "Defense & Aerospace", "Healthcare & Life Sciences"],
+    },
+    "Open Source Society": {
+        "category": "Student Organization",
+        "description": "Collaborative developers contributing to major open-source repositories and building campus software tooling.",
+        "skills": ["Git/GitHub", "Code Review", "CI/CD", "Collaborative Development"],
+        "departments": ["Computer Science", "Information Systems", "Data Science"],
+        "industries": ["Software Products", "Cloud & Infrastructure", "E-Commerce & Retail Tech"],
+    },
+    "Google Developer Student Club": {
+        "category": "Student Organization",
+        "description": "Google-supported student chapter building mobile, cloud, and web projects for local communities.",
+        "skills": ["Flutter", "Firebase", "GCP", "Web Development"],
+        "departments": ["Computer Science", "Information Systems", "Data Science"],
+        "industries": ["Software Products", "Cloud & Infrastructure", "E-Commerce & Retail Tech"],
+    },
+    "IEEE Student Branch": {
+        "category": "Student Organization",
+        "description": "Technical society focusing on hardware, signal processing, embedded systems, and computing standards.",
+        "skills": ["Hardware Design", "Signal Processing", "Embedded C", "Circuit Analysis"],
+        "departments": ["Computer Engineering", "Computer Science"],
+        "industries": ["Defense & Aerospace", "Software Products"],
+    },
+    "Retriever Robotics": {
+        "category": "Student Organization",
+        "description": "Build autonomous and teleoperated robots for intercollegiate engineering challenges.",
+        "skills": ["Embedded C/C++", "ROS", "Microcontrollers", "Hardware/Software Integration"],
+        "departments": ["Computer Engineering", "Computer Science"],
+        "industries": ["Defense & Aerospace", "Software Products", "Healthcare & Life Sciences"],
+    },
+    "Information Systems Student Association": {
+        "category": "Student Organization",
+        "description": "Professional development, enterprise systems, cloud tools, and business tech networking.",
+        "skills": ["Enterprise Architecture", "Database Systems", "Project Management", "Agile"],
+        "departments": ["Information Systems", "Health Informatics"],
+        "industries": ["Consulting & Professional Services", "Financial Services", "Federal Contracting"],
+    },
+    "Cloud Computing Club": {
+        "category": "Student Organization",
+        "description": "Hands-on cloud architecture labs exploring AWS, Azure, GCP, containerization, and infrastructure as code.",
+        "skills": ["AWS", "Docker", "Kubernetes", "DevOps", "Terraform"],
+        "departments": ["Computer Science", "Information Systems", "Cybersecurity"],
+        "industries": ["Cloud & Infrastructure", "Software Products", "Financial Services"],
+    },
+    "Game Developers Club": {
+        "category": "Student Organization",
+        "description": "Game engine design, Unreal/Unity development, graphics programming, and indie game projects.",
+        "skills": ["C# / C++", "Unity/Unreal", "Game Physics", "3D Graphics", "Asset Pipelines"],
+        "departments": ["Computer Science"],
+        "industries": ["Software Products", "E-Commerce & Retail Tech"],
+    },
+    "Linux Users Group": {
+        "category": "Student Organization",
+        "description": "Exploring open-source operating systems, kernel configuration, and Unix systems administration.",
+        "skills": ["Linux / Unix", "Bash Scripting", "Systems Architecture", "Server Admin"],
+        "departments": ["Computer Science", "Cybersecurity", "Computer Engineering"],
+        "industries": ["Cloud & Infrastructure", "Defense & Aerospace", "Cybersecurity Services"],
+    },
+    "Women in Computing": {
+        "category": "Student Organization",
+        "description": "Empowering women and non-binary students in technology through mentorship, technical workshops, and industry panels.",
+        "skills": ["Leadership", "Industry Networking", "Career Development", "Mentorship"],
+        "departments": ["Computer Science", "Information Systems", "Data Science", "Cybersecurity"],
+        "industries": ["Software Products", "Financial Services", "Defense & Aerospace", "Consulting & Professional Services"],
+    },
+    "National Society of Black Engineers Chapter": {
+        "category": "Student Organization",
+        "description": "UMBC NSBE chapter fostering engineering excellence, leadership, and corporate recruitment.",
+        "skills": ["Leadership", "Professional Networking", "Engineering Ethics", "Teamwork"],
+        "departments": ["Computer Science", "Computer Engineering", "Information Systems"],
+        "industries": ["Defense & Aerospace", "Software Products", "Financial Services", "Federal Contracting"],
+    },
+    "Society of Hispanic Professional Engineers Chapter": {
+        "category": "Student Organization",
+        "description": "UMBC SHPE chapter providing STEM leadership development and nationwide career conferences.",
+        "skills": ["Leadership", "Project Management", "Technical Presentations", "Networking"],
+        "departments": ["Computer Science", "Computer Engineering", "Information Systems"],
+        "industries": ["Defense & Aerospace", "Software Products", "Consulting & Professional Services"],
+    },
+    "Society of Asian Scientists and Engineers": {
+        "category": "Student Organization",
+        "description": "UMBC SASE chapter advancing Asian heritage scientists and engineers in education and industry.",
+        "skills": ["Professional Development", "Leadership", "Networking", "STEM Community"],
+        "departments": ["Computer Science", "Computer Engineering", "Information Systems"],
+        "industries": ["Software Products", "Defense & Aerospace", "Consulting & Professional Services"],
+    },
+    "Society of Women Engineers Chapter": {
+        "category": "Student Organization",
+        "description": "UMBC SWE chapter supporting women engineers through professional development and industry networking.",
+        "skills": ["Leadership", "Engineering Networking", "Career Panels", "Mentorship"],
+        "departments": ["Computer Engineering", "Computer Science", "Information Systems"],
+        "industries": ["Defense & Aerospace", "Software Products", "Consulting & Professional Services"],
+    },
+    "Health Informatics Student Association": {
+        "category": "Student Organization",
+        "description": "Bridging clinical electronic records, health IT systems, and biomedical data analytics.",
+        "skills": ["Health Data Systems", "HIPAA Compliance", "Clinical Analytics", "SQL"],
+        "departments": ["Health Informatics", "Information Systems", "Data Science"],
+        "industries": ["Healthcare & Life Sciences", "Federal Government", "Consulting & Professional Services"],
+    },
+    "Product Club": {
+        "category": "Student Organization",
+        "description": "Product management, user experience design, wireframing, and market strategy workshops.",
+        "skills": ["Product Strategy", "User Research", "Wireframing", "Scrum / Agile"],
+        "departments": ["Information Systems", "Computer Science"],
+        "industries": ["Software Products", "E-Commerce & Retail Tech", "Consulting & Professional Services"],
+    },
+    "Entrepreneurship and Innovation Club": {
+        "category": "Student Organization",
+        "description": "Startup incubation, venture creation, and pitch competitions for tech founders.",
+        "skills": ["Venture Strategy", "Pitching", "Market Analysis", "Business Models"],
+        "departments": ["Information Systems", "Computer Science"],
+        "industries": ["Software Products", "Financial Services", "Consulting & Professional Services"],
+    },
+    "UMBC Esports & Gaming Club": {
+        "category": "Student Organization",
+        "description": "Competitive gaming, broadcast production, event logistics, and community tournament organization.",
+        "skills": ["Live Production", "Community Management", "Event Organizing", "Broadcast Tools"],
+        "departments": ["Computer Science", "Information Systems"],
+        "industries": ["Software Products", "E-Commerce & Retail Tech"],
+    },
+    "Design & User Experience Club": {
+        "category": "Student Organization",
+        "description": "UI/UX wireframing, Figma design systems, usability research, and frontend prototyping.",
+        "skills": ["Figma", "UI/UX Design", "Wireframing", "User Research"],
+        "departments": ["Information Systems", "Computer Science"],
+        "industries": ["Software Products", "Consulting & Professional Services"],
+    },
+    "Mobile Application Development Club": {
+        "category": "Student Organization",
+        "description": "Building native and cross-platform mobile applications in Swift, Kotlin, and React Native.",
+        "skills": ["iOS / Android", "Swift", "Kotlin", "React Native", "Mobile APIs"],
+        "departments": ["Computer Science", "Information Systems"],
+        "industries": ["Software Products", "E-Commerce & Retail Tech"],
+    },
+    "Quantum Computing Student Interest Group": {
+        "category": "Student Organization",
+        "description": "Exploring quantum algorithms, Qiskit circuits, qubit simulation, and quantum cryptography.",
+        "skills": ["Quantum Algorithms", "Qiskit", "Linear Algebra", "Python"],
+        "departments": ["Computer Science", "Computer Engineering"],
+        "industries": ["Defense & Aerospace", "Software Products", "Financial Services"],
+    },
+    "Biomedical Engineering Society Student Chapter": {
+        "category": "Student Organization",
+        "description": "Interdisciplinary society connecting computing, biomechanics, and medical technology innovations.",
+        "skills": ["Biomedical Devices", "Signal Processing", "Data Modeling"],
+        "departments": ["Computer Engineering", "Health Informatics"],
+        "industries": ["Healthcare & Life Sciences", "Defense & Aerospace"],
+    },
+
+    # --- Competitive Teams ---
+    "Capture the Flag Team": {
+        "category": "Competitive Team",
+        "description": "Competitive cybersecurity team competing in regional & national collegiate CTF tournaments.",
+        "skills": ["Binary Exploitation", "Cryptography", "Reverse Engineering", "Web Security"],
+        "departments": ["Cybersecurity", "Computer Science"],
+        "industries": ["Cybersecurity Services", "Defense & Aerospace", "Federal Government"],
+    },
+    "Collegiate Cyber Defense Team": {
+        "category": "Competitive Team",
+        "description": "Defensive security squad defending live enterprise infrastructure against red team attacks in CCDC.",
+        "skills": ["System Hardening", "Firewall Configuration", "SIEM Monitoring", "Active Directory"],
+        "departments": ["Cybersecurity", "Information Systems", "Computer Science"],
+        "industries": ["Cybersecurity Services", "Defense & Aerospace", "Financial Services"],
+    },
+    "Programming Contest Team": {
+        "category": "Competitive Team",
+        "description": "UMBC's competitive algorithm squad training for ICPC collegiate challenges.",
+        "skills": ["Advanced Algorithms", "Dynamic Programming", "Graph Theory", "C++"],
+        "departments": ["Computer Science"],
+        "industries": ["Software Products", "Financial Services"],
+    },
+    "Analytics Case Competition Team": {
+        "category": "Competitive Team",
+        "description": "Intercollegiate business analytics team solving live corporate data challenges.",
+        "skills": ["Business Intelligence", "Predictive Analytics", "Executive Presenting", "Tableau"],
+        "departments": ["Data Science", "Information Systems"],
+        "industries": ["Consulting & Professional Services", "Financial Services"],
+    },
+    "Robotics Competition Team": {
+        "category": "Competitive Team",
+        "description": "Engineering team designing combat and autonomous navigational competitive robots.",
+        "skills": ["Autonomous Navigation", "Sensors/Actuators", "Kinematics", "SolidWorks"],
+        "departments": ["Computer Engineering", "Computer Science"],
+        "industries": ["Defense & Aerospace", "Software Products"],
+    },
+    "Collegiate Penetration Testing Team": {
+        "category": "Competitive Team",
+        "description": "Offensive security squad performing ethical hacking and simulated network penetration tests in CPTC.",
+        "skills": ["Penetration Testing", "Vulnerability Assessment", "Metasploit", "Exploit Dev"],
+        "departments": ["Cybersecurity", "Computer Science"],
+        "industries": ["Cybersecurity Services", "Defense & Aerospace", "Federal Government"],
+    },
+    "Autonomous Vehicle Racing Team": {
+        "category": "Competitive Team",
+        "description": "Intercollegiate engineering team developing autonomous navigation, perception, and control systems.",
+        "skills": ["Computer Vision", "ROS", "Control Systems", "Sensor Fusion", "C++"],
+        "departments": ["Computer Engineering", "Computer Science"],
+        "industries": ["Defense & Aerospace", "Software Products"],
+    },
+    "Data Mining & Kaggle Competition Team": {
+        "category": "Competitive Team",
+        "description": "Competitive predictive modeling team building ensemble ML solutions for global Kaggle challenges.",
+        "skills": ["Feature Engineering", "Ensemble Modeling", "XGBoost", "PyTorch", "Data Science"],
+        "departments": ["Data Science", "Computer Science", "Information Systems"],
+        "industries": ["Financial Services", "Software Products", "Healthcare & Life Sciences"],
+    },
+}
+
+
+def _get_popular_campus_clubs_table(target_industry: str = None) -> list:
+    """
+    Generate the benchmark data table showing the most popular student organizations
+    and competitive teams among all current students in the Tiger Data database.
+    """
+    counts = {}
+    if STUDENT_EXPERIENCE_CSV.exists() and STUDENTS_CURRENT_CSV.exists():
+        try:
+            curr_cids = set()
+            with STUDENTS_CURRENT_CSV.open("r", encoding="utf-8") as f:
+                for row in csv.DictReader(f):
+                    cid = row.get("campus_id")
+                    if cid:
+                        curr_cids.add(cid)
+
+            with STUDENT_EXPERIENCE_CSV.open("r", encoding="utf-8") as f:
+                for row in csv.DictReader(f):
+                    cid = row.get("campus_id")
+                    if cid in curr_cids:
+                        ename = row.get("experience_name", "").strip()
+                        etype = row.get("experience_type", "").strip()
+                        if etype in ("Student Organization", "Competitive Team") and ename in CAMPUS_ACTIVITIES_METADATA:
+                            counts[ename] = counts.get(ename, 0) + 1
+        except Exception as exc:
+            print(f"Warning: Failed to compute student activity counts from CSV: {exc}")
+
+    table = []
+    filtered_counts = {k: v for k, v in counts.items() if k in CAMPUS_ACTIVITIES_METADATA}
+    sorted_clubs = sorted(filtered_counts.items(), key=lambda x: x[1], reverse=True)
+    if not sorted_clubs:
+        sorted_clubs = [
+            ("Association for Computing Machinery Student Chapter", 195),
+            ("Data Science Collective", 182),
+            ("Retriever Cyber Club", 170),
+            ("Google Developer Student Club", 158),
+            ("Open Source Society", 145),
+            ("Retriever Robotics", 140),
+            ("Artificial Intelligence Student Group", 135),
+            ("Women in Computing", 128),
+            ("IEEE Student Branch", 120),
+            ("Game Developers Club", 116),
+            ("Capture the Flag Team", 112),
+            ("Programming Contest Team", 108),
+            ("Cloud Computing Club", 105),
+            ("Information Systems Student Association", 102),
+        ]
+
+    for rank, (name, cnt) in enumerate(sorted_clubs[:12], start=1):
+        meta = CAMPUS_ACTIVITIES_METADATA.get(name, {})
+        cat = meta.get("category", "Student Organization")
+        relevance = "High Alignment"
+        if target_industry and meta.get("industries") and target_industry in meta.get("industries"):
+            relevance = f"🔥 Critical for {target_industry}"
+        elif cat == "Competitive Team":
+            relevance = "High Technical Distinction"
+        else:
+            relevance = "Strong Co-Curricular Foundation"
+
+        table.append({
+            "rank": rank,
+            "name": name,
+            "category": cat,
+            "student_count": cnt,
+            "relevance": relevance,
+            "skills": ", ".join(meta.get("skills", [])[:3]),
+        })
+
+    return table
+
+
+@app.route("/api/involvement-options", methods=["GET", "POST"])
+def get_involvement_options():
+    """
+    Query Tiger Data / dataset using the user's current session state to return:
+    1. popular_activities: Top 6-8 student organizations & competitive teams tailored to student's major & industry for Q1 checkboxes.
+    2. all_organizations: Full list of UMBC student organizations & competitive teams for Q2 autocomplete.
+    3. campus_club_stats: Top organizations & teams table data across current students in database.
+    """
+    if request.method == "POST":
+        payload = request.get_json(silent=True) or {}
+    else:
+        payload = request.args
+
+    major = (payload.get("major") or "Computer Science").strip()
+    major_track = (payload.get("majorTrack") or payload.get("track") or "").strip()
+    target_ind_raw = (payload.get("targetCompanyIndustry") or payload.get("industry") or "").strip()
+    career_goals = (payload.get("careerGoals") or "").strip()
+    matched_industry = _infer_industry_label(target_ind_raw, career_goals, major)
+
+    scored_activities = []
+    for name, meta in CAMPUS_ACTIVITIES_METADATA.items():
+        cat = meta.get("category", "Student Organization")
+        deps = meta.get("departments", [])
+        inds = meta.get("industries", [])
+
+        score = 0
+        if major in deps:
+            score += 40
+        if matched_industry in inds:
+            score += 50
+        if cat == "Competitive Team":
+            score += 30
+
+        # Special major-specific boosts
+        if "Cyber" in major or "Cyber" in major_track:
+            if any(k in name.lower() for k in ["cyber", "flag", "defense", "security", "linux"]):
+                score += 80
+        if "Data" in major or "AI" in major_track or "Machine" in major_track:
+            if any(k in name.lower() for k in ["data", "ai", "artificial", "analytics", "statistics"]):
+                score += 80
+
+        scored_activities.append({
+            "name": name,
+            "category": cat,
+            "description": meta.get("description", ""),
+            "skills": ", ".join(meta.get("skills", [])),
+            "score": score,
+        })
+
+    scored_activities.sort(key=lambda x: x["score"], reverse=True)
+    popular_activities = scored_activities[:8]
+
+    # Always ensure popular_activities has at least 6 items
+    if len(popular_activities) < 6:
+        defaults = [
+            "Association for Computing Machinery Student Chapter",
+            "Data Science Collective",
+            "Open Source Society",
+            "Retriever Cyber Club",
+            "Google Developer Student Club",
+            "Retriever Robotics",
+            "Capture the Flag Team",
+            "Women in Computing",
+        ]
+        for d in defaults:
+            if not any(a["name"] == d for a in popular_activities):
+                meta = CAMPUS_ACTIVITIES_METADATA.get(d, {})
+                popular_activities.append({
+                    "name": d,
+                    "category": meta.get("category", "Student Organization"),
+                    "description": meta.get("description", ""),
+                    "skills": ", ".join(meta.get("skills", [])),
+                    "score": 10,
+                })
+
+    all_organizations = [
+        {
+            "name": name,
+            "category": meta.get("category", "Student Organization"),
+            "description": meta.get("description", ""),
+            "skills": ", ".join(meta.get("skills", [])),
+        }
+        for name, meta in sorted(CAMPUS_ACTIVITIES_METADATA.items())
+    ]
+
+    campus_club_stats = _get_popular_campus_clubs_table(matched_industry)
+
+    return jsonify({
+        "major": major,
+        "matched_industry": matched_industry,
+        "popular_activities": popular_activities,
+        "all_organizations": all_organizations,
+        "campus_club_stats": campus_club_stats,
+    }), 200
+
+
+@app.route("/api/search-organizations", methods=["GET"])
+def search_organizations():
+    """
+    Live autocomplete search endpoint for campus organizations and activities.
+    """
+    query = (request.args.get("q") or "").strip()
+    if not query:
+        return jsonify({"results": []}), 200
+
+    q_lower = query.lower()
+    q_words = q_lower.split()
+    matched = []
+
+    for name, meta in CAMPUS_ACTIVITIES_METADATA.items():
+        name_lower = name.lower()
+        cat_lower = meta.get("category", "").lower()
+        desc_lower = meta.get("description", "").lower()
+        skills_lower = " ".join(meta.get("skills", [])).lower()
+        full_haystack = f"{name_lower} {cat_lower} {desc_lower} {skills_lower}"
+
+        score = 0
+        if q_lower == name_lower:
+            score += 100
+        elif name_lower.startswith(q_lower):
+            score += 80
+        elif q_lower in name_lower:
+            score += 60
+        elif all(w in full_haystack for w in q_words):
+            score += 40
+        elif any(w in full_haystack for w in q_words):
+            score += 20
+
+        if score > 0:
+            matched.append((
+                score,
+                {
+                    "name": name,
+                    "category": meta.get("category", "Student Organization"),
+                    "description": meta.get("description", ""),
+                    "skills": ", ".join(meta.get("skills", [])),
+                    "display_name": f"{name} ({meta.get('category', 'Club')})",
+                }
+            ))
+
+    matched.sort(key=lambda x: x[0], reverse=True)
+    results = [m[1] for m in matched[:10]]
+    return jsonify({"results": results}), 200
+
+
+def analyze_student_involvement(user_data: dict, matches: list = None) -> dict:
+    """
+    Analyze student's campus involvement, leadership density, outlier factor,
+    and generate visual metrics and data table for Section 3 report.
+    """
+    major = (user_data.get("major") or "Computer Science").strip()
+    target_ind = (user_data.get("targetCompanyIndustry") or "").strip() or _infer_industry_label(
+        user_data.get("targetCompanyIndustry"), user_data.get("careerGoals"), major
+    )
+    class_year = (user_data.get("classYear") or "Freshman").strip()
+
+    selected_acts = list(user_data.get("selectedActivities") or user_data.get("selected_activities") or [])
+    other_orgs = list(user_data.get("otherOrganizations") or user_data.get("other_organizations") or [])
+    custom_act = (user_data.get("customActivity") or user_data.get("custom_activity") or "").strip()
+    impact_text = (user_data.get("campusImpact") or user_data.get("impactStatement") or user_data.get("campus_impact") or "").strip()
+
+    all_user_activities = list(selected_acts) + list(other_orgs)
+    if custom_act and custom_act not in all_user_activities:
+        all_user_activities.append(custom_act)
+
+    total_activities_count = len(all_user_activities)
+
+    # Calculate Engagement Score (0 - 100)
+    base_score = 45 if total_activities_count > 0 else 30
+    act_points = min(40, total_activities_count * 12)
+    impact_points = 20 if len(impact_text) > 100 else (12 if len(impact_text) > 30 else (5 if impact_text else 0))
+    engagement_score = min(98, max(25, base_score + act_points + impact_points))
+
+    # Leadership Density Assessment
+    combined_text = f"{impact_text} {' '.join(all_user_activities)}".lower()
+    leadership_keywords = ["lead", "organize", "president", "officer", "mentor", "ta", "founder", "captain", "director", "chair", "board", "executive", "head"]
+    if any(k in combined_text for k in leadership_keywords):
+        leadership_factor = "High (Leadership & Mentorship)"
+        leadership_desc = "Demonstrated organizational or mentorship leadership driving campus initiatives."
+    elif total_activities_count >= 2:
+        leadership_factor = "Moderate (Active Contributor)"
+        leadership_desc = "Consistently contributing across multiple technical or student communities."
+    elif total_activities_count == 1:
+        leadership_factor = "Emerging (Active Member)"
+        leadership_desc = "Engaged in foundational campus activity with opportunity for project leadership."
+    else:
+        leadership_factor = "Foundational Exploration"
+        leadership_desc = "Early exploration phase; opportunity to join high-impact technical student groups."
+
+    # Outlier Factor Detection from Paragraph Input
+    outlier_keywords = ["bot", "founded", "built", "shipped", "ctf", "research", "paper", "award", "open source", "steam", "patent", "startup", "nonprofit", "hackathon", "first place", "winner", "competition", "hardware", "indie", "robotics"]
+    outlier_hits = [k for k in outlier_keywords if k in combined_text]
+    if len(outlier_hits) >= 2 or (len(outlier_hits) >= 1 and len(impact_text) > 80):
+        outlier_status = "High Outlier Match"
+        outlier_summary = f"Distinctive experiences identified ({', '.join(outlier_hits[:3])}) mirroring high-earning non-traditional alumni trajectories."
+    elif len(outlier_hits) == 1:
+        outlier_status = "Moderate Outlier Potential"
+        outlier_summary = "Unique personal initiative demonstrating self-directed technical ownership beyond the classroom."
+    else:
+        outlier_status = "Standard Curriculum Path"
+        outlier_summary = "Well-aligned with standard departmental extracurricular milestones."
+
+    # Alignment with top-earning alumni in target industry
+    alignment_pct = min(98, max(45, 60 + total_activities_count * 8 + (10 if len(outlier_hits) > 0 else 0)))
+
+    # Get data table of top campus clubs in the database
+    popular_clubs_table = _get_popular_campus_clubs_table(target_ind)
+
+    return {
+        "total_activities_count": total_activities_count,
+        "all_user_activities": all_user_activities,
+        "selected_activities": selected_acts,
+        "other_organizations": other_orgs,
+        "custom_activity": custom_act,
+        "campus_impact": impact_text,
+        "engagement_score": engagement_score,
+        "engagement_rating": "Distinguished Engagement" if engagement_score >= 85 else ("Competitive Engagement" if engagement_score >= 65 else "Developing Engagement"),
+        "leadership_factor": leadership_factor,
+        "leadership_desc": leadership_desc,
+        "outlier_status": outlier_status,
+        "outlier_summary": outlier_summary,
+        "alignment_pct": f"{alignment_pct}%",
+        "popular_clubs_table": popular_clubs_table,
+    }
+
+
+# ==============================================================================
 # TIGER DATA (POSTGRESQL & DATASET) QUERY ENGINE FOR THE 5 SECTIONS
 # ==============================================================================
 
@@ -770,7 +1315,8 @@ def query_tiger_data(section_name: str, user_data: dict) -> list:
                                 se.experience_name, se.experience_type, se.duration_terms, se.hours_per_week, se.outcome
                             FROM top_engaged_alums a
                             LEFT JOIN student_experience se ON se.campus_id = a.campus_id
-                            WHERE se.experience_type IS NULL OR se.experience_type IN ('Student Organization', 'Competitive Team', 'Hackathon', 'Undergraduate Research', 'Peer Mentor', 'Leadership', 'Creative Outlier');
+                            WHERE (se.experience_type IS NULL OR se.experience_type IN ('Student Organization', 'Competitive Team'))
+                              AND (se.experience_type NOT ILIKE '%research%' AND se.experience_name NOT ILIKE '%research%');
                             """,
                             (major, matched_industry),
                         )
@@ -797,8 +1343,8 @@ def query_tiger_data(section_name: str, user_data: dict) -> list:
                         for item in grouped.values():
                             if not item["activities"]:
                                 item["activities"] = [
-                                    {"experience_name": "HackUMBC", "experience_type": "Hackathon", "duration_terms": 2, "hours_per_week": "8", "outcome": "Built project portfolio"},
-                                    {"experience_name": "ACM Student Chapter", "experience_type": "Student Organization", "duration_terms": 3, "hours_per_week": "4", "outcome": "Peer Workshops"},
+                                    {"experience_name": "ACM Student Chapter", "experience_type": "Student Organization", "duration_terms": 3, "hours_per_week": "4", "outcome": "Technical Workshops & Networking"},
+                                    {"experience_name": "Data Science Collective", "experience_type": "Student Organization", "duration_terms": 3, "hours_per_week": "5", "outcome": "Campus Project Collaboration"},
                                 ]
                         matches = list(grouped.values())[:3]
             except Exception as exc:
@@ -812,10 +1358,10 @@ def query_tiger_data(section_name: str, user_data: dict) -> list:
                     "first_job_title": "AI/ML Solutions Engineer",
                     "first_job_annual_salary_usd": "$102,000",
                     "activities": [
-                        {"experience_name": "HackUMBC Organizing Team", "experience_type": "Hackathon", "duration_terms": 3, "hours_per_week": "8", "outcome": "Built project portfolio & tech network"},
+                        {"experience_name": "Open Source Society Lead", "experience_type": "Student Organization", "duration_terms": 3, "hours_per_week": "8", "outcome": "Built project portfolio & tech network"},
                         {"experience_name": "ACM Student Chapter Officer", "experience_type": "Student Organization", "duration_terms": 4, "hours_per_week": "6", "outcome": "Led technical workshops in Python/Cloud"},
                     ],
-                    "outlier_insight": "Combined hackathon leadership with peer mentoring; recruiter cited collaboration skills as primary hiring factor.",
+                    "outlier_insight": "Combined open-source project leadership with student chapter workshops; recruiter cited active collaboration as primary hiring factor.",
                 },
                 {
                     "campus_id": "ALUM-4120",
@@ -824,9 +1370,9 @@ def query_tiger_data(section_name: str, user_data: dict) -> list:
                     "first_job_annual_salary_usd": "$96,000",
                     "activities": [
                         {"experience_name": "Capture The Flag (CTF) Team", "experience_type": "Competitive Team", "duration_terms": 4, "hours_per_week": "7", "outcome": "Top 10 collegiate ranking"},
-                        {"experience_name": "Undergraduate Research Assistant", "experience_type": "Research", "duration_terms": 2, "hours_per_week": "10", "outcome": "Published paper in IEEE student conference"},
+                        {"experience_name": "Retriever Cyber Club Officer", "experience_type": "Student Organization", "duration_terms": 3, "hours_per_week": "6", "outcome": "Conducted campus security workshops"},
                     ],
-                    "outlier_insight": "Competitive CTF participation directly substituted for traditional coursework during technical defense interviews.",
+                    "outlier_insight": "Competitive CTF participation and cyber club leadership directly substituted for traditional coursework during defense interviews.",
                 },
                 {
                     "campus_id": "ALUM-2879",
@@ -1062,7 +1608,7 @@ def query_tiger_data(section_name: str, user_data: dict) -> list:
 # GEMINI GENERATIVE TEXT INTEGRATION (google-genai SDK)
 # ==============================================================================
 
-def generate_gemini_advice(section_name: str, user_data: dict, matches: list, class_analysis: dict = None) -> str:
+def generate_gemini_advice(section_name: str, user_data: dict, matches: list, class_analysis: dict = None, involvement_analysis: dict = None) -> str:
     """
     Prompt Gemini via the google-genai SDK:
     'Act as an expert academic advisor. Based on this user data and these database matches,
@@ -1105,6 +1651,29 @@ def generate_gemini_advice(section_name: str, user_data: dict, matches: list, cl
             "Shift your tone to clearly and warmly remind them: 'You should complete these if you have not already.'"
         )
 
+    is_involvement_sec = "campus" in clean_section_key or "3" in clean_section_key or "involvement" in clean_section_key
+    involvement_context = ""
+    if is_involvement_sec:
+        all_acts = list(user_data.get("selectedActivities") or []) + list(user_data.get("otherOrganizations") or [])
+        custom_act = (user_data.get("customActivity") or "").strip()
+        if custom_act and custom_act not in all_acts:
+            all_acts.append(custom_act)
+        impact_stmt = (user_data.get("campusImpact") or user_data.get("impactStatement") or "").strip() or "None provided"
+        outlier_sum = (involvement_analysis.get("outlier_summary") if involvement_analysis else "") or "Standard engagement profile"
+        outlier_status = (involvement_analysis.get("outlier_status") if involvement_analysis else "") or "Standard"
+        
+        involvement_context = f"""
+Student Campus Involvement Profile:
+- All Student Activities & Clubs: {', '.join(all_acts) or 'None selected yet'}
+- Campus Impact Statement (Paragraph): "{impact_stmt}"
+- Outlier Factor Status: {outlier_status} ({outlier_sum})
+"""
+        tone_instruction += (
+            " Special Directive for Campus Involvement: Analyze the student's paragraph impact statement to identify 'outlier' matches—"
+            "unique connections to alumni who had similar unconventional or highly specific experiences. Generate a comparative observation "
+            "contrasting the user's specific interests and involvement against the commonalities found in the most successful alumni in their career path."
+        )
+
     prompt = f"""Act as an expert academic advisor. Based on this user data and these database matches, write a 2 to 3 sentence message giving the student targeted advice for their {section_title}. Base your tone strictly on their class year.
 
 Student Context:
@@ -1113,7 +1682,7 @@ Student Context:
 - Current GPA: {gpa} | Completed Credits: {credits_completed}
 - Target Industry & Career Goals: {target_industry} | {user_data.get('careerGoals', 'Launch tech career')}
 - Student Input Skills / Experience: {user_data.get('skills', 'Standard Coursework')} | {user_data.get('internships', 'Seeking experience')}
-- Selected Campus Activities: {', '.join(user_data.get('selectedActivities', [])) or 'Exploring clubs'}
+- Selected Campus Activities: {', '.join(user_data.get('selectedActivities', [])) or 'Exploring clubs'}{involvement_context}
 
 Tiger Data Alumni Matches (Top 3):
 {json.dumps(matches[:3], indent=2)}
@@ -1568,8 +2137,11 @@ def generate_report():
             "targetCompanyIndustry": asp.get("targetCompaniesIndustries"),
             "targetLocation": asp.get("targetLocation"),
             "careerGoals": asp.get("careerGoals"),
-            "selectedActivities": inv.get("selectedActivities") or [],
-            "customActivity": inv.get("customActivity") or "",
+            "selectedActivities": inv.get("selectedActivities") or user_data.get("selectedActivities") or [],
+            "otherOrganizations": inv.get("otherOrganizations") or user_data.get("otherOrganizations") or [],
+            "customActivity": inv.get("customActivity") or user_data.get("customActivity") or "",
+            "campusImpact": inv.get("campusImpact") or user_data.get("campusImpact") or user_data.get("impactStatement") or "",
+            "impactStatement": inv.get("impactStatement") or user_data.get("impactStatement") or user_data.get("campusImpact") or "",
             "skills": prof.get("projectsAndSkills") or user_data.get("skills") or "",
             "internships": prof.get("internshipsAndJobs") or user_data.get("internships") or "",
             "takenRequiredCourses": user_data.get("takenRequiredCourses") or [],
@@ -1580,14 +2152,24 @@ def generate_report():
 
     clean_sec = (section_name or "").lower().replace(" ", "_").replace("-", "_")
     class_analysis = None
+    involvement_analysis = None
+
     if clean_sec in ("course_advising", "section_2", "2", "courses", "course"):
         class_analysis = analyze_student_coursework(user_data)
+    elif clean_sec in ("campus_involvement", "section_3", "3", "involvement", "campus"):
+        involvement_analysis = analyze_student_involvement(user_data)
 
     # Step A: Query Tiger Data
     matches = query_tiger_data(section_name, user_data)
 
-    # Step B: Gemini API Summary (with class_analysis context & tone shift support)
-    gemini_text = generate_gemini_advice(section_name, user_data, matches, class_analysis=class_analysis)
+    # Step B: Gemini API Summary (with class_analysis and involvement_analysis context)
+    gemini_text = generate_gemini_advice(
+        section_name,
+        user_data,
+        matches,
+        class_analysis=class_analysis,
+        involvement_analysis=involvement_analysis,
+    )
 
     # Step C: ElevenLabs TTS Audio
     base64_audio = generate_elevenlabs_tts(gemini_text)
@@ -1598,6 +2180,7 @@ def generate_report():
         "audio": base64_audio,
         "matches": matches,
         "class_analysis": class_analysis,
+        "involvement_analysis": involvement_analysis,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }), 200
 
