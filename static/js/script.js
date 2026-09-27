@@ -660,7 +660,7 @@ document.addEventListener("DOMContentLoaded", () => {
             card.innerHTML = `
                 <div>
                     <div class="card-top-row">
-                        <span class="alum-id-badge">${escapeHtml(m.campus_id || `ALUM-${1000 + idx}`)}</span>
+                        <span class="alum-id-badge">Alumni Match #${idx + 1}</span>
                         <span class="alum-salary-badge">${escapeHtml(m.first_job_annual_salary_usd || "$102,000")}</span>
                     </div>
                     <h4 class="alum-role-title">${escapeHtml(m.first_job_title || "Software Engineer")}</h4>
@@ -693,7 +693,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!grid) return;
 
         grid.innerHTML = "";
-        (matches || []).forEach((m) => {
+        (matches || []).forEach((m, idx) => {
             const card = document.createElement("div");
             card.className = "alumni-card";
             const coursesList = (m.courses_taken || [])
@@ -704,7 +704,7 @@ document.addEventListener("DOMContentLoaded", () => {
             card.innerHTML = `
                 <div>
                     <div class="card-top-row">
-                        <span class="alum-id-badge">${escapeHtml(m.campus_id)}</span>
+                        <span class="alum-id-badge">Alumni Match #${idx + 1}</span>
                         <span class="alum-salary-badge">${escapeHtml(m.first_job_annual_salary_usd || "$105,000")}</span>
                     </div>
                     <h4 class="alum-role-title">${escapeHtml(m.first_job_title || "Software Engineer")}</h4>
@@ -770,7 +770,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!grid) return;
 
         grid.innerHTML = "";
-        (matches || []).forEach((m) => {
+        (matches || []).forEach((m, idx) => {
             const card = document.createElement("div");
             card.className = "alumni-card";
             const acts = (m.activities || [])
@@ -780,7 +780,7 @@ document.addEventListener("DOMContentLoaded", () => {
             card.innerHTML = `
                 <div>
                     <div class="card-top-row">
-                        <span class="alum-id-badge">${escapeHtml(m.campus_id)}</span>
+                        <span class="alum-id-badge">Alumni Match #${idx + 1}</span>
                         <span class="alum-salary-badge">${escapeHtml(m.first_job_annual_salary_usd || "$98,000")}</span>
                     </div>
                     <h4 class="alum-role-title">${escapeHtml(m.first_job_title || "Engineer")}</h4>
@@ -802,7 +802,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!grid) return;
 
         grid.innerHTML = "";
-        (matches || []).forEach((m) => {
+        (matches || []).forEach((m, idx) => {
             const card = document.createElement("div");
             card.className = "alumni-card";
             const skillsList = (m.skills_mastered || ["Python", "AWS", "SQL", "Git"])
@@ -816,7 +816,7 @@ document.addEventListener("DOMContentLoaded", () => {
             card.innerHTML = `
                 <div>
                     <div class="card-top-row">
-                        <span class="alum-id-badge">${escapeHtml(m.campus_id)}</span>
+                        <span class="alum-id-badge">Alumni Match #${idx + 1}</span>
                         <span class="alum-salary-badge">${escapeHtml(m.first_job_annual_salary_usd || "$112,000")}</span>
                     </div>
                     <h4 class="alum-role-title">${escapeHtml(m.first_job_title || "Software Specialist")}</h4>
@@ -859,13 +859,13 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
 
         grid.innerHTML = "";
-        (matches || []).forEach((m) => {
+        (matches || []).forEach((m, idx) => {
             const card = document.createElement("div");
             card.className = "alumni-card";
             card.innerHTML = `
                 <div>
                     <div class="card-top-row">
-                        <span class="alum-id-badge">${escapeHtml(m.campus_id)}</span>
+                        <span class="alum-id-badge">Alumni Match #${idx + 1}</span>
                         <span class="alum-salary-badge">${escapeHtml(m.first_job_annual_salary_usd || "$110,000")}</span>
                     </div>
                     <h4 class="alum-role-title">${escapeHtml(m.first_job_title || "Software Engineer")}</h4>

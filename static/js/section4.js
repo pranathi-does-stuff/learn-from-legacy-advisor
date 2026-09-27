@@ -75,7 +75,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (grid) {
             grid.innerHTML = "";
-            matches.forEach((m) => {
+            matches.forEach((m, idx) => {
                 const card = document.createElement("div");
                 card.className = "alumni-card";
                 const skillsList = (m.skills_mastered || ["Python", "AWS", "SQL", "Git"])
@@ -89,7 +89,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 card.innerHTML = `
                     <div>
                         <div class="card-top-row">
-                            <span class="alum-id-badge">${QuizApp.escapeHtml(m.campus_id)}</span>
+                            <span class="alum-id-badge">Alumni Match #${idx + 1}</span>
                             <span class="alum-salary-badge">${QuizApp.escapeHtml(m.first_job_annual_salary_usd || "$112,000")}</span>
                         </div>
                         <h4 class="alum-role-title">${QuizApp.escapeHtml(m.first_job_title || "Software Specialist")}</h4>

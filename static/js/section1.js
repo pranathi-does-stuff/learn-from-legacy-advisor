@@ -345,13 +345,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         const grid = document.getElementById("section-1-matches-grid");
         if (!grid) return;
         grid.innerHTML = "";
-        (matches || []).forEach((m) => {
+        (matches || []).forEach((m, idx) => {
             const card = document.createElement("div");
             card.className = "alumni-card";
             card.innerHTML = `
                 <div>
                     <div class="card-top-row">
-                        <span class="alum-id-badge">${QuizApp.escapeHtml(m.campus_id)}</span>
+                        <span class="alum-id-badge">Alumni Match #${idx + 1}</span>
                         <span class="alum-salary-badge">${QuizApp.escapeHtml(m.first_job_annual_salary_usd || "$105,000")}</span>
                     </div>
                     <h4 class="alum-role-title">${QuizApp.escapeHtml(m.first_job_title || "Software Engineer")}</h4>
