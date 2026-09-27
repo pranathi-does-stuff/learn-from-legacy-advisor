@@ -141,6 +141,9 @@
                 Select upcoming courses from the catalog below or enter specific future classes to complete your
                 graduation roadmap:
             </p>
+            <p id="zero-credit-course-note" class="step-description" hidden>
+                Since you have zero completed credits, the questions about courses already taken are skipped.
+            </p>
 
             <div class="course-planner-card"
                 style="margin-top: 1rem; background:rgba(15, 23, 42, 0.6); padding:1.25rem; border-radius:8px; border:1px solid var(--border-subtle);">
@@ -275,5 +278,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/section2.js', v='51') }}"></script>
+<script src="{{ url_for('static', filename='js/section2.js', v='52') }}"></script>
 {% endblock %}

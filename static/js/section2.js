@@ -23,6 +23,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const subRequired = document.getElementById("substep-required-courses");
     const subElectives = document.getElementById("substep-electives");
     const subPlanned = document.getElementById("substep-planned");
+    const zeroCreditCourseNote = document.getElementById("zero-credit-course-note");
+    const creditValue = state.user.creditsCompleted;
+    const hasZeroCompletedCredits = creditValue !== null && creditValue !== undefined && String(creditValue).trim() !== "" && Number(creditValue) === 0;
 
     // Screen 1 Elements
     const majorLabel = document.getElementById("student-major-label");
@@ -47,6 +50,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     const btnBackToElectives = document.getElementById("btn-back-to-electives");
     const btnSubmitReport = document.getElementById("btn-submit-course-report");
     const spinnerGenerateReport = document.getElementById("spinner-generate-report");
+
+    if (hasZeroCompletedCredits) {
+        if (btnBackToElectives) btnBackToElectives.hidden = true;
+        if (zeroCreditCourseNote) zeroCreditCourseNote.hidden = false;
+        const plannedQuestionLabel = subPlanned?.querySelector(".step-badge.active-pill");
+        if (plannedQuestionLabel) plannedQuestionLabel.textContent = "Question 1 of 1";
+    }
 
     // Populate Dynamic Labels from Saved State
     if (majorLabel && state.user.major) {
@@ -314,7 +324,23 @@ document.addEventListener("DOMContentLoaded", async () => {
                 questionsStage.hidden = false;
                 questionsStage.removeAttribute("hidden");
                 questionsStage.style.display = "block";
-                showSubstep(subRequired);
+                if (hasZeroCompletedCredits) {
+                    takenRequired.clear();
+                    takenElectives.clear();
+                    if (noneRequiredCheckbox) noneRequiredCheckbox.checked = true;
+                    if (noneElectivesCheckbox) noneElectivesCheckbox.checked = true;
+                    if (customElectivesInput) customElectivesInput.value = "";
+                    QuizApp.updateUserData({
+                        takenRequiredCourses: [],
+                        noRequiredCourses: true,
+                        takenElectives: [],
+                        customElectives: "",
+                        noElectives: true,
+                    });
+                    showSubstep(subPlanned);
+                } else {
+                    showSubstep(subRequired);
+                }
             }
             loadCourseOptions();
         });
