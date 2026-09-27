@@ -39,7 +39,6 @@ Flask==3.0.3
 Flask-Cors==4.0.1
 Flask-MySQLdb==2.0.0
 # Editable install with no version control (flaskr==1.0.0)
--e /Users/owenpennington/Desktop/CMSC 447/flask-tutorial
 fonttools==4.61.1
 fqdn==1.5.1
 fsspec==2026.3.0
