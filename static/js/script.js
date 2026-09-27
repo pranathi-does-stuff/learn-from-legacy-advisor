@@ -23,6 +23,9 @@ document.addEventListener("DOMContentLoaded", () => {
             skills: "",
             internships: "",
             checkedCourses: [],
+            takenRequiredCourses: [],
+            takenElectives: [],
+            plannedCourses: [],
         },
         sectionData: {
             1: null,
@@ -1358,6 +1361,9 @@ document.addEventListener("DOMContentLoaded", () => {
             skills: "",
             internships: "",
             checkedCourses: [],
+            takenRequiredCourses: [],
+            takenElectives: [],
+            plannedCourses: [],
         };
         state.sectionData = {
             1: null,
@@ -1423,8 +1429,117 @@ document.addEventListener("DOMContentLoaded", () => {
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;");
 
+    // =========================================================================
+    // PLANNED COURSES AUTOCOMPLETE SEARCH BAR (SCREEN 5 / SECTION 2)
+    // =========================================================================
+    const initPlannedCourseAutocomplete = () => {
+        const searchInput = document.getElementById("planned-course-search");
+        const dropdownMenu = document.getElementById("autocomplete-dropdown");
+        const chipsContainer = document.getElementById("planned-courses-chips");
+
+        const renderPlannedChips = () => {
+            if (!chipsContainer) return;
+            chipsContainer.innerHTML = "";
+            const planned = state.user.plannedCourses || [];
+            if (planned.length === 0) {
+                chipsContainer.innerHTML = '<span style="color:var(--text-muted); font-size:0.85rem;">No courses planned yet. Search and select classes from the dropdown.</span>';
+                return;
+            }
+
+            planned.forEach((cId) => {
+                const chip = document.createElement("span");
+                chip.className = "planned-course-chip";
+                chip.innerHTML = `
+                    <span>${escapeHtml(cId)}</span>
+                    <button type="button" class="chip-remove-btn" title="Remove ${escapeHtml(cId)}">&times;</button>
+                `;
+                chip.querySelector(".chip-remove-btn").addEventListener("click", () => {
+                    state.user.plannedCourses = state.user.plannedCourses.filter((id) => id !== cId);
+                    renderPlannedChips();
+                    avatarSayTextOnly(`Removed ${cId} from your planned courses.`, 2);
+                });
+                chipsContainer.appendChild(chip);
+            });
+        };
+
+        const renderDropdown = (results) => {
+            if (!dropdownMenu) return;
+            dropdownMenu.innerHTML = "";
+
+            if (!results || results.length === 0) {
+                dropdownMenu.innerHTML = `<div class="autocomplete-empty">No matching courses found in catalog.</div>`;
+                dropdownMenu.hidden = false;
+                return;
+            }
+
+            results.forEach((item) => {
+                const isAdded = (state.user.plannedCourses || []).includes(item.course_id);
+                const el = document.createElement("div");
+                el.className = `autocomplete-item ${isAdded ? "highlighted" : ""}`;
+                el.innerHTML = `
+                    <div class="autocomplete-item-top">
+                        <span class="autocomplete-item-code">${escapeHtml(item.course_id)}</span>
+                        <span class="autocomplete-item-credits">${item.credits} Credits &bull; ${escapeHtml(item.course_level || "Upper")}</span>
+                    </div>
+                    <div class="autocomplete-item-title">${escapeHtml(item.course_title)}</div>
+                    ${item.skill_tags ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.2rem;">${escapeHtml(item.skill_tags)}</div>` : ""}
+                `;
+                el.addEventListener("click", () => {
+                    if (!state.user.plannedCourses) state.user.plannedCourses = [];
+                    if (!state.user.plannedCourses.includes(item.course_id)) {
+                        state.user.plannedCourses.push(item.course_id);
+                    }
+                    renderPlannedChips();
+                    if (searchInput) searchInput.value = "";
+                    dropdownMenu.hidden = true;
+                    avatarSayTextOnly(`Added ${item.course_id} to your planned courses.`, 2);
+                });
+                dropdownMenu.appendChild(el);
+            });
+            dropdownMenu.hidden = false;
+        };
+
+        let timer = null;
+        if (searchInput) {
+            searchInput.addEventListener("input", (e) => {
+                clearTimeout(timer);
+                const query = e.target.value.trim();
+                if (!query) {
+                    if (dropdownMenu) dropdownMenu.hidden = true;
+                    return;
+                }
+                timer = setTimeout(async () => {
+                    try {
+                        const res = await fetch(`/api/search-classes?q=${encodeURIComponent(query)}`);
+                        if (res.ok) {
+                            const data = await res.json();
+                            renderDropdown(data.results || []);
+                        }
+                    } catch (err) {
+                        console.warn("Autocomplete fetch error:", err);
+                    }
+                }, 180);
+            });
+
+            searchInput.addEventListener("focus", () => {
+                if (searchInput.value.trim().length > 0 && dropdownMenu && dropdownMenu.children.length > 0) {
+                    dropdownMenu.hidden = false;
+                }
+            });
+        }
+
+        document.addEventListener("click", (e) => {
+            if (dropdownMenu && !dropdownMenu.contains(e.target) && e.target !== searchInput) {
+                dropdownMenu.hidden = true;
+            }
+        });
+
+        renderPlannedChips();
+    };
+
     // Initialize application: Strictly reset all forms & state, load options, and start on Screen 1
     resetAllFormsAndState();
     loadAcademicOptions();
+    initPlannedCourseAutocomplete();
     goToScreen(1);
 });
