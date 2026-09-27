@@ -39,7 +39,8 @@
         </div>
         <p id="advisor-intro-message" class="intro-dialogue-text">
             Greetings! I am Avatar 4, your Career &amp; Industry Strategist. I benchmark your technical proficiencies,
-            certifications, and internship milestones against top salary earners in your field.
+            certifications, and internship milestones against alumni with a similar major and an industry inferred
+            from your target industry and career goals. Their profiles appear at the end of this section.
         </p>
     </div>
 
@@ -105,8 +106,9 @@
                     </div>
                     <div class="thought-body">
                         <p id="thought-bubble-text" class="thought-text">
-                            Avatar 4 is assessing your technical proficiencies, certifications, and internship readiness
-                            against competitive market baselines.
+                                            The skill buttons are examples to help describe your profile. At the end, you can compare
+                                            your skills and experience with alumni matched to your major and an industry inferred from
+                                            your target industry and career goals.
                         </p>
                     </div>
                 </div>
@@ -114,37 +116,25 @@
         </div>
     </div>
 
-    <div id="section-4-container" class="interactive-screen">
+        <div id="section-4-container" class="interactive-screen">
+            <div id="section4-skills-page">
         <p class="eyebrow">Section 4 of 5 &bull; Skills &amp; Experience</p>
         <h2 class="step-heading">Technical Skills, Certifications &amp; Internships</h2>
         <p class="step-description">
-            Avatar 4 (Purple) maps your technical toolchain and internship trajectory against top salary graduates in
-            your domain.
+            Use the skill examples below to describe your background. At the end of this section, alumni profiles
+            matched to your major and an industry inferred from your target industry and career goals will show
+            related skills, internship histories, and career outcomes.
         </p>
 
         <!-- Skills & Experience Card -->
         <div class="course-planner-card" style="margin-bottom: 1.5rem;">
-            <h4 class="card-subtitle">Technical Skills &amp; Toolchain</h4>
-            <p class="card-subtext">Click key skills to add them to your profile or type directly below:</p>
+            <h4 class="card-subtitle">Technical Skills From Similar Alumni</h4>
+            <p id="skill-source-summary" class="card-subtext" aria-live="polite">Loading matched alumni skill examples...</p>
+            <p class="card-subtext">Select the skills that fit you or enter your own below. Full alumni profiles remain at the end of the section.</p>
 
             <div id="quick-skills-container" class="skill-pills-wrap"
-                style="display:flex; flex-wrap:wrap; gap:0.5rem; margin:1rem 0;">
-                <button type="button" class="skill-pill" data-skill="Python">Python</button>
-                <button type="button" class="skill-pill" data-skill="Java">Java</button>
-                <button type="button" class="skill-pill" data-skill="C / C++">C / C++</button>
-                <button type="button" class="skill-pill" data-skill="JavaScript / TypeScript">JavaScript /
-                    TypeScript</button>
-                <button type="button" class="skill-pill" data-skill="React">React</button>
-                <button type="button" class="skill-pill" data-skill="SQL">SQL</button>
-                <button type="button" class="skill-pill" data-skill="AWS Cloud">AWS Cloud</button>
-                <button type="button" class="skill-pill" data-skill="Docker">Docker</button>
-                <button type="button" class="skill-pill" data-skill="Git">Git / GitHub</button>
-                <button type="button" class="skill-pill" data-skill="Linux">Linux CLI</button>
-                <button type="button" class="skill-pill" data-skill="Machine Learning">Machine Learning /
-                    PyTorch</button>
-                <button type="button" class="skill-pill" data-skill="Cybersecurity">Cybersecurity / Network
-                    Security</button>
-                <button type="button" class="skill-pill" data-skill="Agile / Scrum">Agile / Scrum</button>
+                style="display:flex; flex-wrap:wrap; gap:0.5rem; margin:1rem 0;" aria-live="polite">
+                <span class="card-subtext">Loading skills from matched alumni profiles...</span>
             </div>
 
             <div style="margin-top: 1rem;">
@@ -171,25 +161,36 @@
             </div>
         </div>
 
-        <!-- Visual Matches Container for Section 4 -->
+        <div class="nav-button-row" style="display:flex; justify-content:flex-end; margin-top:2rem;">
+            <button type="button" class="submit-btn" id="btn-view-related-alumni">
+                View Related Alumni Profiles &rarr;
+            </button>
+        </div>
+      </div>
+
+      <div id="section4-alumni-page" hidden>
+        <p class="eyebrow">Section 4 of 5 &bull; Career Benchmarks</p>
+        <h2 class="step-heading">Alumni With Related Career Paths</h2>
+        <p class="step-description">These profiles are matched by major and an industry inferred from your target industry and career goals.</p>
+
         <div id="section-4-matches-container" class="matches-data-container">
             <div class="matches-header">
-                <h3 class="matches-title">Top Alumni Skills Profiles &amp; Industry Outcomes</h3>
-                <span class="matches-subtitle">Skill combinations and internship timelines that led to highest
-                    compensation</span>
+                <span class="matches-subtitle">Compare their technical skills, internship histories, and career outcomes with your own.</span>
             </div>
             <div id="section-4-matches-grid" class="alumni-match-grid"></div>
 
-            <div class="nav-button-row" style="display: flex; justify-content: flex-end; margin-top: 2rem;">
+            <div class="nav-button-row" style="display:flex; justify-content:space-between; margin-top:2rem;">
+                <button type="button" class="secondary-btn" id="btn-back-to-skills">&larr; Back to Skills &amp; Experience</button>
                 <button type="button" class="submit-btn" id="btn-next-to-section-5">
                     Proceed to Section 5: Synthesis &amp; Final Report &rarr;
                 </button>
             </div>
         </div>
+      </div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/section4.js', v='37') }}"></script>
+<script src="{{ url_for('static', filename='js/section4.js', v='40') }}"></script>
 {% endblock %}
