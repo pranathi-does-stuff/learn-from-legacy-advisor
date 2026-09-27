@@ -21,6 +21,8 @@ load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 TIGER_DATA_URL = os.getenv("TIGER_DATA_URL") or os.getenv("DATABASE_URL")
+DEFAULT_ELEVENLABS_VOICE_ID = "JBFqnCBsd6RMkjVDRZzb"
+SECTION_1_ELEVENLABS_VOICE_ID = "ktHrlQPfUoEUQDP8xbm1"
 
 DATA_DIR = Path(__file__).resolve().parent / "hackumbc-2026-main" / "data"
 STUDENTS_CURRENT_CSV = DATA_DIR / "students_current.csv"
@@ -1064,18 +1066,24 @@ Guidelines:
 # ELEVENLABS TEXT-TO-SPEECH (TTS) INTEGRATION
 # ==============================================================================
 
-def generate_elevenlabs_tts(text: str) -> str:
+def generate_elevenlabs_tts(
+    text: str,
+    voice_id: str = DEFAULT_ELEVENLABS_VOICE_ID,
+    *,
+    raise_errors: bool = False,
+) -> str:
     """
     Pass the generated Gemini response string into the ElevenLabs SDK
     to generate the TTS audio stream, and return it as a Base64 encoded audio string.
     """
     if not elevenlabs_client or not text:
+        if raise_errors:
+            raise RuntimeError("ElevenLabs client is not configured or text is empty.")
         return ""
 
     try:
-        # Default authoritative advisor voice ID (George: 'JBFqnCBsd6RMkjVDRZzb' or customizable)
         audio_stream = elevenlabs_client.text_to_speech.convert(
-            voice_id="JBFqnCBsd6RMkjVDRZzb",
+            voice_id=voice_id,
             text=text,
             model_id="eleven_turbo_v2_5",
             output_format="mp3_44100_128",
@@ -1088,10 +1096,40 @@ def generate_elevenlabs_tts(text: str) -> str:
         if audio_chunks:
             audio_bytes = b"".join(audio_chunks)
             return base64.b64encode(audio_bytes).decode("utf-8")
+        raise RuntimeError("ElevenLabs returned an empty audio stream.")
     except Exception as exc:
+        if raise_errors:
+            raise
         print(f"ElevenLabs TTS generation warning: {exc}")
 
     return ""
+
+
+@app.route("/api/section1-voice", methods=["POST"])
+def generate_section1_voice():
+    payload = request.get_json(silent=True) or {}
+    text = payload.get("text")
+    if not isinstance(text, str) or not text.strip():
+        return jsonify({"error": "Text is required."}), 400
+    if len(text) > 1000:
+        return jsonify({"error": "Text must be 1000 characters or fewer."}), 413
+
+    try:
+        audio = generate_elevenlabs_tts(
+            text.strip(),
+            SECTION_1_ELEVENLABS_VOICE_ID,
+            raise_errors=True,
+        )
+    except Exception as exc:
+        if getattr(exc, "status_code", None) == 402:
+            return jsonify({
+                "error": "This ElevenLabs voice requires a paid API plan. Upgrade the account or use a voice available on its current plan.",
+                "code": "paid_plan_required",
+            }), 402
+        app.logger.error("Section 1 ElevenLabs TTS failed: %s", type(exc).__name__)
+        return jsonify({"error": "Section 1 voice generation failed."}), 502
+
+    return jsonify({"audio": audio}), 200
 
 
 def analyze_student_coursework(user_data: dict) -> dict:
@@ -1275,7 +1313,13 @@ def generate_report():
     gemini_text = generate_gemini_advice(section_name, user_data, matches)
 
     # Step C: ElevenLabs TTS Audio
-    base64_audio = generate_elevenlabs_tts(gemini_text)
+    clean_section_name = (section_name or "").lower().strip().replace(" ", "_").replace("-", "_")
+    voice_id = (
+        SECTION_1_ELEVENLABS_VOICE_ID
+        if clean_section_name in ("basic_info", "section_1", "section1", "1")
+        else DEFAULT_ELEVENLABS_VOICE_ID
+    )
+    base64_audio = generate_elevenlabs_tts(gemini_text, voice_id)
 
     clean_sec = (section_name or "").lower().replace(" ", "_").replace("-", "_")
     class_analysis = None

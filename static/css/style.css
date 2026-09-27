@@ -429,15 +429,16 @@ body {
 .section1-fullscreen:not([hidden]) {
     display: grid;
     grid-template-columns: minmax(320px, 42vw) minmax(0, 1fr);
-    align-items: stretch;
+    align-items: start;
     width: 100%;
     min-height: max(620px, calc(100vh - 190px));
 }
 
 .section1-avatar-panel {
     position: relative;
+    align-self: start;
     min-width: 0;
-    min-height: 100%;
+    height: clamp(480px, calc(100vh - 190px), 820px);
     overflow: hidden;
 }
 
@@ -458,15 +459,6 @@ body {
 .section1-avatar-panel .avatar-portrait {
     object-fit: cover;
     object-position: center top;
-}
-
-.section1-avatar-name {
-    position: absolute;
-    z-index: 1;
-    left: 1.25rem;
-    bottom: 1.25rem;
-    color: #fff;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
 }
 
 .section1-content-panel {
@@ -493,6 +485,51 @@ body {
     width: 100%;
     max-width: 980px;
     margin: 0 auto;
+}
+
+#section-1-container .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+}
+
+#section-1-container .form-grid .field-label {
+    display: block;
+    min-height: 2.5rem;
+    line-height: 1.35;
+}
+
+#section-1-container .form-field > .text-input,
+#section-1-container .form-field > select {
+    height: 3.1rem;
+    min-height: 3.1rem;
+}
+
+.section1-dropdown-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+    gap: 1.15rem;
+    margin-bottom: 1.15rem;
+}
+
+.section1-dropdown-grid .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+}
+
+#section-1-container .section1-dropdown-grid .field-label {
+    display: block;
+    min-height: 3.5rem;
+    line-height: 1.35;
+}
+
+.section1-dropdown-grid .dropdown-select {
+    height: 3.1rem;
+    min-height: 3.1rem;
 }
 
 @media (max-width: 700px) {
@@ -522,6 +559,16 @@ body {
     .section1-advisor-panel .avatar-dock {
         width: 100%;
         gap: 0.5rem;
+    }
+
+    .section1-dropdown-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (min-width: 701px) and (max-width: 1000px) {
+    .section1-dropdown-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 

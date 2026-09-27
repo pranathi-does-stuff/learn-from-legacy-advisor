@@ -14,9 +14,7 @@
     <div class="intro-avatar-wrapper">
         <div class="intro-avatar-circle avatar-1-blue avatar-image-frame">
             <img src="{{ url_for('static', filename='images/Avatar1.PNG') }}" alt="Avatar 1" class="avatar-portrait" />
-            <span class="intro-avatar-badge">A1</span>
         </div>
-        <h2 class="intro-persona-title">Avatar 1 (Blue)</h2>
         <span class="intro-role-subtitle">Academic Foundations Advisor</span>
     </div>
 
@@ -57,9 +55,7 @@
     <aside id="avatar-stage" class="section1-avatar-panel" aria-label="Avatar 1, Academic Foundations Advisor">
         <div id="active-avatar-circle" class="avatar-circle avatar-1-blue avatar-image-frame">
             <img src="{{ url_for('static', filename='images/Avatar1.PNG') }}" alt="Avatar 1" class="avatar-portrait" />
-            <span class="avatar-number-badge">A1</span>
         </div>
-        <span class="avatar-name-tag section1-avatar-name">Avatar 1 (Blue)</span>
     </aside>
 
     <div class="section1-content-panel">
@@ -118,7 +114,7 @@
         <div id="substep-standing" class="substep-block">
             <p class="eyebrow">Section 1 of 5 &bull; Academic Foundations</p>
             <h2 class="step-heading">What is your current college standing? <span class="required-indicator">Required</span></h2>
-            <p class="step-description">Avatar 1 (Blue) tailors all advice and timeline benchmarks to your exact
+            <p class="step-description">Your advisor tailors all advice and timeline benchmarks to your exact
                 academic progression stage.</p>
 
             <div class="pill-group" role="radiogroup" aria-label="College Standing" aria-required="true">
@@ -145,26 +141,19 @@
             <h2 class="step-heading">Select your Major, Track, Minor, and Career Goals</h2>
             <p class="step-description">Choose your academic profile and align it with your target industry, salary, and role goals.</p>
 
-            <div class="form-grid">
-                <div class="form-field">
-                    <label class="field-label" for="user-name-input">Full Name (Optional)</label>
-                    <input type="text" id="user-name-input" class="text-input" placeholder="e.g. Alex Rivera" />
-                </div>
-
+            <div class="section1-dropdown-grid">
                 <div class="form-field">
                     <label class="field-label" for="major-select">Primary Major <span class="required-indicator">Required</span></label>
                     <select id="major-select" class="dropdown-select" required aria-required="true">
                         <option value="" selected disabled>Choose one</option>
                     </select>
                 </div>
-
                 <div class="form-field">
                     <label class="field-label" for="track-select">Specialized Concentration / Major Track (Optional)</label>
                     <select id="track-select" class="dropdown-select">
                         <option value="" selected disabled>Choose one</option>
                     </select>
                 </div>
-
                 <div class="form-field">
                     <label class="field-label" for="minor-select">Minor or Secondary Field (Optional)</label>
                     <select id="minor-select" class="dropdown-select">
@@ -172,17 +161,22 @@
                         <option value="None">None</option>
                     </select>
                 </div>
+            </div>
 
+            <div class="form-grid section1-profile-grid">
+                <div class="form-field">
+                    <label class="field-label" for="user-name-input">Full Name (Optional)</label>
+                    <input type="text" id="user-name-input" class="text-input" placeholder="e.g. Alex Rivera" />
+                </div>
                 <div class="form-field">
                     <label class="field-label" for="target-industry-input">Target Industry or Dream Employers <span class="required-indicator">Required</span></label>
                     <input type="text" id="target-industry-input" class="text-input"
                         placeholder="e.g., Software Products, Amazon, Google, Defense, Cloud"
                         value="" required aria-required="true" />
                 </div>
-
                 <div class="form-field">
                     <label class="field-label" for="target-salary-input">Target Starting Annual Salary ($ USD) (Optional)</label>
-                    <input type="text" id="target-salary-input" class="text-input" placeholder="e.g., $105,000"
+                    <input type="number" id="target-salary-input" class="text-input" placeholder="e.g., $105,000"
                         value="" />
                 </div>
 
@@ -219,7 +213,7 @@
 
                 <div class="form-field">
                     <label class="field-label" for="credits-input">Total Earned Credits <span class="required-indicator">Required</span></label>
-                    <input type="number" id="credits-input" class="text-input" min="0" max="180" placeholder="e.g. 45"
+                    <input type="number" id="credits-input" class="text-input" min="0"  placeholder="e.g. 45"
                         value="" required aria-required="true" />
                 </div>
             </div>
@@ -256,5 +250,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/section1.js', v='38') }}"></script>
+<script src="{{ url_for('static', filename='js/section1.js', v='42') }}"></script>
 {% endblock %}

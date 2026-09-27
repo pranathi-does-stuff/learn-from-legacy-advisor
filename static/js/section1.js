@@ -12,22 +12,52 @@ document.addEventListener("DOMContentLoaded", async () => {
     const introText = introMsgEl ? introMsgEl.textContent.trim() : "";
     const introReplayBtn = document.getElementById("intro-replay-voice-btn");
 
-    // Check cached audio
-    const cachedData = QuizApp.getSectionData(1);
-    const base64Audio = cachedData ? cachedData.audio : null;
+    let speechRequestId = 0;
+    let section1VoiceBlocked = false;
+    const saySection1Message = async (text) => {
+        const message = String(text || "").trim();
+        if (!message) return;
+
+        const requestId = ++speechRequestId;
+        QuizApp.stopAllSpeech();
+        QuizApp.avatarSayTextOnly(message, 1);
+
+        if (!section1VoiceBlocked) {
+            try {
+                const response = await fetch("/api/section1-voice", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ text: message }),
+                });
+                if (requestId !== speechRequestId) return;
+
+                if (response.status === 402) {
+                    const data = await response.json();
+                    section1VoiceBlocked = true;
+                    console.warn(data.error || "The configured Section 1 voice is unavailable on this ElevenLabs plan.");
+                } else if (response.ok) {
+                    const data = await response.json();
+                    if (data.audio && await QuizApp.playBase64Audio(data.audio)) return;
+                    console.warn("Section 1 ElevenLabs response contained no playable audio.");
+                } else {
+                    console.warn(`Section 1 voice endpoint returned HTTP ${response.status}.`);
+                }
+            } catch (e) {
+                console.warn("Section 1 voice playback failed:", e);
+            }
+        }
+
+        if (requestId === speechRequestId) {
+            await QuizApp.speakWebSpeech(message, 1);
+        }
+    };
 
     // Auto-play voice on load
-    setTimeout(async () => {
-        try {
-            await QuizApp.playReportAudio(introText, base64Audio, 1);
-        } catch (e) {
-            console.log("Intro audio playback info:", e);
-        }
-    }, 400);
+    setTimeout(() => saySection1Message(introText), 400);
 
     if (introReplayBtn) {
         introReplayBtn.addEventListener("click", () => {
-            QuizApp.playReportAudio(introText, base64Audio, 1);
+            saySection1Message(introText);
         });
     }
 
@@ -75,6 +105,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         const error = document.getElementById(id);
         if (error) error.hidden = true;
     };
+    const getGpaRangeMessage = (value) => {
+        if (!String(value || "").trim()) return "";
+        const gpa = Number(value);
+        if (gpa < 0) {
+            return "A GPA below 0? That's a grading-scale plot twist. Please enter a value from 0.00 to 4.00.";
+        }
+        if (gpa > 4) {
+            return "A GPA above 4.00? You found the secret bonus scale. Please enter a value from 0.00 to 4.00.";
+        }
+        return "";
+    };
 
     // Keep the saved quiz state intact, but clear the visible form on reload so users can re-enter answers.
     if (nameInput) nameInput.value = shouldClearInputsOnReload ? "" : (state.user.name || "");
@@ -83,6 +124,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (industryInput) industryInput.value = shouldClearInputsOnReload ? "" : (state.user.targetCompanyIndustry || "");
     if (salaryInput) salaryInput.value = shouldClearInputsOnReload ? "" : (state.user.targetSalary || "");
     if (goalsInput) goalsInput.value = shouldClearInputsOnReload ? "" : (state.user.careerGoals || "");
+
+    nameInput?.addEventListener("input", (e) => {
+        QuizApp.updateUserData({ name: e.target.value });
+    });
+    nameInput?.addEventListener("blur", (e) => {
+        const name = e.target.value.trim();
+        if (name) {
+            saySection1Message(`Nice to meet you, ${name}. I'll use your name as we build your academic profile.`);
+        }
+    });
 
     let tracksByMajor = {};
 
@@ -168,7 +219,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 QuizApp.updateUserData({ major: sel, majorTrack: "" });
                 updateTracks(sel);
                 if (sel) {
-                    QuizApp.avatarSayTextOnly(QuizApp.HARDCODED_REACTIONS.major(sel), 1);
+                    saySection1Message(QuizApp.HARDCODED_REACTIONS.major(sel));
                 }
             });
 
@@ -185,6 +236,22 @@ document.addEventListener("DOMContentLoaded", async () => {
                 } else {
                     QuizApp.updateUserData({ majorTrack: selectedTrack });
                 }
+
+                const trackMessage = matchedMajor
+                    ? `I've matched the ${selectedTrack} track with ${matchedMajor}. I'll use both to tailor your academic path.`
+                    : `I've noted ${selectedTrack} as your major track and will use it to tailor your academic path.`;
+                saySection1Message(trackMessage);
+            });
+
+            minorSelect?.addEventListener("change", (e) => {
+                const selectedMinor = e.target.value;
+                if (!selectedMinor) return;
+
+                const minorMessage = selectedMinor === "None"
+                    ? "No minor selected. I'll keep your academic profile focused on your major."
+                    : `I've noted ${selectedMinor} as your minor or secondary field and will include it in your profile.`;
+                QuizApp.updateUserData({ minor: selectedMinor });
+                saySection1Message(minorMessage);
             });
         }
     } catch (e) {
@@ -210,7 +277,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             const val = pill.getAttribute("data-value");
             QuizApp.updateUserData({ classYear: val });
             clearRequiredError("standing-required-error");
-            QuizApp.avatarSayTextOnly(QuizApp.HARDCODED_REACTIONS.classYear(val), 1);
+            saySection1Message(QuizApp.HARDCODED_REACTIONS.classYear(val));
         });
     });
 
@@ -221,12 +288,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
         clearRequiredError("standing-required-error");
         showSubstep(subMajor);
-        QuizApp.avatarSayTextOnly("Select your primary major and track to load curriculum pathways.", 1);
+        saySection1Message("Select your primary major and track to load curriculum pathways.");
     });
 
     document.getElementById("btn-back-to-standing")?.addEventListener("click", () => {
         showSubstep(subStanding);
-        QuizApp.avatarSayTextOnly("Review or update your college standing. Choose the option that best describes your current status.", 1);
+        saySection1Message("Review or update your college standing. Choose the option that best describes your current status.");
     });
 
     document.getElementById("btn-to-substep-gpa")?.addEventListener("click", () => {
@@ -247,12 +314,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             careerGoals: goalsInput?.value || "",
         });
         showSubstep(subGpa);
-        QuizApp.avatarSayTextOnly("Let's record your cumulative GPA and earned credit total.", 1);
+        saySection1Message("Let's record your cumulative GPA and earned credit total.");
     });
 
     document.getElementById("btn-back-to-major")?.addEventListener("click", () => {
         showSubstep(subMajor);
-        QuizApp.avatarSayTextOnly("Review or update your major, track, minor, and career goals before continuing.", 1);
+        saySection1Message("Review or update your major, track, minor, and career goals before continuing.");
     });
 
     // Real-time reactions for GPA and Credits
@@ -261,7 +328,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         clearRequiredError("gpa-required-error");
     });
     gpaInput?.addEventListener("blur", (e) => {
-        QuizApp.avatarSayTextOnly(QuizApp.HARDCODED_REACTIONS.gpa(e.target.value), 1);
+        const rangeMessage = getGpaRangeMessage(e.target.value);
+        saySection1Message(rangeMessage || QuizApp.HARDCODED_REACTIONS.gpa(e.target.value));
     });
 
     creditsInput?.addEventListener("input", (e) => {
@@ -269,7 +337,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         clearRequiredError("gpa-required-error");
     });
     creditsInput?.addEventListener("blur", (e) => {
-        QuizApp.avatarSayTextOnly(QuizApp.HARDCODED_REACTIONS.credits(e.target.value), 1);
+        saySection1Message(QuizApp.HARDCODED_REACTIONS.credits(e.target.value));
     });
 
     // Sub-step Aspirations & Baseline Matches
@@ -324,7 +392,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     document.getElementById("btn-to-substep-aspirations")?.addEventListener("click", () => {
         if (!gpaInput?.value || !gpaInput.checkValidity() || !creditsInput?.value || !creditsInput.checkValidity()) {
-            showRequiredError("gpa-required-error", "Enter a valid GPA from 0.00 to 4.00 and total earned credits before continuing.");
+            const rangeMessage = getGpaRangeMessage(gpaInput?.value);
+            showRequiredError("gpa-required-error", rangeMessage || "Enter a valid GPA from 0.00 to 4.00 and total earned credits before continuing.");
             if (!gpaInput?.value || !gpaInput.checkValidity()) gpaInput?.focus();
             else creditsInput?.focus();
             return;
@@ -336,21 +405,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
         showSubstep(subAspirations);
         const thankYouMessage = "Thank you for sharing your academic profile, goals, and background. Our advisor team is excited to help you explore your options and build a personalized plan.";
-        QuizApp.avatarSayTextOnly(thankYouMessage, 1);
-        QuizApp.speakWebSpeech(thankYouMessage, 1);
+        saySection1Message(thankYouMessage);
         loadBaselineReport();
     });
 
     document.getElementById("btn-back-to-gpa")?.addEventListener("click", () => {
         showSubstep(subGpa);
-        QuizApp.avatarSayTextOnly("Review or update your GPA and completed credits before continuing.", 1);
+        saySection1Message("Review or update your GPA and completed credits before continuing.");
     });
 
     industryInput?.addEventListener("input", (e) => {
         QuizApp.updateUserData({ targetCompanyIndustry: e.target.value });
     });
     industryInput?.addEventListener("blur", (e) => {
-        QuizApp.avatarSayTextOnly(QuizApp.HARDCODED_REACTIONS.industry(e.target.value), 1);
+        saySection1Message(QuizApp.HARDCODED_REACTIONS.industry(e.target.value));
         loadBaselineReport();
     });
 
@@ -358,14 +426,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         QuizApp.updateUserData({ targetSalary: e.target.value });
     });
     salaryInput?.addEventListener("blur", (e) => {
-        QuizApp.avatarSayTextOnly(QuizApp.HARDCODED_REACTIONS.salary(e.target.value), 1);
+        saySection1Message(QuizApp.HARDCODED_REACTIONS.salary(e.target.value));
     });
 
     goalsInput?.addEventListener("input", (e) => {
         QuizApp.updateUserData({ careerGoals: e.target.value });
     });
     goalsInput?.addEventListener("blur", (e) => {
-        QuizApp.avatarSayTextOnly(QuizApp.HARDCODED_REACTIONS.goals(e.target.value), 1);
+        saySection1Message(QuizApp.HARDCODED_REACTIONS.goals(e.target.value));
     });
 
     // Proceed to Section 2 Loading Screen
@@ -385,5 +453,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         window.location.href = "/loading?next=2";
     });
 
-    QuizApp.bindVoiceReplayListeners();
+    document.getElementById("voice-replay-btn")?.addEventListener("click", () => {
+        const bubbleText = document.getElementById("thought-bubble-text");
+        if (bubbleText?.textContent.trim()) {
+            saySection1Message(bubbleText.textContent.trim());
+        }
+    });
 });
