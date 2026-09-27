@@ -379,6 +379,154 @@ body {
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
 }
 
+.avatar-portrait {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 0;
+}
+
+.intro-avatar-circle.avatar-image-frame {
+    width: 104px;
+    height: 140px;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.avatar-circle.avatar-image-frame {
+    width: 100px;
+    height: 136px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.page-wrapper.section1-immersive {
+    padding: 1.25rem 1.5rem 0;
+}
+
+.page-wrapper.section1-immersive .site-header,
+.page-wrapper.section1-immersive .site-footer {
+    max-width: none;
+}
+
+.page-wrapper.section1-immersive .main-container {
+    align-items: stretch;
+    justify-content: stretch;
+    padding: 1rem 0 0;
+}
+
+.page-wrapper.section1-immersive .advisory-card {
+    max-width: none;
+    width: 100%;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+}
+
+.section1-fullscreen:not([hidden]) {
+    display: grid;
+    grid-template-columns: minmax(320px, 42vw) minmax(0, 1fr);
+    align-items: stretch;
+    width: 100%;
+    min-height: max(620px, calc(100vh - 190px));
+}
+
+.section1-avatar-panel {
+    position: relative;
+    min-width: 0;
+    min-height: 100%;
+    overflow: hidden;
+}
+
+.section1-avatar-panel .avatar-circle.avatar-image-frame {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: default;
+    transition: none;
+}
+
+.section1-avatar-panel .avatar-circle.avatar-image-frame:hover {
+    transform: none;
+}
+
+.section1-avatar-panel .avatar-portrait {
+    object-fit: cover;
+    object-position: center top;
+}
+
+.section1-avatar-name {
+    position: absolute;
+    z-index: 1;
+    left: 1.25rem;
+    bottom: 1.25rem;
+    color: #fff;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+}
+
+.section1-content-panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 0 clamp(1rem, 2.5vw, 2.5rem);
+}
+
+.section1-advisor-panel {
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+}
+
+.section1-advisor-panel .avatar-dock {
+    margin-bottom: 1rem;
+}
+
+.section1-advisor-panel .thought-bubble-container {
+    width: 100%;
+}
+
+#section-1-container {
+    width: 100%;
+    max-width: 980px;
+    margin: 0 auto;
+}
+
+@media (max-width: 700px) {
+    .page-wrapper.section1-immersive {
+        padding: 1rem 0.75rem 0;
+    }
+
+    .page-wrapper.section1-immersive .main-container {
+        padding-top: 0.5rem;
+    }
+
+    .section1-fullscreen {
+        grid-template-columns: minmax(0, 1fr);
+        min-height: 0;
+    }
+
+    .section1-avatar-panel {
+        height: 48vh;
+        min-height: 260px;
+        max-height: 480px;
+    }
+
+    .section1-content-panel {
+        padding: 1rem 0 0;
+    }
+
+    .section1-advisor-panel .avatar-dock {
+        width: 100%;
+        gap: 0.5rem;
+    }
+}
+
 .avatar-number-badge {
     position: absolute;
     bottom: -4px;

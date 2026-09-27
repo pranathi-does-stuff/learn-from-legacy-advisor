@@ -12,8 +12,8 @@
      ========================================================================= -->
 <div id="section-intro-stage" class="section-intro-stage" data-section="1">
     <div class="intro-avatar-wrapper">
-        <div class="intro-avatar-circle avatar-1-blue">
-            <span class="intro-avatar-glyph">🎓</span>
+        <div class="intro-avatar-circle avatar-1-blue avatar-image-frame">
+            <img src="{{ url_for('static', filename='images/Avatar1.PNG') }}" alt="Avatar 1" class="avatar-portrait" />
             <span class="intro-avatar-badge">A1</span>
         </div>
         <h2 class="intro-persona-title">Avatar 1 (Blue)</h2>
@@ -53,35 +53,34 @@
      STAGE B: SECTION 1 QUESTIONS & BENCHMARKS
      Appears after user clicks "Begin Section 1: Questions"
      ========================================================================= -->
-<div id="section-questions-stage" class="section-questions-stage" hidden>
-    <!-- Top Avatar Dock & Thought Bubble -->
-    <div id="avatar-stage" class="avatar-stage-wrapper">
-        <div class="avatar-dock" aria-label="Advisory Council Avatars">
-            <div class="dock-avatar-indicator active" data-avatar="1">
-                <div class="dock-circle dock-blue"></div>
-                <span class="dock-label">Foundations</span>
-            </div>
-            <div class="dock-avatar-indicator" data-avatar="2">
-                <div class="dock-circle dock-green"></div>
-                <span class="dock-label">Courses</span>
-            </div>
-            <div class="dock-avatar-indicator" data-avatar="3">
-                <div class="dock-circle dock-orange"></div>
-                <span class="dock-label">Involvement</span>
-            </div>
-            <div class="dock-avatar-indicator" data-avatar="4">
-                <div class="dock-circle dock-purple"></div>
-                <span class="dock-label">Career</span>
-            </div>
+<div id="section-questions-stage" class="section-questions-stage section1-fullscreen" hidden>
+    <aside id="avatar-stage" class="section1-avatar-panel" aria-label="Avatar 1, Academic Foundations Advisor">
+        <div id="active-avatar-circle" class="avatar-circle avatar-1-blue avatar-image-frame">
+            <img src="{{ url_for('static', filename='images/Avatar1.PNG') }}" alt="Avatar 1" class="avatar-portrait" />
+            <span class="avatar-number-badge">A1</span>
         </div>
+        <span class="avatar-name-tag section1-avatar-name">Avatar 1 (Blue)</span>
+    </aside>
 
-        <div class="advisor-interaction-row">
-            <div class="avatar-container">
-                <div id="active-avatar-circle" class="avatar-circle avatar-1-blue">
-                    <span class="avatar-glyph">🎓</span>
-                    <span class="avatar-number-badge">A1</span>
+    <div class="section1-content-panel">
+        <div class="section1-advisor-panel avatar-stage-wrapper">
+            <div class="avatar-dock" aria-label="Advisory Council Avatars">
+                <div class="dock-avatar-indicator active" data-avatar="1">
+                    <div class="dock-circle dock-blue"></div>
+                    <span class="dock-label">Foundations</span>
                 </div>
-                <span class="avatar-name-tag">Avatar 1 (Blue)</span>
+                <div class="dock-avatar-indicator" data-avatar="2">
+                    <div class="dock-circle dock-green"></div>
+                    <span class="dock-label">Courses</span>
+                </div>
+                <div class="dock-avatar-indicator" data-avatar="3">
+                    <div class="dock-circle dock-orange"></div>
+                    <span class="dock-label">Involvement</span>
+                </div>
+                <div class="dock-avatar-indicator" data-avatar="4">
+                    <div class="dock-circle dock-purple"></div>
+                    <span class="dock-label">Career</span>
+                </div>
             </div>
 
             <div class="thought-bubble-container">
@@ -113,9 +112,8 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <div id="section-1-container" class="interactive-screen">
+        <div id="section-1-container" class="interactive-screen">
         <!-- SUB-STEP 1: College Standing -->
         <div id="substep-standing" class="substep-block">
             <p class="eyebrow">Section 1 of 5 &bull; Academic Foundations</p>
@@ -252,10 +250,11 @@
                 </button>
             </div>
         </div>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/section1.js', v='36') }}"></script>
+<script src="{{ url_for('static', filename='js/section1.js', v='38') }}"></script>
 {% endblock %}

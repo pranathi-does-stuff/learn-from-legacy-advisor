@@ -40,7 +40,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (questionsStage) {
                 questionsStage.hidden = false;
                 questionsStage.removeAttribute("hidden");
-                questionsStage.style.display = "block";
+                questionsStage.style.display = "grid";
+                document.querySelector(".page-wrapper")?.classList.add("section1-immersive");
                 window.scrollTo({ top: 0, behavior: "smooth" });
             }
         });
