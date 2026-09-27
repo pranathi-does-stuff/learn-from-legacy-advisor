@@ -31,6 +31,14 @@ TIGER_DATA_URL = os.getenv("TIGER_DATA_URL") or os.getenv("DATABASE_URL")
 DEFAULT_ELEVENLABS_VOICE_ID = "ktHrlQPfUoEUQDP8xbm1"
 SECTION_1_ELEVENLABS_VOICE_ID = "ktHrlQPfUoEUQDP8xbm1"
 
+AVATAR_VOICE_IDS = {
+    1: "ktHrlQPfUoEUQDP8xbm1",
+    2: "b1fu18ehYUVnbLjA7vJ3",
+    3: "Bn9xWp6PwkrqKRbq8cX2",
+    4: "Sq93GQT4X1lKDXsQcixO",
+    5: "ktHrlQPfUoEUQDP8xbm1",
+}
+
 DATA_DIR = Path(__file__).resolve().parent / "hackumbc-2026-main" / "data"
 STUDENTS_CURRENT_CSV = DATA_DIR / "students_current.csv"
 ALUMNI_CSV = DATA_DIR / "alumni.csv"
@@ -2164,7 +2172,18 @@ def _resolve_all_prerequisites(taken_course_ids: set, catalog_dict: dict) -> set
 def generate_section1_voice():
     payload = request.get_json(silent=True) or {}
     text = payload.get("text")
-    voice_id = str(payload.get("voice_id") or "").strip() or SECTION_1_ELEVENLABS_VOICE_ID
+    voice_id = str(payload.get("voice_id") or "").strip()
+    if not voice_id:
+        avatar_num = payload.get("avatar_num") or payload.get("avatar") or payload.get("section_num") or payload.get("section")
+        if avatar_num is not None:
+            try:
+                av_clean = str(avatar_num).lower().replace("section_", "").replace("section", "").replace("avatar_", "").replace("avatar", "").strip()
+                av_int = int(av_clean)
+                voice_id = AVATAR_VOICE_IDS.get(av_int, DEFAULT_ELEVENLABS_VOICE_ID)
+            except Exception:
+                pass
+    if not voice_id:
+        voice_id = SECTION_1_ELEVENLABS_VOICE_ID
     if not isinstance(text, str) or not text.strip():
         return jsonify({"error": "Text is required."}), 400
     if len(text) > 1500:
@@ -2660,14 +2679,22 @@ def generate_report():
         professional_analysis=professional_analysis,
     )
 
-    # Step C: ElevenLabs TTS Audio (Strictly use frontend voice_id or SECTION_1_ELEVENLABS_VOICE_ID)
+    # Step C: ElevenLabs TTS Audio (Resolved using requested voice_id or AVATAR_VOICE_IDS mapping)
     requested_voice_id = str(payload.get("voice_id") or "").strip()
     if requested_voice_id:
         voice_to_use = requested_voice_id
-    elif clean_sec in ("basic_info", "section_1", "1", "final_report", "section_5", "5", "final", "synthesis"):
-        voice_to_use = SECTION_1_ELEVENLABS_VOICE_ID
+    elif clean_sec in ("basic_info", "section_1", "1"):
+        voice_to_use = AVATAR_VOICE_IDS.get(1, DEFAULT_ELEVENLABS_VOICE_ID)
+    elif clean_sec in ("course_advising", "section_2", "2", "courses", "course"):
+        voice_to_use = AVATAR_VOICE_IDS.get(2, DEFAULT_ELEVENLABS_VOICE_ID)
+    elif clean_sec in ("campus_involvement", "section_3", "3", "involvement", "campus"):
+        voice_to_use = AVATAR_VOICE_IDS.get(3, DEFAULT_ELEVENLABS_VOICE_ID)
+    elif clean_sec in ("professional_involvement", "section_4", "4", "professional", "skills", "experience", "internships"):
+        voice_to_use = AVATAR_VOICE_IDS.get(4, DEFAULT_ELEVENLABS_VOICE_ID)
+    elif clean_sec in ("final_report", "section_5", "5", "final", "synthesis"):
+        voice_to_use = AVATAR_VOICE_IDS.get(5, DEFAULT_ELEVENLABS_VOICE_ID)
     else:
-        voice_to_use = SECTION_1_ELEVENLABS_VOICE_ID
+        voice_to_use = DEFAULT_ELEVENLABS_VOICE_ID
 
     base64_audio = generate_elevenlabs_tts(gemini_text, voice_id=voice_to_use)
 
