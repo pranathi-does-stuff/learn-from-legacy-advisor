@@ -613,6 +613,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     section_name: sectionName,
+                    voice_id: "ktHrlQPfUoEUQDP8xbm1",
                     user_data: state.user,
                 }),
             });
@@ -1207,67 +1208,34 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Save to Database Button
-    document.getElementById("btn-save-to-db")?.addEventListener("click", async () => {
-        const spinner = document.getElementById("spinner-save-db");
-        const btn = document.getElementById("btn-save-to-db");
-        const msgEl = document.getElementById("save-confirmation-msg");
-        if (spinner) spinner.hidden = false;
-        if (btn) btn.disabled = true;
+    // Print Dossier Button Handler
+    const handleLegacyPrintDossier = () => {
+        stopAllSpeech();
+        collectFormData();
 
-        try {
-            collectFormData();
-            const res = await fetch("/api/submit-quiz", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    role: "student",
-                    student: {
-                        classYear: state.user.classYear,
-                        demographics: {
-                            name: state.user.name,
-                            major: state.user.major,
-                            majorTrack: state.user.majorTrack,
-                            otherCategories: state.user.minor,
-                            gpa: state.user.gpa,
-                            creditsCompleted: state.user.creditsCompleted,
-                        },
-                        aspirations: {
-                            targetCompaniesIndustries: state.user.targetCompanyIndustry,
-                            expectedSalaryUsd: state.user.targetSalary,
-                            targetLocation: state.user.targetLocation,
-                            careerGoals: state.user.careerGoals,
-                            expectedGraduationYear: state.user.expectedGradYear,
-                        },
-                        involvement: {
-                            clubsAndActivities: state.user.selectedActivities.join(", "),
-                            rolesAndInterests: state.user.customActivity,
-                        },
-                        experience: {
-                            projectsAndSkills: state.user.skills,
-                            internshipsAndJobs: state.user.internships,
-                        },
-                    },
-                }),
-            });
+        const cleanPayload = {
+            user: state.user || {},
+        };
 
-            const result = await res.json();
-            if (result.user_id) {
-                state.activeUserId = result.user_id;
-            }
-            if (msgEl) {
-                msgEl.hidden = false;
-                msgEl.textContent = `✓ Report successfully saved to Tiger Data (Record ID: ${result.submission_id || "Saved"}).`;
-            }
-            avatarSayTextOnly("Your comprehensive career report has been officially saved to Tiger Data!", 1);
-        } catch (err) {
-            console.error("Save error:", err);
-            showError("Unable to save report to database.");
-        } finally {
-            if (spinner) spinner.hidden = true;
-            if (btn) btn.disabled = false;
-        }
-    });
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = "/print-report";
+        form.target = "_blank";
+        form.style.display = "none";
+
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "state_json";
+        input.value = JSON.stringify(cleanPayload);
+
+        form.appendChild(input);
+        document.body.appendChild(form);
+        form.submit();
+        form.remove();
+    };
+
+    document.getElementById("btn-print-report")?.addEventListener("click", handleLegacyPrintDossier);
+    document.getElementById("btn-print-report-bottom")?.addEventListener("click", handleLegacyPrintDossier);
 
     // Restart Quiz Button
     document.getElementById("btn-restart-quiz")?.addEventListener("click", () => {

@@ -140,17 +140,28 @@ const QuizApp = {
         sessionStorage.removeItem(STORAGE_KEY);
     },
 
-    // Audio Playback Engine
+    // Audio Playback Engine (Strict Audio Management)
     currentAudio: null,
 
     stopAllSpeech() {
         if (this.currentAudio) {
-            this.currentAudio.pause();
-            this.currentAudio.currentTime = 0;
+            try {
+                this.currentAudio.pause();
+                this.currentAudio.currentTime = 0;
+            } catch (_e) { }
             this.currentAudio = null;
         }
-        if (window.speechSynthesis && window.speechSynthesis.speaking) {
-            window.speechSynthesis.cancel();
+        if (window.currentAudio) {
+            try {
+                window.currentAudio.pause();
+                window.currentAudio.currentTime = 0;
+            } catch (_e) { }
+            window.currentAudio = null;
+        }
+        if (window.speechSynthesis) {
+            try {
+                window.speechSynthesis.cancel();
+            } catch (_e) { }
         }
         this.setAudioWavesVisual(false);
     },
@@ -167,7 +178,7 @@ const QuizApp = {
     },
 
     playBase64Audio(base64Mp3) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             this.stopAllSpeech();
             if (!base64Mp3) return resolve(false);
 
@@ -175,18 +186,25 @@ const QuizApp = {
                 const audioEl = document.getElementById("advisor-audio-element") || new Audio();
                 audioEl.src = `data:audio/mp3;base64,${base64Mp3}`;
                 this.currentAudio = audioEl;
+                window.currentAudio = audioEl;
 
                 this.setAudioWavesVisual(true);
 
                 audioEl.onended = () => {
                     this.setAudioWavesVisual(false);
                     this.currentAudio = null;
+                    window.currentAudio = null;
                     resolve(true);
+                };
+
+                audioEl.onpause = () => {
+                    this.setAudioWavesVisual(false);
                 };
 
                 audioEl.onerror = (err) => {
                     this.setAudioWavesVisual(false);
                     this.currentAudio = null;
+                    window.currentAudio = null;
                     resolve(false);
                 };
 

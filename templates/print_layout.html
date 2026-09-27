@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Official Career Dossier &bull; {{ user.name or 'Student' }} &bull; Legacy Advisory</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+
+    <style>
+        :root {
+            --text-main: #111827;
+            --text-secondary: #374151;
+            --text-muted: #6b7280;
+            --brand-gold: #b45309;
+            --brand-gold-dark: #78350f;
+            --brand-gold-subtle: #fef3c7;
+            --brand-emerald: #065f46;
+            --brand-emerald-subtle: #d1fae5;
+            --brand-navy: #1e3a8a;
+            --border-dark: #d1d5db;
+            --border-light: #e5e7eb;
+            --bg-table-header: #f3f4f6;
+            --bg-card: #f9fafb;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--text-main);
+            background-color: #e5e7eb;
+            line-height: 1.45;
+            font-size: 9pt;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* Screen Toolbar (Hidden on Print) */
+        .print-toolbar {
+            position: sticky;
+            top: 0;
+            background: #1f2937;
+            color: #ffffff;
+            padding: 0.75rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 9999;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        .toolbar-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .toolbar-btn-group {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .toolbar-btn {
+            background-color: #2563eb;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            padding: 0.5rem 1.25rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: background-color 0.2s ease;
+        }
+
+        .toolbar-btn:hover {
+            background-color: #1d4ed8;
+        }
+
+        .toolbar-btn-secondary {
+            background-color: #4b5563;
+        }
+
+        .toolbar-btn-secondary:hover {
+            background-color: #374151;
+        }
+
+        /* Dossier Page Container */
+        .dossier-wrapper {
+            max-width: 8.5in;
+            margin: 1.5rem auto;
+            background: #ffffff;
+            padding: 0.5in 0.55in;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            border-radius: 4px;
+        }
+
+        /* Official Document Header */
+        .dossier-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2.5px solid var(--text-main);
+            padding-bottom: 0.75rem;
+            margin-bottom: 1.15rem;
+        }
+
+        .header-brand-block {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .brand-crest {
+            width: 46px;
+            height: 46px;
+            background: linear-gradient(135deg, #b45309, #78350f);
+            color: #ffffff;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            font-weight: 700;
+            box-shadow: 0 2px 6px rgba(120, 53, 15, 0.3);
+        }
+
+        .header-titles h1 {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 18pt;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: 0.02em;
+            line-height: 1.15;
+            text-transform: uppercase;
+        }
+
+        .header-titles p {
+            font-size: 8pt;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--brand-gold-dark);
+            margin-top: 0.15rem;
+        }
+
+        .header-meta-block {
+            text-align: right;
+            font-size: 7.5pt;
+            line-height: 1.45;
+            color: var(--text-secondary);
+        }
+
+        .meta-dossier-id {
+            font-weight: 700;
+            color: var(--text-main);
+            font-size: 8.5pt;
+            letter-spacing: 0.04em;
+        }
+
+        .meta-status-badge {
+            display: inline-block;
+            background: var(--brand-emerald-subtle);
+            color: var(--brand-emerald);
+            font-weight: 700;
+            padding: 0.15rem 0.45rem;
+            border-radius: 4px;
+            margin-top: 0.2rem;
+            border: 1px solid rgba(6, 95, 70, 0.25);
+        }
+
+        /* Section Styling */
+        .dossier-section {
+            margin-bottom: 1.15rem;
+            page-break-inside: avoid;
+        }
+
+        .section-title-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-table-header);
+            border-left: 3.5px solid var(--brand-gold-dark);
+            padding: 0.35rem 0.65rem;
+            margin-bottom: 0.55rem;
+        }
+
+        .section-heading {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 11.5pt;
+            font-weight: 700;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .section-tag {
+            font-size: 7pt;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+        }
+
+        /* Tables */
+        .formal-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8pt;
+            margin-bottom: 0.45rem;
+        }
+
+        .formal-table th {
+            background-color: var(--bg-table-header);
+            color: var(--text-main);
+            font-weight: 700;
+            text-align: left;
+            padding: 0.35rem 0.55rem;
+            border: 1px solid var(--border-dark);
+            font-size: 7.5pt;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        .formal-table td {
+            padding: 0.35rem 0.55rem;
+            border: 1px solid var(--border-light);
+            vertical-align: top;
+            color: var(--text-secondary);
+        }
+
+        .formal-table tr:nth-child(even) td {
+            background-color: #fafafa;
+        }
+
+        .matrix-table td strong {
+            color: var(--text-main);
+        }
+
+        /* Two Column Layout */
+        .two-column-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.85rem;
+            margin-bottom: 0.45rem;
+        }
+
+        /* Metric Cards */
+        .metric-stat-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dark);
+            border-radius: 4px;
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        .metric-stat-label {
+            font-size: 7pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.04em;
+        }
+
+        .metric-stat-value {
+            font-size: 10pt;
+            font-weight: 700;
+            color: var(--brand-emerald);
+        }
+
+        /* The Ultimate Match Dossier Card */
+        .ultimate-match-dossier {
+            background: linear-gradient(135deg, #ffffff 0%, #fefce8 100%);
+            border: 1.5px solid var(--brand-gold);
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            margin-top: 0.35rem;
+        }
+
+        .ultimate-match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(180, 83, 9, 0.2);
+            padding-bottom: 0.4rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .ultimate-alum-role {
+            font-size: 11pt;
+            font-weight: 700;
+            color: var(--text-main);
+            font-family: 'Cormorant Garamond', Georgia, serif;
+        }
+
+        .ultimate-salary-highlight {
+            font-size: 10pt;
+            font-weight: 800;
+            color: var(--brand-emerald);
+            background: var(--brand-emerald-subtle);
+            padding: 0.15rem 0.55rem;
+            border-radius: 4px;
+            border: 1px solid rgba(6, 95, 70, 0.3);
+        }
+
+        .ultimate-summary-quote {
+            margin-top: 0.5rem;
+            background: rgba(254, 243, 199, 0.5);
+            border-left: 3px solid var(--brand-gold);
+            padding: 0.4rem 0.65rem;
+            font-size: 8pt;
+            font-style: italic;
+            color: var(--text-main);
+        }
+
+        /* Timeline Roadmap Grid */
+        .timeline-roadmap-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            margin-top: 0.35rem;
+        }
+
+        .timeline-milestone-card {
+            background: #ffffff;
+            border: 1px solid var(--border-dark);
+            border-radius: 4px;
+            padding: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .timeline-timeframe {
+            font-size: 6.8pt;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--brand-gold-dark);
+            background: var(--brand-gold-subtle);
+            padding: 0.1rem 0.35rem;
+            border-radius: 3px;
+            width: fit-content;
+            letter-spacing: 0.04em;
+        }
+
+        .timeline-title {
+            font-size: 8pt;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1.2;
+        }
+
+        .timeline-desc {
+            font-size: 7.2pt;
+            color: var(--text-secondary);
+            line-height: 1.35;
+        }
+
+        /* Executive Endorsement & Signature Block */
+        .endorsement-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dark);
+            border-radius: 4px;
+            padding: 0.65rem 0.85rem;
+            margin-top: 0.45rem;
+            font-size: 8pt;
+            line-height: 1.45;
+            color: var(--text-secondary);
+        }
+
+        .signature-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1.25rem;
+            padding-top: 0.85rem;
+            border-top: 1px solid var(--border-dark);
+        }
+
+        .sig-block {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .sig-line {
+            width: 100%;
+            height: 1px;
+            background: var(--text-main);
+            margin-top: 1.5rem;
+        }
+
+        .sig-name {
+            font-size: 7.8pt;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-top: 0.25rem;
+        }
+
+        .sig-title {
+            font-size: 6.8pt;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .footer-disclaimer {
+            margin-top: 1rem;
+            text-align: center;
+            font-size: 6.8pt;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-light);
+            padding-top: 0.5rem;
+            letter-spacing: 0.03em;
+        }
+
+        /* =========================================================================
+           PRINT SPECIFIC STYLESHEET
+           ========================================================================= */
+        @media print {
+            @page {
+                size: letter portrait;
+                margin: 0.35in 0.35in 0.35in 0.35in;
+            }
+
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                font-size: 8.5pt !important;
+            }
+
+            .print-toolbar {
+                display: none !important;
+            }
+
+            .dossier-wrapper {
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+
+            .dossier-section {
+                page-break-inside: avoid !important;
+            }
+
+            .formal-table th {
+                background-color: #f3f4f6 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .ultimate-match-dossier {
+                background: #fafafa !important;
+                border: 1.5px solid #000000 !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Floating Toolbar for Screen Preview -->
+    <header class="print-toolbar" aria-label="Dossier Print Controls">
+        <div class="toolbar-title">
+            <span>🎓</span>
+            <span>Official Academic &amp; Career Trajectory Dossier Preview</span>
+        </div>
+        <div class="toolbar-btn-group">
+            <button type="button" class="toolbar-btn" onclick="window.print();">
+                🖨️ Print Dossier Document
+            </button>
+            <button type="button" class="toolbar-btn toolbar-btn-secondary" onclick="window.close();">
+                ✖ Close Window
+            </button>
+        </div>
+    </header>
+
+    <main class="dossier-wrapper">
+        <!-- Official Document Header -->
+        <header class="dossier-header">
+            <div class="header-brand-block">
+                <div class="brand-crest" aria-hidden="true">UMBC</div>
+                <div class="header-titles">
+                    <h1>Academic &amp; Career Trajectory Dossier</h1>
+                    <p>Division of Academic &amp; Career Advising &bull; Tiger Data Historical Benchmark Synthesis</p>
+                </div>
+            </div>
+            <div class="header-meta-block">
+                <div class="meta-dossier-id">{{ dossier_id }}</div>
+                <div>Issued: {{ timestamp_str }}</div>
+                <span class="meta-status-badge">Official Advisory Record</span>
+            </div>
+        </header>
+
+        <!-- 1. Candidate Profile & Academic Matrix -->
+        <section class="dossier-section">
+            <div class="section-title-bar">
+                <h2 class="section-heading">1. Candidate Profile &amp; Academic Baseline</h2>
+                <span class="section-tag">Student Record Summary</span>
+            </div>
+            <table class="formal-table matrix-table">
+                <tbody>
+                    <tr>
+                        <td style="width:18%;"><strong>Candidate Name:</strong></td>
+                        <td style="width:32%;">{{ user.name or 'Undergraduate Student' }}</td>
+                        <td style="width:18%;"><strong>Classification:</strong></td>
+                        <td style="width:32%;">{{ user.classYear or 'Undergraduate' }} Standing</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Primary Major:</strong></td>
+                        <td>{{ user.major or 'Computer Science' }}</td>
+                        <td><strong>Specialized Track:</strong></td>
+                        <td>{{ user.majorTrack or 'Standard Track' }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Minor / Focus:</strong></td>
+                        <td>{{ user.minor or 'None declared' }}</td>
+                        <td><strong>Cumulative GPA:</strong></td>
+                        <td><strong>{{ user.gpa or '3.60' }} GPA</strong> &bull; {{ user.creditsCompleted or '15' }}
+                            Credits Earned</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Target Industry:</strong></td>
+                        <td>{{ user.targetCompanyIndustry or 'Software Products' }}</td>
+                        <td><strong>Target Role:</strong></td>
+                        <td>{{ user.careerGoals or 'Software Development Engineer' }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Target Compensation:</strong></td>
+                        <td><strong style="color:var(--brand-emerald);">{{ user.targetSalary or '$105,000' }} /
+                                Year</strong></td>
+                        <td><strong>Geographic Focus:</strong></td>
+                        <td>{{ user.targetLocation or 'Mid-Atlantic / Remote' }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 2. Comprehensive Degree Progress & Coursework Audit -->
+        <section class="dossier-section">
+            <div class="section-title-bar">
+                <h2 class="section-heading">2. Degree Progress &amp; Coursework Audit</h2>
+                <span class="section-tag">Departmental Curriculum Clearance</span>
+            </div>
+
+            <div class="two-column-grid">
+                <!-- Completed Core Courses -->
+                <div>
+                    <table class="formal-table">
+                        <thead>
+                            <tr>
+                                <th colspan="3">Completed Major Core Requirements ({{ class_analysis.completed_required
+                                    | length }})</th>
+                            </tr>
+                            <tr>
+                                <th>Code</th>
+                                <th>Title</th>
+                                <th>Credits</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if class_analysis.completed_required %}
+                            {% for c in class_analysis.completed_required %}
+                            <tr>
+                                <td><strong>{{ c.course_id }}</strong></td>
+                                <td>{{ c.course_title }}</td>
+                                <td>{{ c.credits or 3 }} cr</td>
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="3" style="text-align:center; color:var(--text-muted);">No foundational core
+                                    courses recorded yet.</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Remaining Core Courses (Conditional) -->
+                <div>
+                    <table class="formal-table">
+                        <thead>
+                            <tr>
+                                <th colspan="3">Remaining Core Requirements Needed ({{ class_analysis.missing_required |
+                                    length }})</th>
+                            </tr>
+                            <tr>
+                                <th>Code</th>
+                                <th>Title</th>
+                                <th>Credits</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if class_analysis.missing_required and not user.noRequiredCourses %}
+                            {% for c in class_analysis.missing_required %}
+                            <tr>
+                                <td><strong style="color:var(--brand-gold-dark);">{{ c.course_id }}</strong></td>
+                                <td>{{ c.course_title }}</td>
+                                <td>{{ c.credits or 3 }} cr</td>
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="3"
+                                    style="text-align:center; color:var(--brand-emerald); font-weight:600; background:#f0fdf4;">
+                                    ✓ Core degree coursework requirements 100% cleared!
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Recommended Track Electives -->
+            {% if class_analysis.recommended_electives %}
+            <table class="formal-table" style="margin-top:0.25rem;">
+                <thead>
+                    <tr>
+                        <th colspan="4">Prioritized Upper-Level Electives Aligned to {{ user.targetCompanyIndustry or
+                            'Target Industry' }}</th>
+                    </tr>
+                    <tr>
+                        <th>Code</th>
+                        <th>Course Title</th>
+                        <th>Credits</th>
+                        <th>Competency Focus</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in class_analysis.recommended_electives[:4] %}
+                    <tr>
+                        <td><strong>{{ e.course_id }}</strong></td>
+                        <td>{{ e.course_title }}</td>
+                        <td>{{ e.credits or 3 }} cr</td>
+                        <td>{{ e.skill_tags or 'Advanced Industry Track' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+        </section>
+
+        <!-- 3. Tiger Data Departmental & Industry Benchmarks -->
+        <section class="dossier-section">
+            <div class="section-title-bar">
+                <h2 class="section-heading">3. Tiger Data Alumni Benchmarks &amp; Industry Analytics</h2>
+                <span class="section-tag">{{ user.major }} Historical Placement Data</span>
+            </div>
+
+            <div class="two-column-grid">
+                <!-- Salary Distribution Table -->
+                <table class="formal-table">
+                    <thead>
+                        <tr>
+                            <th colspan="2">Historical Starting Salary Distribution ({{ user.major }})</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>25th Percentile:</strong></td>
+                            <td>{{ tiger_benchmarks.salary_25th }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Median (50th Percentile):</strong></td>
+                            <td><strong>{{ tiger_benchmarks.salary_median }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>75th Percentile (Top Quartile):</strong></td>
+                            <td><strong style="color:var(--brand-emerald);">{{ tiger_benchmarks.salary_75th }}</strong>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Maximum Recorded Offer:</strong></td>
+                            <td>{{ tiger_benchmarks.salary_max }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Average Program Salary:</strong></td>
+                            <td>{{ tiger_benchmarks.salary_avg }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Top Employers Table -->
+                <table class="formal-table">
+                    <thead>
+                        <tr>
+                            <th>Top Alumni Employers</th>
+                            <th>Alumni Placements</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for emp in tiger_benchmarks.top_employers %}
+                        <tr>
+                            <td><strong>{{ emp.name }}</strong></td>
+                            <td>{{ emp.count }} Graduates</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="two-column-grid" style="margin-top:0.25rem;">
+                <div class="metric-stat-box">
+                    <span class="metric-stat-label">Average Time-to-Degree</span>
+                    <span class="metric-stat-value">{{ tiger_benchmarks.avg_time_to_degree }}</span>
+                </div>
+                <div class="metric-stat-box">
+                    <span class="metric-stat-label">Average Completed Internships</span>
+                    <span class="metric-stat-value">{{ tiger_benchmarks.avg_internships }}</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Campus Involvement & Leadership Evaluation -->
+        <section class="dossier-section">
+            <div class="section-title-bar">
+                <h2 class="section-heading">4. Campus Involvement &amp; Leadership Profile</h2>
+                <span class="section-tag">Extracurricular Differentiation</span>
+            </div>
+            <table class="formal-table">
+                <tbody>
+                    <tr>
+                        <td style="width:25%;"><strong>Current Student Involvement:</strong></td>
+                        <td>
+                            {% if user.selectedActivities %}
+                            {{ user.selectedActivities | join(', ') }}
+                            {% if user.customActivity %}, {{ user.customActivity }}{% endif %}
+                            {% else %}
+                            {{ user.customActivity or 'Exploring foundational campus technical organizations' }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Leadership Density Factor:</strong></td>
+                        <td><strong>{{ involvement_analysis.leadership_factor or 'Active Contributor' }}</strong>
+                            &mdash; {{ involvement_analysis.leadership_desc or 'Consistently contributing across
+                            technical student groups.' }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Outlier Factor Assessment:</strong></td>
+                        <td><strong>{{ involvement_analysis.outlier_status or 'Standard Path' }}</strong> &mdash; {{
+                            involvement_analysis.outlier_summary or 'Aligned with standard extracurricular
+                            trajectories.' }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Recommended Opportunities:</strong></td>
+                        <td>Target technical leadership in <strong>Association for Computing Machinery (ACM)
+                                Chapter</strong> or <strong>Competitive Capture The Flag (CTF) Team</strong> for
+                            recruiter visibility.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 5. Professional Experience & Technical Competencies -->
+        <section class="dossier-section">
+            <div class="section-title-bar">
+                <h2 class="section-heading">5. Professional Readiness &amp; Technical Stacks</h2>
+                <span class="section-tag">Industry Skill Inventory</span>
+            </div>
+            <table class="formal-table">
+                <tbody>
+                    <tr>
+                        <td style="width:25%;"><strong>Technical Competencies &amp; Skills:</strong></td>
+                        <td><strong>{{ user.skills or 'Python, Git, Relational Databases, REST APIs, Data Structures'
+                                }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Internship &amp; Industry History:</strong></td>
+                        <td>{{ user.internships or 'Actively seeking first industry placement / co-op position' }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Recruiting Recommendation:</strong></td>
+                        <td>Target 25+ early applications during the Fall recruitment sprint for {{
+                            user.targetCompanyIndustry or 'Software Products' }} employers.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 6. The Ultimate Matched Alumni Blueprint -->
+        <section class="dossier-section">
+            <div class="section-title-bar">
+                <h2 class="section-heading">6. The Ultimate Matched Alumni Blueprint</h2>
+                <span class="section-tag">Tiger Data Benchmark Match</span>
+            </div>
+
+            <div class="ultimate-match-dossier">
+                <div class="ultimate-match-header">
+                    <div>
+                        <div class="ultimate-alum-role">
+                            {{ ultimate_match.first_job_title or 'Software Development Engineer' }} at {{
+                            ultimate_match.first_employer or 'Amazon Web Services' }}
+                        </div>
+                        <div style="font-size:7.5pt; color:var(--text-muted); margin-top:0.1rem;">
+                            {{ ultimate_match.first_employer_industry or 'Software Products' }} &bull; {{
+                            ultimate_match.major or user.major }} ({{ ultimate_match.track or 'Standard Track' }})
+                        </div>
+                    </div>
+                    <div class="ultimate-salary-highlight">
+                        {{ ultimate_match.first_job_annual_salary_usd or '$114,000' }} Starting Offer
+                    </div>
+                </div>
+
+                <div class="two-column-grid" style="margin-bottom:0.4rem;">
+                    <div>
+                        <table class="formal-table" style="margin:0;">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Academic Performance:</strong></td>
+                                    <td>{{ ultimate_match.final_gpa or '3.84' }} Final GPA &bull; {{
+                                        ultimate_match.time_to_degree_years or '4.0 Years' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Experience Track:</strong></td>
+                                    <td>{{ ultimate_match.internships or '2 Summer Internships' }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div>
+                        <table class="formal-table" style="margin:0;">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Key Involvements:</strong></td>
+                                    <td>{{ (ultimate_match.key_involvements or ['ACM Student Chapter', 'Open Source
+                                        Society']) | join(', ') }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Core Electives:</strong></td>
+                                    <td>{{ (ultimate_match.key_courses or ['CMSC 441', 'CMSC 471', 'CMSC 447']) |
+                                        join(', ') }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="ultimate-summary-quote">
+                    <strong>Advisory Insight:</strong> "{{ ultimate_match.strategic_takeaway or 'Maintained strong core
+                    standing, led collaborative student builds, completed two industry internships, and locked in a
+                    top-tier return offer upon graduation.' }}"
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. Actionable 4-Stage Multi-Year Timeline -->
+        <section class="dossier-section">
+            <div class="section-title-bar">
+                <h2 class="section-heading">7. Actionable Multi-Year Execution Roadmap</h2>
+                <span class="section-tag">Strategic Milestone Sequence</span>
+            </div>
+
+            <div class="timeline-roadmap-grid">
+                {% for step in timeline_steps %}
+                <div class="timeline-milestone-card">
+                    <span class="timeline-timeframe">{{ step.timeframe }}</span>
+                    <h3 class="timeline-title">{{ step.title }}</h3>
+                    <p class="timeline-desc">{{ step.description }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- 8. Executive Council Synthesis & Endorsement Block -->
+        <section class="dossier-section">
+            <div class="section-title-bar">
+                <h2 class="section-heading">8. Advisory Council Synthesis &amp; Clearance</h2>
+                <span class="section-tag">Formal Endorsement</span>
+            </div>
+
+            <div class="endorsement-box">
+                <strong>Executive Directive:</strong> {{ executive_advice }}
+            </div>
+
+            <div class="signature-row">
+                <div class="sig-block">
+                    <div class="sig-line"></div>
+                    <div class="sig-name">Avatar 1 (Lead Advisor)</div>
+                    <div class="sig-title">Academic Foundations &amp; Synthesis Lead</div>
+                </div>
+                <div class="sig-block">
+                    <div class="sig-line"></div>
+                    <div class="sig-name">Tiger Data Analytics Engine</div>
+                    <div class="sig-title">Institutional Historical Benchmark Unit</div>
+                </div>
+                <div class="sig-block">
+                    <div class="sig-line"></div>
+                    <div class="sig-name">Advisory Council Executive Board</div>
+                    <div class="sig-title">Division of Career Advancement &amp; Degree Clearance</div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="footer-disclaimer">
+            This dossier is an official advisory roadmap synthesized from historical Tiger Data alumni outcomes and
+            Gemini cognitive modeling. All degree clearance milestones must be verified with departmental advisors.
+        </footer>
+    </main>
+
+    <!-- Auto-Print Trigger on Document Load -->
+    <script>
+        window.addEventListener("load", function () {
+            setTimeout(function () {
+                window.print();
+            }, 600);
+        });
+    </script>
+</body>
+
+</html>

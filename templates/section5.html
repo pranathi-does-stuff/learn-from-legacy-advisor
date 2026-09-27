@@ -1,23 +1,21 @@
 {% extends "base.html" %}
 
-{% block title %}Section 5 &bull; Synthesis &amp; Final Blueprint &bull; Legacy Advisory{% endblock %}
+{% block title %}Section 5 &bull; Synthesis &amp; Final Report &bull; Legacy Advisory{% endblock %}
 
 {% block progress_label %}Section 5 of 5 &bull; Synthesis &amp; Final Report{% endblock %}
 {% block progress_percent %}100%{% endblock %}
 
 {% block content %}
 <!-- =========================================================================
-     STAGE A: STANDALONE AVATAR INTRODUCTION SCREEN
-     Avatar with Dialogue Bubble introducing themself before showing report
+     STAGE A: STANDALONE AVATAR 1 INTRODUCTION SCREEN (Event A)
+     Large Hero Avatar 1 (Blue) with Dialogue Bubble introducing final report
      ========================================================================= -->
-<div id="section-intro-stage" class="section-intro-stage" data-section="5">
-    <div class="intro-avatar-wrapper">
-        <div class="intro-avatar-circle avatar-1-blue">
-            <span class="intro-avatar-glyph">🎓</span>
-            <span class="intro-avatar-badge">A1</span>
+<div id="section-intro-stage" class="section-intro-stage section5-intro-hero" data-section="5">
+    <div class="intro-avatar-wrapper section5-large-avatar-wrap">
+        <div class="intro-avatar-circle avatar-1-blue avatar-image-frame section5-hero-avatar-frame">
+            <img src="{{ url_for('static', filename='images/Avatar1.PNG') }}" alt="Avatar 1" class="avatar-portrait" />
         </div>
-        <h2 class="intro-persona-title">Avatar 1 (Lead Advisor)</h2>
-        <span class="intro-role-subtitle">Synthesis &amp; Advisory Council Lead</span>
+        <span class="intro-role-subtitle">Academic Foundations Advisor</span>
     </div>
 
     <div class="intro-dialogue-bubble">
@@ -25,7 +23,7 @@
             <div class="intro-speaker-tag" style="color:var(--avatar-blue);">
                 <span class="thought-badge-dot"
                     style="background-color:var(--avatar-blue); box-shadow:0 0 6px var(--avatar-blue);"></span>
-                <span>Council Synthesis</span>
+                <span>Advisor Introduction</span>
             </div>
             <div class="thought-audio-controls">
                 <div class="audio-waves" hidden aria-hidden="true">
@@ -38,24 +36,23 @@
             </div>
         </div>
         <p id="advisor-intro-message" class="intro-dialogue-text">
-            Congratulations! The Advisory Council has converged and synthesized your complete multi-dimensional career
-            blueprint. Review your personalized 4-year trajectory and matched alumni below, and save your record to
-            Tiger Data.
+            Let's take a look at your final career blueprint.
         </p>
     </div>
 
     <button type="button" class="submit-btn intro-continue-btn" id="btn-start-section-questions">
-        View Final Blueprint &amp; Report &rarr;
+        Continue to Report &rarr;
     </button>
 </div>
 
 <!-- =========================================================================
-     STAGE B: SECTION 5 FINAL BLUEPRINT & TIGER DATA SAVE
-     Appears after user clicks "View Final Blueprint & Report"
+     STAGE B: SECTION 5 FINAL REPORT DASHBOARD (Event B)
+     Top: Large Avatar (Takes up half screen) + Thought Bubble
+     Below: Centered Full-Width Blueprint Dashboard
      ========================================================================= -->
-<div id="section-questions-stage" class="section-questions-stage" hidden>
-    <!-- Top Avatar Dock & Thought Bubble -->
-    <div id="avatar-stage" class="avatar-stage-wrapper">
+<div id="section-questions-stage" class="section-questions-stage section5-stage" hidden>
+    <!-- Top Hero Section: Large Avatar 1 (Half Screen) + Thought Bubble -->
+    <div id="avatar-stage" class="avatar-stage-wrapper section5-hero-stage-wrapper">
         <div class="avatar-dock" aria-label="Advisory Council Avatars">
             <div class="dock-avatar-indicator active" data-avatar="1">
                 <div class="dock-circle dock-blue"></div>
@@ -75,95 +72,162 @@
             </div>
         </div>
 
-        <div class="advisor-interaction-row">
-            <div class="avatar-container">
-                <div id="active-avatar-circle" class="avatar-circle avatar-1-blue">
-                    <span class="avatar-glyph">🎓</span>
-                    <span class="avatar-number-badge">A1</span>
+        <div class="section5-top-hero-row">
+            <!-- Left Half: Large Hero Avatar taking 50% width / 50vh height -->
+            <div class="section5-avatar-half">
+                <div id="active-avatar-circle"
+                    class="avatar-circle avatar-1-blue avatar-image-frame section5-hero-avatar-circle">
+                    <img src="{{ url_for('static', filename='images/Avatar1.PNG') }}" alt="Avatar 1"
+                        class="avatar-portrait section5-hero-portrait" />
                 </div>
-                <span class="avatar-name-tag">Avatar 1 (Lead Advisor)</span>
+                <span class="avatar-name-tag section5-avatar-tag">Avatar 1 &bull; Academic Foundations Advisor</span>
             </div>
 
-            <div class="thought-bubble-container">
-                <div class="thought-bubble" id="thought-bubble">
-                    <div class="thought-header">
-                        <div class="thought-speaker-info">
-                            <span class="thought-badge-dot"
-                                style="background-color:var(--avatar-blue); box-shadow:0 0 6px var(--avatar-blue);"></span>
-                            <span class="thought-persona-title" style="color:var(--avatar-blue);">Executive Pathway
-                                Director</span>
-                        </div>
-                        <div class="thought-audio-controls">
-                            <div class="audio-waves" hidden aria-hidden="true">
-                                <span></span><span></span><span></span><span></span>
+            <!-- Right Half: Thought Bubble with Gemini Synthesis & Audio Controls -->
+            <div class="section5-thought-half">
+                <div class="thought-bubble-container">
+                    <div class="thought-bubble" id="thought-bubble">
+                        <div class="thought-header">
+                            <div class="thought-speaker-info">
+                                <span class="thought-badge-dot"
+                                    style="background-color:var(--avatar-blue); box-shadow:0 0 6px var(--avatar-blue);"></span>
+                                <span class="thought-persona-title" style="color:var(--avatar-blue);">Academic
+                                    Foundations
+                                    Advisor</span>
                             </div>
-                            <button type="button" class="voice-replay-btn" id="voice-replay-btn"
-                                title="Play / Replay Voice">
-                                <span class="voice-icon" aria-hidden="true">🔊</span>
-                                <span id="voice-btn-label">Play Voice</span>
-                            </button>
+                            <div class="thought-audio-controls">
+                                <div class="audio-waves" hidden aria-hidden="true">
+                                    <span></span><span></span><span></span><span></span>
+                                </div>
+                                <button type="button" class="voice-replay-btn" id="voice-replay-btn"
+                                    title="Play / Replay Voice">
+                                    <span class="voice-icon" aria-hidden="true">🔊</span>
+                                    <span id="voice-btn-label">Play Voice</span>
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                    <div class="thought-body">
-                        <p id="thought-bubble-text" class="thought-text">
-                            Avatar 1 and the Advisory Council have synthesized your complete multi-dimensional career
-                            blueprint and aligned it against historical alumni milestones.
-                        </p>
+                        <div class="thought-body">
+                            <p id="thought-bubble-text" class="thought-text">
+                                Analyzing your complete multi-dimensional profile against Tiger Data historical
+                                benchmarks...
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Centered Full-Width Blueprint Dashboard Container Below Avatar -->
     <div id="section-5-container" class="interactive-screen">
-        <p class="eyebrow">Section 5 of 5 &bull; Synthesis &amp; Final Report</p>
-        <h2 class="step-heading">Comprehensive 4-Year Career Trajectory Blueprint</h2>
-        <p class="step-description">
-            Your complete profile has been synthesized across Academic Foundations, Course Planning, Campus Involvement,
-            and
-            Industry Readiness.
-        </p>
-
-        <!-- Student Matrix Summary -->
-        <div class="course-planner-card" style="margin-bottom: 1.5rem;">
-            <h4 class="card-subtitle">Synthesized Student Profile Matrix</h4>
-            <div id="final-summary-matrix" class="summary-matrix-grid"
-                style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-top:1rem;">
+        <div class="report-top-header-row">
+            <div>
+                <p class="eyebrow">Section 5 of 5 &bull; Synthesis &amp; Final Report</p>
+                <h2 class="step-heading">Comprehensive 4-Year Career Trajectory Blueprint</h2>
+                <p class="step-description">
+                    Your complete profile synthesized across Academic Foundations, Course Planning, Campus Involvement,
+                    and Industry Readiness.
+                </p>
+            </div>
+            <div class="report-actions-quick-bar">
+                <button type="button" class="submit-btn" id="btn-print-report"
+                    style="background-color:var(--accent-emerald); color:#fff;">
+                    🖨️ Print My Report
+                </button>
             </div>
         </div>
 
-        <!-- Visual Matches Container for Section 5 -->
-        <div id="section-5-matches-container" class="matches-data-container">
-            <div class="matches-header">
-                <h3 class="matches-title">Top 3 Most Similar Alumni Career Blueprints</h3>
-                <span class="matches-subtitle">Historical graduates with your exact major, career targets, and activity
-                    patterns</span>
-            </div>
-            <div id="section-5-matches-grid" class="alumni-match-grid"></div>
-
-            <!-- Persistence & Action Callout -->
-            <div class="action-card"
-                style="background:var(--bg-elevated); border:1px solid var(--border-subtle); border-radius:12px; padding:1.5rem; margin-top:2rem;">
-                <h4 style="color:var(--text-primary); font-size:1.1rem; margin-bottom:0.5rem;">Tiger Data Archival &amp; Next Steps
-                </h4>
-                <p style="color:var(--text-secondary); font-size:0.88rem; margin-bottom:1.25rem;">
-                    Save this customized 4-year graduation and career roadmap directly to the Tiger Data repository to
-                    maintain your milestones and track your degree trajectory.
-                </p>
-
-                <div id="save-confirmation-msg" class="success-banner"
-                    style="background:rgba(39,104,74,0.1); border:1px solid rgba(39,104,74,0.28); color:var(--accent-emerald); padding:0.75rem 1rem; border-radius:8px; margin-bottom:1rem; font-size:0.9rem;"
-                    hidden></div>
-
-                <div style="display:flex; flex-wrap:wrap; align-items:center; gap:1rem;">
-                    <button type="button" class="submit-btn" id="btn-save-to-db">
-                        💾 Save Full Blueprint to Tiger Data
-                    </button>
-                    <span id="spinner-save-db" class="spinner" hidden aria-hidden="true"></span>
-                    <button type="button" class="secondary-btn" id="btn-restart-quiz">
-                        🔄 Start New Assessment
-                    </button>
+        <!-- 4-Card Clear & Concise Dashboard Grid -->
+        <div id="section5-dashboard-grid" class="report-dashboard-grid">
+            <!-- 1. Basic Information -->
+            <div id="section5-basic-info-card" class="report-section-card">
+                <div class="report-card-header">
+                    <span class="report-card-icon">👤</span>
+                    <h3 class="report-card-title">Basic Information</h3>
                 </div>
+                <ul id="section5-basic-info-list" class="concise-bullet-list">
+                    <!-- Populated dynamically via JS -->
+                </ul>
+            </div>
+
+            <!-- 2. Remaining Coursework (Conditional: removed from DOM if empty) -->
+            <div id="section5-remaining-courses-container" class="report-section-card">
+                <div class="report-card-header">
+                    <span class="report-card-icon">📚</span>
+                    <h3 class="report-card-title">Remaining Coursework</h3>
+                </div>
+                <ul id="section5-remaining-courses-list" class="concise-bullet-list">
+                    <!-- Populated dynamically via JS -->
+                </ul>
+            </div>
+
+            <!-- 3. Campus Involvement -->
+            <div id="section5-campus-involvement-card" class="report-section-card">
+                <div class="report-card-header">
+                    <span class="report-card-icon">🏛️</span>
+                    <h3 class="report-card-title">Campus Involvement</h3>
+                </div>
+                <ul id="section5-campus-involvement-list" class="concise-bullet-list">
+                    <!-- Populated dynamically via JS -->
+                </ul>
+            </div>
+
+            <!-- 4. Career Experience -->
+            <div id="section5-career-experience-card" class="report-section-card">
+                <div class="report-card-header">
+                    <span class="report-card-icon">💼</span>
+                    <h3 class="report-card-title">Career Experience</h3>
+                </div>
+                <ul id="section5-career-experience-list" class="concise-bullet-list">
+                    <!-- Populated dynamically via JS -->
+                </ul>
+            </div>
+        </div>
+
+        <!-- The Ultimate Match Section (1 Single Best Match) -->
+        <div id="section5-ultimate-match-container" class="ultimate-match-section">
+            <div class="matches-header">
+                <h3 class="matches-title">🌟 The Ultimate Alumni Match</h3>
+                <span class="matches-subtitle">Single highest-synergy alumni blueprint identified from Tiger Data</span>
+            </div>
+            <div id="section5-ultimate-match-card" class="ultimate-match-hero">
+                <!-- Populated dynamically via JS -->
+            </div>
+        </div>
+
+        <!-- Next Steps Horizontal Timeline Container -->
+        <div class="timeline-section-wrapper">
+            <div class="matches-header">
+                <h3 class="matches-title">🗓️ Actionable Next Steps Timeline</h3>
+                <span class="matches-subtitle">Gemini-synthesized milestones tailored to your academic standing and
+                    target career path</span>
+            </div>
+            <div class="timeline-container" id="section5-timeline-container">
+                <div class="timeline-track" id="section5-timeline-track">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Panel (Print & Restart Assessment) -->
+        <div class="action-card"
+            style="background:var(--bg-elevated); border:1px solid var(--border-subtle); border-radius:12px; padding:1.5rem; margin-top:2.5rem;">
+            <h4 style="color:var(--text-primary); font-size:1.1rem; margin-bottom:0.5rem;">
+                Official Academic &amp; Career Dossier
+            </h4>
+            <p style="color:var(--text-secondary); font-size:0.88rem; margin-bottom:1.25rem;">
+                Generate and print an official, comprehensive career dossier synthesizing your degree requirements,
+                Tiger Data compensation benchmarks, and alumni milestones into a formal document.
+            </p>
+
+            <div style="display:flex; flex-wrap:wrap; align-items:center; gap:1rem;">
+                <button type="button" class="submit-btn" id="btn-print-report-bottom"
+                    style="background-color:var(--accent-emerald); color:#fff;">
+                    🖨️ Print My Report
+                </button>
+                <button type="button" class="secondary-btn" id="btn-restart-quiz">
+                    🔄 Start New Assessment
+                </button>
             </div>
         </div>
     </div>
@@ -171,5 +235,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/section5.js', v='36') }}"></script>
+<script src="{{ url_for('static', filename='js/section5.js', v='110') }}"></script>
 {% endblock %}
