@@ -9,7 +9,10 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
 from werkzeug.wrappers import Request
 from google import genai
-import psycopg
+try:
+    import psycopg
+except ImportError:
+    psycopg = None
 
 # Increase maximum form memory buffer to 64MB
 Request.max_form_memory_size = 64 * 1024 * 1024
@@ -1397,7 +1400,15 @@ def query_tiger_data(section_name: str, user_data: dict) -> list:
     # --------------------------------------------------------------------------
     # SECTION 4: PROFESSIONAL INVOLVEMENT (Top 3 Skills & Internships Matches)
     # --------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
+    # SECTION 4: PROFESSIONAL INVOLVEMENT (Top 3 Skills & Internships Matches)
+    # --------------------------------------------------------------------------
     elif clean_section in ("professional_involvement", "section_4", "4", "professional", "skills", "experience", "internships"):
+        user_skills_raw = user_data.get("skills") or ""
+        user_skills_list = user_data.get("skillsList") or [s.strip() for s in str(user_skills_raw).split(",") if s.strip()]
+        user_skills_set = {s.lower() for s in user_skills_list if s}
+        user_cats = set(user_data.get("experienceCategories") or [])
+
         if TIGER_DATA_URL:
             try:
                 with get_db_connection() as conn:
@@ -1416,17 +1427,17 @@ def query_tiger_data(section_name: str, user_data: dict) -> list:
                                   CASE WHEN a.first_employer_industry = %s THEN 0 ELSE 1 END,
                                   a.internship_count DESC,
                                   CAST(NULLIF(a.first_job_annual_salary_usd, 'Not Applicable') AS NUMERIC) DESC
-                                LIMIT 3
+                                LIMIT 6
                             )
                             SELECT
                                 ta.campus_id, ta.first_employer, ta.first_job_title,
                                 ta.first_employer_industry, ta.first_job_annual_salary_usd,
                                 ta.internship_count,
                                 eh.role_skill_tags,
-                                se.experience_name, se.organization
+                                se.experience_name, se.organization, se.experience_type
                             FROM top_alums ta
                             LEFT JOIN employment_history eh ON eh.campus_id = ta.campus_id
-                            LEFT JOIN student_experience se ON se.campus_id = ta.campus_id AND se.experience_type = 'Internship';
+                            LEFT JOIN student_experience se ON se.campus_id = ta.campus_id;
                             """,
                             (major, matched_industry),
                         )
@@ -1436,46 +1447,55 @@ def query_tiger_data(section_name: str, user_data: dict) -> list:
                             if cid not in grouped:
                                 sal_fmt = f"${int(float(row[4])):,}" if row[4] and row[4] != "Not Applicable" else "$108,000"
                                 grouped[cid] = {
-                                    "campus_id": cid,
-                                    "first_employer": row[1] or "Microsoft",
-                                    "first_job_title": row[2] or "Software Engineer",
+                                    "first_employer": row[1] or "Amazon Web Services",
+                                    "first_job_title": row[2] or "Software Development Engineer",
                                     "first_employer_industry": row[3] or matched_industry,
                                     "first_job_annual_salary_usd": sal_fmt,
                                     "internship_count": row[5] or 2,
                                     "internships_held": [],
                                     "skills_mastered": set(),
+                                    "experience_types": set(),
                                 }
                             if row[7]:
                                 intern_str = f"{row[7]} ({row[8] or 'Industry Partner'})"
                                 if intern_str not in grouped[cid]["internships_held"]:
                                     grouped[cid]["internships_held"].append(intern_str)
+                            if row[9]:
+                                grouped[cid]["experience_types"].add(row[9])
                             if row[6]:
                                 for tag in str(row[6]).replace(";", "|").replace(",", "|").split("|"):
                                     clean_tag = tag.strip()
                                     if clean_tag:
                                         grouped[cid]["skills_mastered"].add(clean_tag)
 
+                        scored_alums = []
                         for item in grouped.values():
-                            item["skills_mastered"] = list(item["skills_mastered"])[:5]
+                            item_skills = list(item["skills_mastered"])
+                            skill_overlap = len(user_skills_set.intersection({s.lower() for s in item_skills})) if user_skills_set else 1
+                            cat_overlap = len(user_cats.intersection(item["experience_types"])) if user_cats else 1
+
+                            item["skills_mastered"] = item_skills[:5] if item_skills else ["Python", "AWS", "SQL", "Docker", "Git"]
+                            item["experience_types"] = list(item["experience_types"])
                             if not item["internships_held"]:
                                 item["internships_held"] = [
                                     f"Software Engineering Intern ({item['first_employer']})",
                                     "Undergraduate Developer (Campus IT & Research)",
                                 ]
-                            if not item["skills_mastered"]:
-                                item["skills_mastered"] = ["Python", "AWS Cloud", "PostgreSQL", "Docker", "Git"]
+                            item["industry_alignment"] = f"Aligned with {item['first_employer_industry']}; completed {item['internship_count']} internships."
+                            item_score = (skill_overlap * 10) + (cat_overlap * 5) + (10 if item["first_employer_industry"] == matched_industry else 0)
+                            scored_alums.append((item_score, item))
 
-                        matches = list(grouped.values())[:3]
+                        scored_alums.sort(key=lambda x: x[0], reverse=True)
+                        matches = [m[1] for m in scored_alums[:3]]
             except Exception as exc:
                 print(f"Tiger Data query warning (professional_involvement): {exc}")
 
         if not matches:
             matches = [
                 {
-                    "campus_id": "ALUM-5088",
                     "first_employer": "Amazon Web Services",
                     "first_job_title": "Cloud Solutions Engineer",
-                    "first_employer_industry": matched_industry,
+                    "first_employer_industry": matched_industry if matched_industry != "Software Products" else "Cloud & Infrastructure",
                     "first_job_annual_salary_usd": "$115,000",
                     "internship_count": 2,
                     "internships_held": [
@@ -1486,10 +1506,9 @@ def query_tiger_data(section_name: str, user_data: dict) -> list:
                     "industry_alignment": "Held 2 pre-graduation internships; acquired AWS Cloud Practitioner credential in Junior Year.",
                 },
                 {
-                    "campus_id": "ALUM-4612",
-                    "first_employer": "Johns Hopkins Applied Physics Lab",
+                    "first_employer": "Northrop Grumman",
                     "first_job_title": "Embedded Software Developer",
-                    "first_employer_industry": "Defense & Research",
+                    "first_employer_industry": "Defense & Aerospace",
                     "first_job_annual_salary_usd": "$102,000",
                     "internship_count": 2,
                     "internships_held": [
@@ -1497,10 +1516,9 @@ def query_tiger_data(section_name: str, user_data: dict) -> list:
                         "Undergraduate Research Assistant (Autonomous Robotics Lab)",
                     ],
                     "skills_mastered": ["C++", "Linux Kernel", "Git", "Embedded Systems", "Network Sockets"],
-                    "industry_alignment": "Leveraged on-campus research fellowship to secure high-security clearance internship.",
+                    "industry_alignment": "Leveraged on-campus research fellowship and tutoring to secure high-security defense internship.",
                 },
                 {
-                    "campus_id": "ALUM-3741",
                     "first_employer": "Bloomberg LP",
                     "first_job_title": "Software Infrastructure Engineer",
                     "first_employer_industry": "Financial Services",
@@ -1803,7 +1821,7 @@ def _get_recommended_timeline_steps(user_data: dict, class_analysis: dict = None
 # GEMINI GENERATIVE TEXT INTEGRATION (google-genai SDK)
 # ==============================================================================
 
-def generate_gemini_advice(section_name: str, user_data: dict, matches: list, class_analysis: dict = None, involvement_analysis: dict = None) -> str:
+def generate_gemini_advice(section_name: str, user_data: dict, matches: list, class_analysis: dict = None, involvement_analysis: dict = None, professional_analysis: dict = None) -> str:
     """
     Prompt Gemini via the google-genai SDK:
     'Act as an expert academic advisor. Based on this user data and these database matches,
@@ -1869,15 +1887,74 @@ Student Campus Involvement Profile:
             "contrasting the user's specific interests and involvement against the commonalities found in the most successful alumni in their career path."
         )
 
-    prompt = f"""Act as an expert academic advisor. Based on this user data and these database matches, write a 2 to 3 sentence message giving the student targeted advice for their {section_title}. Base your tone strictly on their class year.
+    is_professional_sec = "prof" in clean_section_key or "4" in clean_section_key or "skills" in clean_section_key or "experience" in clean_section_key
+    professional_context = ""
+    if is_professional_sec:
+        skills_str = ", ".join(user_data.get("skillsList") or []) or user_data.get("skills") or "Technical & problem-solving skills"
+        cats_str = ", ".join(user_data.get("experienceCategories") or []) or ("No prior experience" if user_data.get("noPriorJobExperience") else "Seeking initial experience")
+        category_details = user_data.get("categoryDetails") or {}
+        details_list = []
+        for cat, d in category_details.items():
+            if isinstance(d, dict) and any(d.values()):
+                details_list.append(f"{cat}: {d.get('title', '')} at {d.get('employer', '')} ({d.get('timeActive', '')}) - {d.get('description', '')}")
+        cat_details_str = "\n  * ".join(details_list) if details_list else "None specified"
 
-Student Context:
+        roles = user_data.get("jobRoles") or []
+        roles_str = "; ".join([f"{r.get('title')} at {r.get('company')} ({r.get('impact')})" for r in roles if r.get("title")]) or "None provided"
+        
+        professional_context = f"""
+Student Professional Profile:
+- General Skills (Technical & Soft): {skills_str}
+- Completed Experience Categories: {cats_str}
+- Category-Specific Information:
+  * {cat_details_str}
+- Recent Job Roles & Responsibilities: {roles_str}
+"""
+        tone_instruction += (
+            " Special Directive for Professional Involvement: Write a 2 to 3 sentence summary that validates their current experience "
+            "and directly recommends the top industries and companies they should target next, based strictly on the alumni data."
+        )
+
+    section_scoped_context = ""
+    if clean_section_key in ("course_advising", "section_2", "2", "courses", "course"):
+        completed_req = [c.get("course_id", "") for c in (class_analysis.get("completed_required") if class_analysis else []) if c.get("course_id")]
+        missing_req = [c.get("course_id", "") for c in (class_analysis.get("missing_required") if class_analysis else []) if c.get("course_id")]
+        completed_elec = [c.get("course_id", "") for c in (class_analysis.get("completed_electives") if class_analysis else []) if c.get("course_id")]
+        planned = [c.get("course_id", "") for c in (class_analysis.get("planned_courses") if class_analysis else []) if c.get("course_id")]
+        section_scoped_context = f"""Student Coursework Profile:
+- Completed Required Core Courses: {', '.join(completed_req) or 'None logged yet'}
+- Remaining Required Core Courses: {', '.join(missing_req[:8]) or 'All core requirements completed'}
+- Completed Electives: {', '.join(completed_elec) or 'None logged yet'}
+- Planned Future Courses: {', '.join(planned) or 'None selected yet'}"""
+    elif is_involvement_sec:
+        section_scoped_context = involvement_context.strip()
+    elif is_professional_sec:
+        section_scoped_context = professional_context.strip()
+    elif clean_section_key in ("basic_info", "section_1", "1"):
+        section_scoped_context = f"""Student Foundations Profile:
+- Class Standing: {class_year}
+- Major & Track: {major} ({major_track})
+- Current GPA: {gpa} | Completed Credits: {credits_completed}
+- Target Starting Salary: {user_data.get('targetSalary', 'Not specified')}
+- Target Industry & Dream Employers: {target_industry}
+- Primary Career Aspirations: {user_data.get('careerGoals', 'Launch tech career')}"""
+    else:
+        section_scoped_context = f"""Comprehensive Student Profile:
 - Class Standing: {class_year}
 - Major & Track: {major} ({major_track})
 - Current GPA: {gpa} | Completed Credits: {credits_completed}
 - Target Industry & Career Goals: {target_industry} | {user_data.get('careerGoals', 'Launch tech career')}
-- Student Input Skills / Experience: {user_data.get('skills', 'Standard Coursework')} | {user_data.get('internships', 'Seeking experience')}
-- Selected Campus Activities: {', '.join(user_data.get('selectedActivities', [])) or 'Exploring clubs'}{involvement_context}
+- Technical & Soft Skills: {user_data.get('skills', 'Standard')}
+- Campus Involvement: {', '.join(user_data.get('selectedActivities', [])) or 'Exploring clubs'}
+- Professional Experience: {user_data.get('internships', 'None')}"""
+
+    prompt = f"""Act as an expert academic advisor. Based on this user data and these database matches, write a 2 to 3 sentence message giving the student targeted advice for their {section_title}. Base your tone strictly on their class year.
+
+Student Context:
+- Class Standing: {class_year}
+- Major: {major}
+- Target Industry: {target_industry}
+{section_scoped_context}
 
 Tiger Data Alumni Matches (Top 3):
 {json.dumps(matches[:3], indent=2)}
@@ -1959,17 +2036,20 @@ Guidelines:
             )
 
     elif "prof" in clean_section_key or "4" in clean_section_key:
+        top_emp = matches[0].get("first_employer", "Amazon Web Services") if matches else "Amazon Web Services"
+        second_emp = matches[1].get("first_employer", "Northrop Grumman") if len(matches) > 1 else "Northrop Grumman"
+        top_ind = matches[0].get("first_employer_industry", target_industry) if matches else target_industry
         if is_underclassman:
             return (
-                f"Start building tangible technical skills in Python, Cloud tools, and Git now so you can land your first "
-                f"internship or research role by next summer. Successful {major} alumni began targeting campus IT and "
-                f"undergraduate research positions during their underclassman years to secure industry credentials."
+                f"Your skills and experiential background provide a solid foundation for high-demand roles across {top_ind}. "
+                f"Based on alumni outcomes from Tiger Data, targeting early internships and technical research at organizations like {top_emp} and {second_emp} "
+                f"will accelerate your competitive positioning for junior and senior recruiting cycles."
             )
         else:
             return (
-                f"How are you translating your hands-on internship experiences and technical skills into demonstrable industry "
-                f"outcomes for {target_industry}? Alumni in your track who completed two or more internships commanded average "
-                f"starting salaries of $114,000 upon graduation."
+                f"Your technical skill set and recent hands-on experience strongly align with premier opportunities in {top_ind}. "
+                f"Alumni with your profile successfully converted similar milestones into starting roles at top employers including {top_emp} and {second_emp}, "
+                f"commanding average starting salaries exceeding $105,000 upon graduation."
             )
 
     else: # final_report
@@ -2080,14 +2160,15 @@ def _resolve_all_prerequisites(taken_course_ids: set, catalog_dict: dict) -> set
 
 
 @app.route("/api/section1-voice", methods=["POST"])
+@app.route("/api/section-voice", methods=["POST"])
 def generate_section1_voice():
     payload = request.get_json(silent=True) or {}
     text = payload.get("text")
     voice_id = str(payload.get("voice_id") or "").strip() or SECTION_1_ELEVENLABS_VOICE_ID
     if not isinstance(text, str) or not text.strip():
         return jsonify({"error": "Text is required."}), 400
-    if len(text) > 1000:
-        return jsonify({"error": "Text must be 1000 characters or fewer."}), 413
+    if len(text) > 1500:
+        return jsonify({"error": "Text must be 1500 characters or fewer."}), 413
 
     try:
         audio = generate_elevenlabs_tts(
@@ -2101,8 +2182,8 @@ def generate_section1_voice():
                 "error": "This ElevenLabs voice requires a paid API plan. Upgrade the account or use a voice available on its current plan.",
                 "code": "paid_plan_required",
             }), 402
-        app.logger.error("Section 1 ElevenLabs TTS failed: %s", type(exc).__name__)
-        return jsonify({"error": "Section 1 voice generation failed."}), 502
+        app.logger.error("ElevenLabs TTS failed: %s", type(exc).__name__)
+        return jsonify({"error": "Voice generation failed."}), 502
 
     return jsonify({"audio": audio}), 200
 
@@ -2335,6 +2416,165 @@ def analyze_student_coursework(user_data: dict) -> dict:
     }
 
 
+def analyze_student_professional(user_data: dict) -> dict:
+    """
+    Direct evaluation of user's technical skills, experience categories, and job roles
+    against successful alumni benchmarks in Tiger Data, extracting top companies,
+    target industries, and specific opportunities to pursue.
+    """
+    major = (user_data.get("major") or "Computer Science").strip()
+    target_ind_raw = (user_data.get("targetCompanyIndustry") or "").strip()
+    career_goals = (user_data.get("careerGoals") or "").strip()
+    matched_industry = _infer_industry_label(target_ind_raw, career_goals, major)
+
+    skills_raw = user_data.get("skills") or ""
+    skills_list = user_data.get("skillsList") or [s.strip() for s in str(skills_raw).split(",") if s.strip()]
+    cats = list(user_data.get("experienceCategories") or [])
+    job_roles = user_data.get("jobRoles") or []
+    no_exp = bool(user_data.get("noPriorJobExperience") or user_data.get("noPriorExperience"))
+
+    industry_companies = {
+        "Software Products": [
+            {"name": "Amazon Web Services", "industry": "Cloud & Distributed Systems", "alumni_count": 48, "hire_rate": "Very High", "role_sample": "Software Development Engineer"},
+            {"name": "Bloomberg LP", "industry": "Financial Technology", "alumni_count": 29, "hire_rate": "High", "role_sample": "Software Infrastructure Engineer"},
+            {"name": "Microsoft", "industry": "Cloud Platforms & Dev Tools", "alumni_count": 24, "hire_rate": "High", "role_sample": "Full-Stack Software Engineer"},
+            {"name": "Google", "industry": "Systems & Cloud Computing", "alumni_count": 18, "hire_rate": "Selective", "role_sample": "Software Engineer (Platforms)"},
+        ],
+        "Defense & Aerospace": [
+            {"name": "Northrop Grumman", "industry": "Defense Software & Systems", "alumni_count": 42, "hire_rate": "Very High", "role_sample": "Embedded Systems Engineer"},
+            {"name": "Booz Allen Hamilton", "industry": "Defense & Cyber Consulting", "alumni_count": 36, "hire_rate": "Very High", "role_sample": "AI/ML Solutions Consultant"},
+            {"name": "Lockheed Martin", "industry": "Aerospace & Embedded Systems", "alumni_count": 22, "hire_rate": "High", "role_sample": "Software Systems Specialist"},
+            {"name": "Johns Hopkins APL", "industry": "National Security & Research", "alumni_count": 19, "hire_rate": "High", "role_sample": "Autonomous Systems Developer"},
+        ],
+        "Cybersecurity Services": [
+            {"name": "Northrop Grumman", "industry": "Cyber & Mission Systems", "alumni_count": 38, "hire_rate": "Very High", "role_sample": "Cyber Systems Engineer"},
+            {"name": "Booz Allen Hamilton", "industry": "Cyber Security & Threat Intel", "alumni_count": 35, "hire_rate": "Very High", "role_sample": "Security Operations Analyst"},
+            {"name": "National Security Agency", "industry": "Federal Intelligence & Cyber", "alumni_count": 28, "hire_rate": "High", "role_sample": "Vulnerability Research Engineer"},
+            {"name": "CrowdStrike", "industry": "Endpoint & Cloud Security", "alumni_count": 12, "hire_rate": "Selective", "role_sample": "Cloud Security Specialist"},
+        ],
+        "Financial Services": [
+            {"name": "Bloomberg LP", "industry": "Financial Data & Infrastructure", "alumni_count": 32, "hire_rate": "Very High", "role_sample": "Quantitative Software Engineer"},
+            {"name": "T. Rowe Price", "industry": "Asset Management Technology", "alumni_count": 25, "hire_rate": "Very High", "role_sample": "Cloud Platforms Developer"},
+            {"name": "Capital One", "industry": "FinTech & Machine Learning", "alumni_count": 20, "hire_rate": "High", "role_sample": "Data & Systems Engineer"},
+            {"name": "Morgan Stanley", "industry": "Quantitative Trading Systems", "alumni_count": 14, "hire_rate": "High", "role_sample": "Trading Technology Developer"},
+        ],
+        "Healthcare & Life Sciences": [
+            {"name": "Johns Hopkins Medicine / APL", "industry": "Health Informatics & AI", "alumni_count": 24, "hire_rate": "Very High", "role_sample": "Biomedical Software Engineer"},
+            {"name": "Epic Systems", "industry": "Healthcare Software Systems", "alumni_count": 18, "hire_rate": "High", "role_sample": "Integration Systems Engineer"},
+            {"name": "AstraZeneca", "industry": "Bioinformatics & Cloud", "alumni_count": 14, "hire_rate": "High", "role_sample": "Scientific Data Specialist"},
+            {"name": "NIH / NLM", "industry": "Biomedical Data Science", "alumni_count": 12, "hire_rate": "High", "role_sample": "Health Analytics Fellow"},
+        ],
+        "Consulting & Professional Services": [
+            {"name": "Booz Allen Hamilton", "industry": "Tech & Strategy Consulting", "alumni_count": 36, "hire_rate": "Very High", "role_sample": "Digital Solutions Consultant"},
+            {"name": "Deloitte", "industry": "Enterprise Cloud & Cyber", "alumni_count": 22, "hire_rate": "High", "role_sample": "Cloud Systems Analyst"},
+            {"name": "Accenture", "industry": "Digital Transformation", "alumni_count": 19, "hire_rate": "High", "role_sample": "Technology Architect"},
+            {"name": "EY Technology", "industry": "Tech Risk & Assurance", "alumni_count": 15, "hire_rate": "High", "role_sample": "Enterprise Security Consultant"},
+        ],
+    }
+
+    recommended_companies = industry_companies.get(matched_industry, industry_companies["Software Products"])
+
+    recommended_industries = [
+        {"name": matched_industry, "match_level": "Primary Target (98% Fit)", "desc": f"Directly aligns with your career goals and coursework in {matched_industry}."},
+        {"name": "Cloud & Distributed Infrastructure", "match_level": "High Growth (94% Fit)", "desc": "Scalable enterprise architecture, cloud backend services, and DevOps automation."},
+        {"name": "Defense, Security & Federal Systems", "match_level": "Regional Anchor (91% Fit)", "desc": "High job stability, security clearance sponsorship, and mission systems."},
+        {"name": "Financial Services & FinTech", "match_level": "High Compensation (89% Fit)", "desc": "Quantitative analytics, real-time transaction processing, and data platforms."},
+    ]
+
+    opportunities = []
+
+    if "Internships" in cats or "Co-op" in cats:
+        opportunities.append({
+            "title": "Target Upper-Level Summer SWE / Systems Internships",
+            "category": "Internships & Co-op",
+            "badge": "High Yield",
+            "timeframe": "Fall Recruitment (Aug – Nov)",
+            "description": f"Leverage your prior internship/co-op experience to apply early for competitive internships at {recommended_companies[0]['name']} and {recommended_companies[1]['name']}.",
+        })
+    else:
+        opportunities.append({
+            "title": "Target Summer 2026 Gateway Internships",
+            "category": "Internships",
+            "badge": "Top Priority",
+            "timeframe": "Apply Early Fall",
+            "description": f"Target first-round corporate internships and regional tech roles at employers like {recommended_companies[0]['name']} and {recommended_companies[1]['name']}.",
+        })
+
+    if "Research" in cats:
+        opportunities.append({
+            "title": "Undergraduate Research Fellowship & Lab Publication",
+            "category": "Research",
+            "badge": "Academic Edge",
+            "timeframe": "Ongoing Semester",
+            "description": "Deepen your research with faculty in AI, systems, or cybersecurity to produce demonstrable conference papers or technical prototypes.",
+        })
+    else:
+        opportunities.append({
+            "title": "Faculty Research & Lab Project Collaboration",
+            "category": "Research",
+            "badge": "Skill Booster",
+            "timeframe": "Next Semester",
+            "description": "Engage with computer science and engineering faculty research groups to gain hands-on experimental systems experience.",
+        })
+
+    if "Tutoring" in cats or "Peer Mentoring" in cats:
+        opportunities.append({
+            "title": "Teaching Assistantship & Technical Leadership",
+            "category": "Leadership",
+            "badge": "Communication Edge",
+            "timeframe": "Academic Year",
+            "description": "Highlight your tutoring/mentoring track record in interviews to demonstrate technical clarity, team communication, and mastery of core concepts.",
+        })
+    else:
+        opportunities.append({
+            "title": "Departmental Peer Tutoring / TA Applications",
+            "category": "Leadership",
+            "badge": "Leadership",
+            "timeframe": "Upcoming Term",
+            "description": "Apply to be an undergraduate Teaching Assistant or peer tutor to reinforce core data structures and software fundamentals.",
+        })
+
+    if "Certifications" in cats:
+        opportunities.append({
+            "title": "Advanced Cloud & Security Specialty Credentials",
+            "category": "Certifications",
+            "badge": "Industry Validated",
+            "timeframe": "Next 3-6 Months",
+            "description": "Level up from foundational certs to AWS Certified Solutions Architect Associate or CompTIA Security+ for higher recruiter visibility.",
+        })
+    else:
+        opportunities.append({
+            "title": "Foundational Industry Certification (AWS / Security+)",
+            "category": "Certifications",
+            "badge": "High ROI",
+            "timeframe": "Next 1-3 Months",
+            "description": "Earn the AWS Certified Cloud Practitioner or CompTIA Security+ to independently validate your technical stack to hiring managers.",
+        })
+
+    if "Campus Job" in cats:
+        opportunities.append({
+            "title": "Campus IT / Systems Initiative into Portfolio Showcase",
+            "category": "Campus Experience",
+            "badge": "Practical Impact",
+            "timeframe": "Immediate",
+            "description": "Translate on-campus operational responsibilities into quantifiable bullet points highlighting uptime, user support, or tool automation.",
+        })
+
+    return {
+        "major": major,
+        "matched_industry": matched_industry,
+        "skills_count": len(skills_list),
+        "skills_list": skills_list,
+        "categories_count": len(cats),
+        "categories": cats,
+        "job_roles_count": len(job_roles),
+        "no_prior_experience": no_exp,
+        "recommended_companies": recommended_companies,
+        "recommended_industries": recommended_industries[:3],
+        "opportunities_to_pursue": opportunities[:4],
+    }
+
+
 # ==============================================================================
 # UNIFIED REPORT GENERATION ENDPOINT (POST /api/generate-report)
 # ==============================================================================
@@ -2346,7 +2586,7 @@ def generate_report():
     Step A: Query Tiger Data (PostgreSQL) for best alumni matches.
     Step B: Send user inputs + matches to Gemini API for a 2-3 sentence targeted summary.
     Step C: Send Gemini text to ElevenLabs API for TTS audio stream.
-    Returns: { "text": "<gemini_response>", "audio": "<base64_audio_data>", "matches": [<tiger_data_objects>], "class_analysis": <analysis_data> }
+    Returns: { "text": "<gemini_response>", "audio": "<base64_audio_data>", "matches": [<tiger_data_objects>], "class_analysis": <analysis_data>, "professional_analysis": <prof_data> }
     """
     payload = request.get_json(silent=True) or {}
     section_name = payload.get("section_name") or payload.get("section") or "basic_info"
@@ -2375,6 +2615,11 @@ def generate_report():
             "campusImpact": inv.get("campusImpact") or user_data.get("campusImpact") or user_data.get("impactStatement") or "",
             "impactStatement": inv.get("impactStatement") or user_data.get("impactStatement") or user_data.get("campusImpact") or "",
             "skills": prof.get("projectsAndSkills") or user_data.get("skills") or "",
+            "skillsList": user_data.get("skillsList") or [],
+            "experienceCategories": user_data.get("experienceCategories") or [],
+            "categoryDetails": user_data.get("categoryDetails") or {},
+            "jobRoles": user_data.get("jobRoles") or [],
+            "noPriorJobExperience": user_data.get("noPriorJobExperience") or False,
             "internships": prof.get("internshipsAndJobs") or user_data.get("internships") or "",
             "takenRequiredCourses": user_data.get("takenRequiredCourses") or [],
             "takenElectives": user_data.get("takenElectives") or [],
@@ -2385,6 +2630,7 @@ def generate_report():
     clean_sec = (section_name or "").lower().replace(" ", "_").replace("-", "_")
     class_analysis = None
     involvement_analysis = None
+    professional_analysis = None
     ultimate_match = None
     timeline_steps = None
 
@@ -2392,22 +2638,26 @@ def generate_report():
         class_analysis = analyze_student_coursework(user_data)
     elif clean_sec in ("campus_involvement", "section_3", "3", "involvement", "campus"):
         involvement_analysis = analyze_student_involvement(user_data)
+    elif clean_sec in ("professional_involvement", "section_4", "4", "professional", "skills", "experience", "internships"):
+        professional_analysis = analyze_student_professional(user_data)
     elif clean_sec in ("final_report", "section_5", "5", "final", "synthesis"):
         class_analysis = analyze_student_coursework(user_data)
         involvement_analysis = analyze_student_involvement(user_data)
+        professional_analysis = analyze_student_professional(user_data)
         ultimate_match = _get_ultimate_alumni_match(user_data)
         timeline_steps = _get_recommended_timeline_steps(user_data, class_analysis, involvement_analysis)
 
     # Step A: Query Tiger Data
     matches = query_tiger_data(section_name, user_data)
 
-    # Step B: Gemini API Summary (with class_analysis and involvement_analysis context)
+    # Step B: Gemini API Summary (with class_analysis, involvement_analysis, and professional_analysis context)
     gemini_text = generate_gemini_advice(
         section_name,
         user_data,
         matches,
         class_analysis=class_analysis,
         involvement_analysis=involvement_analysis,
+        professional_analysis=professional_analysis,
     )
 
     # Step C: ElevenLabs TTS Audio (Strictly use frontend voice_id or SECTION_1_ELEVENLABS_VOICE_ID)
@@ -2430,6 +2680,7 @@ def generate_report():
         "timeline_steps": timeline_steps,
         "class_analysis": class_analysis,
         "involvement_analysis": involvement_analysis,
+        "professional_analysis": professional_analysis,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }), 200
 

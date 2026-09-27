@@ -98,7 +98,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Auto-play Avatar 3 Introduction Audio
     setTimeout(async () => {
         try {
-            await QuizApp.playReportAudio(introText, null, 3);
+            await QuizApp.playAvatarDialogue(introText, 3);
         } catch (e) {
             console.log("Intro audio playback info:", e);
         }
@@ -106,7 +106,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (introReplayBtn) {
         introReplayBtn.addEventListener("click", () => {
-            QuizApp.playReportAudio(introText, null, 3);
+            QuizApp.playAvatarDialogue(introText, 3);
         });
     }
 
@@ -126,7 +126,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     };
 
-    // Start Section 3 Questions Button
+    // Start Section 3 Questions Button (Removes intro stage & opens Screen 1 in split layout)
     if (btnStartQuestions) {
         btnStartQuestions.addEventListener("click", () => {
             QuizApp.stopAllSpeech();
@@ -136,8 +136,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (questionsStage) {
                 questionsStage.hidden = false;
                 questionsStage.removeAttribute("hidden");
-                questionsStage.style.display = "block";
+                questionsStage.style.display = "grid";
+                document.querySelector(".page-wrapper")?.classList.add("section1-immersive");
+                window.scrollTo({ top: 0, behavior: "smooth" });
                 showSubstep(subPopular);
+                QuizApp.playAvatarDialogue("Let's look at popular student organizations and competitive teams aligned with your field.", 3);
             }
             loadInvolvementOptions();
         });
@@ -320,6 +323,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 noPopularActivities: Boolean(nonePopularCheckbox?.checked),
             });
             showSubstep(subOther);
+            QuizApp.playAvatarDialogue("Great, now search or add any other student clubs, hackathons, or campus initiatives.", 3);
         });
     }
 
@@ -456,6 +460,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (btnBackToPopular) {
         btnBackToPopular.addEventListener("click", () => {
             showSubstep(subPopular);
+            QuizApp.playAvatarDialogue("Review or update your selected student organizations and teams.", 3);
         });
     }
 
@@ -476,6 +481,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 noOtherOrganizations: hasCheckedNone,
             });
             showSubstep(subImpact);
+            QuizApp.playAvatarDialogue("Tell me about your distinctive campus contributions, leadership, or personal project initiatives.", 3);
         });
     }
 
@@ -513,6 +519,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (btnBackToOtherOrgs) {
         btnBackToOtherOrgs.addEventListener("click", () => {
             showSubstep(subOther);
+            QuizApp.playAvatarDialogue("Review or update your other campus organizations.", 3);
         });
     }
 
@@ -561,7 +568,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     const reportData = await res.json();
                     QuizApp.saveSectionData(3, reportData);
 
-                    // Hide Question Stage & Reveal Section 3 Final Report Stage
+                    // Hide Question Stage & Reveal Section 3 Final Report Stage (Split Grid Layout)
                     if (questionsStage) {
                         questionsStage.hidden = true;
                         questionsStage.style.display = "none";
@@ -569,28 +576,20 @@ document.addEventListener("DOMContentLoaded", async () => {
                     if (reportStage) {
                         reportStage.hidden = false;
                         reportStage.removeAttribute("hidden");
-                        reportStage.style.display = "block";
+                        reportStage.style.display = "grid";
+                        document.querySelector(".page-wrapper")?.classList.add("section1-immersive");
                         window.scrollTo({ top: 0, behavior: "smooth" });
                     }
 
-                    // Update Mentor Thought Bubble text
-                    const thoughtTextEl = document.getElementById("thought-bubble-text");
-                    if (thoughtTextEl && reportData.text) {
-                        thoughtTextEl.textContent = reportData.text;
-                    }
-
-                    // Play Mentor Speech
-                    if (reportData.text) {
-                        QuizApp.avatarSayTextOnly(reportData.text, 3);
-                    }
-                    if (reportData.audio) {
-                        QuizApp.playReportAudio(reportData.text, reportData.audio, 3);
-                    }
-
-                    // Render Visual Metrics, Campus Clubs Table, and Top 3 Outlier Alumni Matches
+                    // Render Visual Metrics (Monochromatic Orange), Campus Clubs Table, and Top 3 Outlier Alumni Matches
                     renderInvolvementMetrics(reportData.involvement_analysis);
                     renderCampusClubsTable(reportData.involvement_analysis?.popular_clubs_table || []);
                     renderTopAlumniMatches(reportData.matches || []);
+
+                    // Play Mentor Speech
+                    if (reportData.text) {
+                        QuizApp.playAvatarDialogue(reportData.text, 3);
+                    }
                 } else {
                     alert("The server encountered an error while analyzing your campus involvement. Please try again.");
                 }
@@ -605,10 +604,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // =========================================================================
-    // DATA VISUALIZATION RENDERING FUNCTIONS
+    // DATA VISUALIZATION RENDERING FUNCTIONS (STRICTLY MONOCHROMATIC ORANGE)
     // =========================================================================
 
-    // 1. Render Visual Metrics (Progress Bar, Leadership Density, Outlier Status)
+    // 1. Render Visual Metrics (Progress Bar, Leadership Density, Outlier Status - Unified Orange Palette)
     const renderInvolvementMetrics = (analysis) => {
         const container = document.getElementById("involvement-metrics-container");
         if (!container || !analysis) return;
@@ -626,7 +625,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <div class="analysis-card" style="border-left: 4px solid var(--avatar-orange);">
                     <div class="analysis-card-header">
                         <span class="analysis-card-title">📈 Campus Engagement Score</span>
-                        <span class="analysis-count-badge badge-recommended">${score}%</span>
+                        <span class="analysis-count-badge badge-orange">${score}%</span>
                     </div>
                     <div class="metric-bar-wrap">
                         <div class="metric-bar-fill" style="width: ${score}%;"></div>
@@ -637,10 +636,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </div>
 
                 <!-- Metric 2: Leadership Density -->
-                <div class="analysis-card" style="border-left: 4px solid #3b82f6;">
+                <div class="analysis-card" style="border-left: 4px solid var(--avatar-orange);">
                     <div class="analysis-card-header">
                         <span class="analysis-card-title">👑 Leadership Density</span>
-                        <span class="analysis-count-badge badge-completed">${QuizApp.escapeHtml(leadership.split(" ")[0])}</span>
+                        <span class="analysis-count-badge badge-orange">${QuizApp.escapeHtml(leadership.split(" ")[0])}</span>
                     </div>
                     <h4 style="font-size:0.95rem; margin:0.4rem 0 0.2rem 0; color:var(--text-primary);">${QuizApp.escapeHtml(leadership)}</h4>
                     <p style="font-size:0.78rem; color:var(--text-secondary);">
@@ -649,10 +648,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </div>
 
                 <!-- Metric 3: Outlier & Distinctive Match Status -->
-                <div class="analysis-card" style="border-left: 4px solid #8b5cf6;">
+                <div class="analysis-card" style="border-left: 4px solid var(--avatar-orange);">
                     <div class="analysis-card-header">
                         <span class="analysis-card-title">⚡ Outlier Trajectory Match</span>
-                        <span class="analysis-count-badge" style="background:rgba(139, 92, 246, 0.15); color:#6d28d9; border:1px solid rgba(139, 92, 246, 0.4);">${QuizApp.escapeHtml(outlierStatus.split(" ")[0])}</span>
+                        <span class="analysis-count-badge badge-orange">${QuizApp.escapeHtml(outlierStatus.split(" ")[0])}</span>
                     </div>
                     <h4 style="font-size:0.95rem; margin:0.4rem 0 0.2rem 0; color:var(--text-primary);">${QuizApp.escapeHtml(outlierStatus)}</h4>
                     <p style="font-size:0.78rem; color:var(--text-secondary);">
@@ -661,10 +660,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </div>
 
                 <!-- Metric 4: Industry Alignment -->
-                <div class="analysis-card" style="border-left: 4px solid #10b981;">
+                <div class="analysis-card" style="border-left: 4px solid var(--avatar-orange);">
                     <div class="analysis-card-header">
                         <span class="analysis-card-title">🎯 Career Field Alignment</span>
-                        <span class="analysis-count-badge badge-planned">${QuizApp.escapeHtml(alignmentPct)}</span>
+                        <span class="analysis-count-badge badge-orange">${QuizApp.escapeHtml(alignmentPct)}</span>
                     </div>
                     <h4 style="font-size:0.95rem; margin:0.4rem 0 0.2rem 0; color:var(--text-primary);">Strong Synergy</h4>
                     <p style="font-size:0.78rem; color:var(--text-secondary);">
@@ -675,7 +674,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         `;
     };
 
-    // 2. Render Data Table: Most Popular Campus Organizations in Database
+    // 2. Render Data Table: Most Popular Campus Organizations in Database (Unified Orange Styling)
     const renderCampusClubsTable = (tableData) => {
         const tbody = document.getElementById("clubs-table-body");
         if (!tbody) return;
@@ -689,17 +688,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         tableData.forEach((row) => {
             const tr = document.createElement("tr");
 
-            let categoryBadgeClass = "badge-org";
-            if (row.category.includes("Hackathon")) categoryBadgeClass = "badge-hackathon";
-            if (row.category.includes("Research")) categoryBadgeClass = "badge-research";
-
             tr.innerHTML = `
-                <td><span class="club-rank-badge">#${row.rank}</span></td>
+                <td><span class="club-rank-badge" style="border-color:rgba(245,158,11,0.4); color:var(--avatar-orange);">#${row.rank}</span></td>
                 <td>
                     <strong style="color:var(--text-primary);">${QuizApp.escapeHtml(row.name)}</strong>
                     ${row.skills ? `<div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.15rem;">Skills: ${QuizApp.escapeHtml(row.skills)}</div>` : ""}
                 </td>
-                <td><span class="analysis-count-badge ${categoryBadgeClass}">${QuizApp.escapeHtml(row.category)}</span></td>
+                <td><span class="analysis-count-badge badge-orange">${QuizApp.escapeHtml(row.category)}</span></td>
                 <td><strong style="color:var(--text-primary);">${row.student_count}</strong> <span style="font-size:0.78rem; color:var(--text-muted);">students</span></td>
                 <td><span style="font-size:0.8rem; font-weight:600; color:var(--avatar-orange);">${QuizApp.escapeHtml(row.relevance)}</span></td>
             `;
@@ -707,7 +702,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     };
 
-    // 3. Render Top 3 Alumni Involvement & Outlier Match Cards
+    // 3. Render Top 3 Alumni Involvement & Outlier Match Cards (Unified Orange)
     const renderTopAlumniMatches = (matches) => {
         const grid = document.getElementById("section-3-matches-grid");
         if (!grid) return;
@@ -725,10 +720,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             let actsHtml = "";
             if (m.activities && Array.isArray(m.activities)) {
                 actsHtml = m.activities
-                    .map((a) => `<span class="highlight-tag" style="background:rgba(230, 81, 0, 0.12); color:#E65100; border:1px solid rgba(230, 81, 0, 0.3);">${QuizApp.escapeHtml(a.experience_name || a)}</span>`)
+                    .map((a) => `<span class="highlight-tag" style="background:rgba(245, 158, 11, 0.12); color:#b45309; border:1px solid rgba(245, 158, 11, 0.35);">${QuizApp.escapeHtml(a.experience_name || a)}</span>`)
                     .join("");
             } else {
-                actsHtml = '<span class="highlight-tag" style="background:rgba(230, 81, 0, 0.12); color:#E65100;">ACM Student Chapter</span><span class="highlight-tag" style="background:rgba(230, 81, 0, 0.12); color:#E65100;">Capture the Flag Team</span>';
+                actsHtml = '<span class="highlight-tag" style="background:rgba(245, 158, 11, 0.12); color:#b45309; border:1px solid rgba(245, 158, 11, 0.35);">ACM Student Chapter</span><span class="highlight-tag" style="background:rgba(245, 158, 11, 0.12); color:#b45309; border:1px solid rgba(245, 158, 11, 0.35);">Capture the Flag Team</span>';
             }
 
             const outlierStory = m.outlier_insight || m.outlier_story || "Leveraged high-ownership hackathon prototypes and leadership roles to stand out in recruiter screens.";
@@ -736,11 +731,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             card.innerHTML = `
                 <div>
                     <div class="card-top-row">
-                        <span class="alum-id-badge">Alumni Match #${idx + 1}</span>
+                        <span class="alum-id-badge" style="background:rgba(245, 158, 11, 0.12); color:#b45309;">Alumni Match #${idx + 1}</span>
                         <span class="alum-salary-badge">${QuizApp.escapeHtml(m.first_job_annual_salary_usd || "$102,000")}</span>
                     </div>
                     <h4 class="alum-role-title">${QuizApp.escapeHtml(m.first_job_title || "Software Solutions Engineer")}</h4>
-                    <p class="alum-employer">${QuizApp.escapeHtml(m.first_employer || "Booz Allen Hamilton")} &bull; <span style="color:var(--avatar-orange);">${QuizApp.escapeHtml(state.user.major || "Computer Science")}</span></p>
+                    <p class="alum-employer">${QuizApp.escapeHtml(m.first_employer || "Booz Allen Hamilton")} &bull; <span style="color:var(--avatar-orange); font-weight:600;">${QuizApp.escapeHtml(state.user.major || "Computer Science")}</span></p>
                     <div style="background-color:var(--bg-inset); padding:0.75rem; border-radius:6px; margin: 0.6rem 0; border:1px solid var(--border-subtle);">
                         <span style="font-size:0.68rem; text-transform:uppercase; color:var(--text-muted); font-weight:700; letter-spacing:0.04em;">Outlier Trajectory Insight</span>
                         <p style="font-size:0.78rem; color:var(--text-secondary); margin-top:0.25rem; line-height:1.4;">
@@ -766,5 +761,5 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-    QuizApp.bindVoiceReplayListeners();
+    QuizApp.bindVoiceReplayListeners(3);
 });

@@ -4,6 +4,7 @@
 
 {% block progress_label %}Section 1 of 5 &bull; Academic Foundations{% endblock %}
 {% block progress_percent %}20%{% endblock %}
+{% block page_wrapper_class %}section1-immersive{% endblock %}
 
 {% block content %}
 <!-- =========================================================================
@@ -13,7 +14,8 @@
 <div id="section-intro-stage" class="section-intro-stage" data-section="1">
     <div class="intro-avatar-wrapper">
         <div class="intro-avatar-circle avatar-1-blue avatar-image-frame">
-            <img src="{{ url_for('static', filename='images/Avatar1.PNG') }}" alt="Avatar 1" class="avatar-portrait" />
+            <img src="/Users/owenpennington/Desktop/Hackathon/career_quiz/static/images/Avatar1.PNG" alt="Avatar 1"
+                class="avatar-portrait" onerror="this.src='{{ url_for('static', filename='images/Avatar1.PNG') }}'" />
         </div>
         <span class="intro-role-subtitle">Academic Foundations Advisor</span>
     </div>
@@ -42,7 +44,7 @@
         </p>
     </div>
 
-    <button type="button" class="submit-btn intro-continue-btn" id="btn-start-section-questions">
+    <button type="button" class="primary-btn intro-continue-btn" id="btn-start-section-questions">
         Begin Section 1: Questions &rarr;
     </button>
 </div>
@@ -54,7 +56,8 @@
 <div id="section-questions-stage" class="section-questions-stage section1-fullscreen" hidden>
     <aside id="avatar-stage" class="section1-avatar-panel" aria-label="Avatar 1, Academic Foundations Advisor">
         <div id="active-avatar-circle" class="avatar-circle avatar-1-blue avatar-image-frame">
-            <img src="{{ url_for('static', filename='images/Avatar1.PNG') }}" alt="Avatar 1" class="avatar-portrait" />
+            <img src="/Users/owenpennington/Desktop/Hackathon/career_quiz/static/images/Avatar1.PNG" alt="Avatar 1"
+                class="avatar-portrait" onerror="this.src='{{ url_for('static', filename='images/Avatar1.PNG') }}'" />
         </div>
     </aside>
 
@@ -110,145 +113,160 @@
         </div>
 
         <div id="section-1-container" class="interactive-screen">
-        <!-- SUB-STEP 1: College Standing -->
-        <div id="substep-standing" class="substep-block">
-            <p class="eyebrow">Section 1 of 5 &bull; Academic Foundations</p>
-            <h2 class="step-heading">What is your current college standing? <span class="required-indicator">Required</span></h2>
-            <p class="step-description">Your advisor tailors all advice and timeline benchmarks to your exact
-                academic progression stage.</p>
+            <!-- SUB-STEP 1: College Standing -->
+            <div id="substep-standing" class="substep-block">
+                <p class="eyebrow">Section 1 of 5 &bull; Academic Foundations</p>
+                <h2 class="step-heading">What is your current college standing? <span
+                        class="required-indicator">Required</span></h2>
+                <p class="step-description">Your advisor tailors all advice and timeline benchmarks to your exact
+                    academic progression stage.</p>
 
-            <div class="pill-group" role="radiogroup" aria-label="College Standing" aria-required="true">
-                <button type="button" class="pill-option" data-name="classYear"
-                    data-value="Freshman">Freshman</button>
-                <button type="button" class="pill-option" data-name="classYear"
-                    data-value="Sophomore">Sophomore</button>
-                <button type="button" class="pill-option" data-name="classYear" data-value="Junior">Junior</button>
-                <button type="button" class="pill-option" data-name="classYear" data-value="Senior">Senior</button>
-                <button type="button" class="pill-option" data-name="classYear" data-value="More than 4 years">5th Year
-                    / Alum</button>
-            </div>
-            <p id="standing-required-error" class="required-error" role="alert" hidden></p>
-
-            <div class="nav-button-row" style="margin-top: 1.5rem;">
-                <button type="button" class="submit-btn" id="btn-to-substep-major">Continue to Major Selection
-                    &rarr;</button>
-            </div>
-        </div>
-
-        <!-- SUB-STEP 2: Major, Track, Minor & Career Alignment -->
-        <div id="substep-major" class="substep-block" hidden>
-            <p class="eyebrow">Section 1 of 5 &bull; Academic Foundations</p>
-            <h2 class="step-heading">Select your Major, Track, Minor, and Career Goals</h2>
-            <p class="step-description">Choose your academic profile and align it with your target industry, salary, and role goals.</p>
-
-            <div class="section1-dropdown-grid">
-                <div class="form-field">
-                    <label class="field-label" for="major-select">Primary Major <span class="required-indicator">Required</span></label>
-                    <select id="major-select" class="dropdown-select" required aria-required="true">
-                        <option value="" selected disabled>Choose one</option>
-                    </select>
+                <div class="pill-group" role="radiogroup" aria-label="College Standing" aria-required="true">
+                    <button type="button" class="pill-option" data-name="classYear"
+                        data-value="Freshman">Freshman</button>
+                    <button type="button" class="pill-option" data-name="classYear"
+                        data-value="Sophomore">Sophomore</button>
+                    <button type="button" class="pill-option" data-name="classYear" data-value="Junior">Junior</button>
+                    <button type="button" class="pill-option" data-name="classYear" data-value="Senior">Senior</button>
+                    <button type="button" class="pill-option" data-name="classYear" data-value="More than 4 years">5th
+                        Year
+                        / Alum</button>
                 </div>
-                <div class="form-field">
-                    <label class="field-label" for="track-select">Specialized Concentration / Major Track (Optional)</label>
-                    <select id="track-select" class="dropdown-select">
-                        <option value="" selected disabled>Choose one</option>
-                    </select>
-                </div>
-                <div class="form-field">
-                    <label class="field-label" for="minor-select">Minor or Secondary Field (Optional)</label>
-                    <select id="minor-select" class="dropdown-select">
-                        <option value="" selected>Choose one</option>
-                        <option value="None">None</option>
-                    </select>
+                <p id="standing-required-error" class="required-error" role="alert" hidden></p>
+
+                <div class="nav-button-row" style="margin-top: 1.5rem;">
+                    <button type="button" class="primary-btn submit-btn" id="btn-to-substep-major">Continue to Major
+                        Selection
+                        &rarr;</button>
                 </div>
             </div>
 
-            <div class="form-grid section1-profile-grid">
-                <div class="form-field">
-                    <label class="field-label" for="user-name-input">Full Name (Optional)</label>
-                    <input type="text" id="user-name-input" class="text-input" placeholder="e.g. Alex Rivera" />
-                </div>
-                <div class="form-field">
-                    <label class="field-label" for="target-industry-input">Target Industry or Dream Employers <span class="required-indicator">Required</span></label>
-                    <input type="text" id="target-industry-input" class="text-input"
-                        placeholder="e.g., Software Products, Amazon, Google, Defense, Cloud"
-                        value="" required aria-required="true" />
-                </div>
-                <div class="form-field">
-                    <label class="field-label" for="target-salary-input">Target Starting Annual Salary ($ USD) (Optional)</label>
-                    <input type="number" id="target-salary-input" class="text-input" placeholder="e.g., $105,000"
-                        value="" />
-                </div>
+            <!-- SUB-STEP 2: Major, Track, Minor & Career Alignment -->
+            <div id="substep-major" class="substep-block" hidden>
+                <p class="eyebrow">Section 1 of 5 &bull; Academic Foundations</p>
+                <h2 class="step-heading">Select your Major, Track, Minor, and Career Goals</h2>
+                <p class="step-description">Choose your academic profile and align it with your target industry, salary,
+                    and role goals.</p>
 
-                <div class="form-field full-width">
-                    <label class="field-label" for="career-goals-input">Primary Career Aspirations or Target Job
-                        Title (Optional)</label>
-                    <input type="text" id="career-goals-input" class="text-input"
-                        placeholder="e.g., Full-Stack Software Engineer, Cloud Architect, ML Engineer"
-                        value="" />
-                </div>
-            </div>
-            <p id="major-required-error" class="required-error" role="alert" hidden></p>
-
-            <div class="nav-button-row" style="margin-top: 1.5rem; display: flex; gap: 1rem;">
-                <button type="button" class="secondary-btn" id="btn-back-to-standing">&larr; Back</button>
-                <button type="button" class="submit-btn" id="btn-to-substep-gpa">Continue to GPA &amp; Credits
-                    &rarr;</button>
-            </div>
-        </div>
-
-        <!-- SUB-STEP 3: GPA & Credits -->
-        <div id="substep-gpa" class="substep-block" hidden>
-            <p class="eyebrow">Section 1 of 5 &bull; Academic Foundations</p>
-            <h2 class="step-heading">Cumulative GPA &amp; Completed Credits</h2>
-            <p class="step-description">Avatar 1 computes your trajectory against historical alumni graduating
-                distributions.</p>
-
-            <div class="form-grid">
-                <div class="form-field">
-                    <label class="field-label" for="gpa-input">Current Cumulative GPA (0.00 &ndash; 4.00) <span class="required-indicator">Required</span></label>
-                    <input type="number" id="gpa-input" class="text-input" step="0.01" min="0.0" max="4.0"
-                        placeholder="e.g. 3.65" value="" required aria-required="true" />
+                <div class="section1-dropdown-grid">
+                    <div class="form-field">
+                        <label class="field-label" for="major-select">Primary Major <span
+                                class="required-indicator">Required</span></label>
+                        <select id="major-select" class="dropdown-select" required aria-required="true">
+                            <option value="" selected disabled>Choose one</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label class="field-label" for="track-select">Specialized Concentration / Major Track
+                            (Optional)</label>
+                        <select id="track-select" class="dropdown-select">
+                            <option value="" selected disabled>Choose one</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label class="field-label" for="minor-select">Minor or Secondary Field (Optional)</label>
+                        <select id="minor-select" class="dropdown-select">
+                            <option value="" selected>Choose one</option>
+                            <option value="None">None</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div class="form-field">
-                    <label class="field-label" for="credits-input">Total Earned Credits <span class="required-indicator">Required</span></label>
-                    <input type="number" id="credits-input" class="text-input" min="0"  placeholder="e.g. 45"
-                        value="" required aria-required="true" />
+                <div class="form-grid section1-profile-grid">
+                    <div class="form-field">
+                        <label class="field-label" for="user-name-input">Full Name (Optional)</label>
+                        <input type="text" id="user-name-input" class="text-input" placeholder="e.g. Alex Rivera" />
+                    </div>
+                    <div class="form-field">
+                        <label class="field-label" for="target-industry-input">Target Industry or Dream Employers <span
+                                class="required-indicator">Required</span></label>
+                        <input type="text" id="target-industry-input" class="text-input"
+                            placeholder="e.g., Software Products, Amazon, Google, Defense, Cloud" value="" required
+                            aria-required="true" />
+                    </div>
+                    <div class="form-field">
+                        <label class="field-label" for="target-salary-input">Target Starting Annual Salary ($ USD)
+                            (Optional)</label>
+                        <input type="number" id="target-salary-input" class="text-input" placeholder="e.g., $105,000"
+                            value="" />
+                    </div>
+
+                    <div class="form-field full-width">
+                        <label class="field-label" for="career-goals-input">Primary Career Aspirations or Target Job
+                            Title (Optional)</label>
+                        <input type="text" id="career-goals-input" class="text-input"
+                            placeholder="e.g., Full-Stack Software Engineer, Cloud Architect, ML Engineer" value="" />
+                    </div>
+                </div>
+                <p id="major-required-error" class="required-error" role="alert" hidden></p>
+
+                <div class="nav-button-row" style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                    <button type="button" class="secondary-btn" id="btn-back-to-standing">&larr; Back</button>
+                    <button type="button" class="primary-btn submit-btn" id="btn-to-substep-gpa">Continue to GPA &amp;
+                        Credits
+                        &rarr;</button>
                 </div>
             </div>
-            <p id="gpa-required-error" class="required-error" role="alert" hidden></p>
 
-            <div class="nav-button-row" style="margin-top: 1.5rem; display: flex; gap: 1rem;">
-                <button type="button" class="secondary-btn" id="btn-back-to-major">&larr; Back</button>
-                <button type="button" class="submit-btn" id="btn-to-substep-aspirations">Continue to Career Aspirations
-                    &rarr;</button>
+            <!-- SUB-STEP 3: GPA & Credits -->
+            <div id="substep-gpa" class="substep-block" hidden>
+                <p class="eyebrow">Section 1 of 5 &bull; Academic Foundations</p>
+                <h2 class="step-heading">Cumulative GPA &amp; Completed Credits</h2>
+                <p class="step-description">Avatar 1 computes your trajectory against historical alumni graduating
+                    distributions.</p>
+
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label class="field-label" for="gpa-input">Current Cumulative GPA (0.00 &ndash; 4.00) <span
+                                class="required-indicator">Required</span></label>
+                        <input type="number" id="gpa-input" class="text-input" step="0.01" min="0.0" max="4.0"
+                            placeholder="e.g. 3.65" value="" required aria-required="true" />
+                    </div>
+
+                    <div class="form-field">
+                        <label class="field-label" for="credits-input">Total Earned Credits <span
+                                class="required-indicator">Required</span></label>
+                        <input type="number" id="credits-input" class="text-input" min="0" placeholder="e.g. 45"
+                            value="" required aria-required="true" />
+                    </div>
+                </div>
+                <p id="gpa-required-error" class="required-error" role="alert" hidden></p>
+
+                <div class="nav-button-row" style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                    <button type="button" class="secondary-btn" id="btn-back-to-major">&larr; Back</button>
+                    <button type="button" class="primary-btn submit-btn" id="btn-to-substep-aspirations">Continue to
+                        Career
+                        Aspirations
+                        &rarr;</button>
+                </div>
             </div>
-        </div>
 
-        <!-- SUB-STEP 4: Thank You -->
-        <div id="substep-aspirations" class="substep-block" hidden>
-            <p class="eyebrow">Section 1 of 5 &bull; Academic Foundations</p>
-            <h2 class="step-heading">Thank you for supplying your information</h2>
-            <p class="step-description">Your academic profile, goals, and background are now recorded. Our avatar team is excited to help you explore your options and build a personalized plan.</p>
+            <!-- SUB-STEP 4: Thank You -->
+            <div id="substep-aspirations" class="substep-block" hidden>
+                <p class="eyebrow">Section 1 of 5 &bull; Academic Foundations</p>
+                <h2 class="step-heading">Thank you for supplying your information</h2>
+                <p class="step-description">Your academic profile, goals, and background are now recorded. Our avatar
+                    team is excited to help you explore your options and build a personalized plan.</p>
 
-            <div class="course-planner-card" style="margin-top: 1.5rem;">
-                <h3 class="card-subtitle">What happens next?</h3>
-                <p class="card-subtext">Once your full pathway is complete, the final report will synthesize your profile and highlight the strongest match and next steps.</p>
+                <div class="course-planner-card" style="margin-top: 1.5rem;">
+                    <h3 class="card-subtitle">What happens next?</h3>
+                    <p class="card-subtext">Once your full pathway is complete, the final report will synthesize your
+                        profile and highlight the strongest match and next steps.</p>
+                </div>
+
+                <div class="form-navigation-row"
+                    style="margin-top: 2rem; display: flex; justify-content: space-between;">
+                    <button type="button" class="secondary-btn" id="btn-back-to-gpa">&larr; Back</button>
+                    <button type="button" class="primary-btn submit-btn" id="btn-next-to-section-2">
+                        Proceed to Section 2: Course Advising &rarr;
+                    </button>
+                </div>
             </div>
-
-            <div class="nav-button-row" style="margin-top: 2rem; display: flex; justify-content: space-between;">
-                <button type="button" class="secondary-btn" id="btn-back-to-gpa">&larr; Back</button>
-                <button type="button" class="submit-btn" id="btn-next-to-section-2">
-                    Proceed to Section 2: Course Advising &rarr;
-                </button>
-            </div>
-        </div>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/section1.js', v='42') }}"></script>
+<script src="{{ url_for('static', filename='js/section1.js', v='130') }}"></script>
 {% endblock %}

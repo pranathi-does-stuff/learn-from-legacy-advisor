@@ -4,6 +4,7 @@
 
 {% block progress_label %}Section 3 of 5 &bull; Campus Involvement{% endblock %}
 {% block progress_percent %}60%{% endblock %}
+{% block page_wrapper_class %}section1-immersive{% endblock %}
 
 {% block content %}
 <!-- =========================================================================
@@ -12,11 +13,11 @@
      ========================================================================= -->
 <div id="section-intro-stage" class="section-intro-stage" data-section="3">
     <div class="intro-avatar-wrapper">
-        <div class="intro-avatar-circle avatar-3-orange">
-            <span class="intro-avatar-glyph">🏛️</span>
-            <span class="intro-avatar-badge">A3</span>
+        <div class="intro-avatar-circle avatar-3-orange avatar-image-frame">
+            <img src="/Users/owenpennington/Desktop/Hackathon/career_quiz/static/images/CourseAdvisorFemale.PNG"
+                alt="Avatar 3" class="avatar-portrait"
+                onerror="this.src='{{ url_for('static', filename='images/CourseAdvisorFemale.PNG') }}'" />
         </div>
-        <h2 class="intro-persona-title">Avatar 3 (Orange)</h2>
         <span class="intro-role-subtitle">Student Engagement Mentor</span>
     </div>
 
@@ -44,181 +45,38 @@
         </p>
     </div>
 
-    <button type="button" class="submit-btn intro-continue-btn" id="btn-start-section-questions">
+    <button type="button" class="primary-btn intro-continue-btn" id="btn-start-section-questions">
         Begin Section 3: Questions &rarr;
     </button>
 </div>
 
 <!-- =========================================================================
-     STAGE B: SEQUENTIAL 3-QUESTION FLOW (One Question per Screen)
-     Recommendations & matches suppressed until final report!
+     STAGE B: SECTION 3 QUESTIONS (CLONED SECTION 1 SPLIT FULLSCREEN LAYOUT)
      ========================================================================= -->
-<div id="section-questions-stage" class="section-questions-stage" hidden>
-    <div id="section-3-container" class="interactive-screen">
-
-        <!-- =================================================================
-             SCREEN 1: POPULAR MATCHES CHECKLIST
-             ================================================================= -->
-        <div id="substep-popular-activities" class="substep-block">
-            <div class="step-badge-row">
-                <span class="step-pill">Section 3 of 5</span>
-                <span class="step-pill active-pill">Question 1 of 3</span>
-            </div>
-            <h2 class="step-heading">Are you involved in any of the following student organizations or competitive
-                teams? <span class="required-indicator">Required response</span></h2>
-            <p class="step-description">
-                Student organizations and competitive teams most popular among successful alumni in <strong
-                    id="student-industry-label" style="color:var(--avatar-orange);">your target field</strong>:
-            </p>
-
-            <div id="popular-activities-spinner" class="loading-state-container"
-                style="display:flex; align-items:center; gap:0.75rem; padding:1.5rem 0;">
-                <span class="spinner"></span>
-                <span style="color:var(--text-secondary); font-size:0.9rem;">Benchmarking popular campus organizations
-                    &amp; teams from
-                    Tiger Data...</span>
-            </div>
-
-            <div id="popular-activities-grid" class="course-checklist-grid" style="margin-top: 1rem;"></div>
-            <label class="required-response"><input type="checkbox" id="none-popular-activities"> I am not involved in
-                any of these organizations or teams.</label>
-            <p id="popular-activities-error" class="required-error" role="alert" hidden></p>
-
-            <div class="nav-button-row" style="margin-top: 2rem; display: flex; justify-content: flex-end;">
-                <button type="button" class="submit-btn" id="btn-to-other-orgs">
-                    Continue to Other Organizations &rarr;
-                </button>
-            </div>
+<div id="section-questions-stage" class="section-questions-stage section1-fullscreen" hidden>
+    <aside id="avatar-stage" class="section1-avatar-panel" aria-label="Avatar 3, Student Engagement Mentor">
+        <div id="active-avatar-circle" class="avatar-circle avatar-3-orange avatar-image-frame">
+            <img src="/Users/owenpennington/Desktop/Hackathon/career_quiz/static/images/CourseAdvisorFemale.PNG"
+                alt="Avatar 3" class="avatar-portrait"
+                onerror="this.src='{{ url_for('static', filename='images/CourseAdvisorFemale.PNG') }}'" />
         </div>
+    </aside>
 
-        <!-- =================================================================
-             SCREEN 2: OTHER ORGANIZATIONS (AUTOCOMPLETE SEARCH BAR)
-             ================================================================= -->
-        <div id="substep-other-orgs" class="substep-block" hidden>
-            <div class="step-badge-row">
-                <span class="step-pill">Section 3 of 5</span>
-                <span class="step-pill active-pill">Question 2 of 3</span>
-            </div>
-            <h2 class="step-heading">Are you involved with any other organizations on campus? <span
-                    class="required-indicator">Required response</span></h2>
-            <p class="step-description">
-                Search and add any additional student clubs, chapters, or competitive teams not listed in Question 1:
-            </p>
-
-            <div class="course-planner-card"
-                style="margin-top: 1.25rem; background:var(--bg-elevated); padding:1.5rem; border-radius:8px; border:1px solid var(--border-subtle);">
-                <label class="field-label" for="org-search-input"
-                    style="font-weight:600; margin-bottom:0.5rem; display:block;">Search Student Organizations &amp;
-                    Competitive Teams</label>
-                <div class="autocomplete-search-wrapper">
-                    <input type="text" id="org-search-input" class="autocomplete-search-input"
-                        placeholder="Search organizations &amp; teams (e.g., Cyber, Robotics, Open Source, ACM, CTF Team)..."
-                        autocomplete="off" />
-                    <div id="org-autocomplete-dropdown" class="autocomplete-dropdown-menu" hidden></div>
+    <div class="section1-content-panel">
+        <div class="section1-advisor-panel avatar-stage-wrapper">
+            <div class="avatar-dock" aria-label="Advisory Council Avatars">
+                <div class="dock-avatar-indicator" data-avatar="1">
+                    <div class="dock-circle dock-blue"></div><span class="dock-label">Foundations</span>
                 </div>
-
-                <div id="selected-org-chips" class="planned-courses-chips"></div>
-
-                <div style="margin-top: 1.25rem; border-top: 1px solid var(--border-subtle); padding-top: 1rem;">
-                    <label class="field-label" for="custom-org-input"
-                        style="font-weight:600; margin-bottom:0.35rem; display:block;">Other Student Organizations,
-                        Teams, or Initiatives (Optional)</label>
-                    <input type="text" id="custom-org-input" class="text-input"
-                        placeholder="e.g. Founder of Campus AI Workshop, Lead Member of Developer Club" />
+                <div class="dock-avatar-indicator" data-avatar="2">
+                    <div class="dock-circle dock-green"></div><span class="dock-label">Courses</span>
                 </div>
-            </div>
-
-            <label class="required-response"><input type="checkbox" id="none-other-orgs"> I am not involved in any other
-                organizations or competitive teams.</label>
-            <p id="other-orgs-error" class="required-error" role="alert" hidden></p>
-
-            <div class="nav-button-row" style="margin-top: 2rem; display: flex; justify-content: space-between;">
-                <button type="button" class="secondary-btn" id="btn-back-to-popular">&larr; Back to Popular
-                    Organizations</button>
-                <button type="button" class="submit-btn" id="btn-to-impact-statement">
-                    Continue to Impact Statement &rarr;
-                </button>
-            </div>
-        </div>
-
-        <!-- =================================================================
-             SCREEN 3: CAMPUS IMPACT STATEMENT (PARAGRAPH TEXTAREA)
-             ================================================================= -->
-        <div id="substep-impact-statement" class="substep-block" hidden>
-            <div class="step-badge-row">
-                <span class="step-pill">Section 3 of 5</span>
-                <span class="step-pill active-pill">Question 3 of 3</span>
-            </div>
-            <h2 class="step-heading">Explain the impact you have made on campus. <span
-                    class="required-indicator">Required response</span></h2>
-            <p class="step-description">
-                This can be everything you've done in student organizations and competitive teams at UMBC outside of
-                academics—events organized, leadership
-                roles held, competitions participated in, or team contributions:
-            </p>
-
-            <div class="course-planner-card"
-                style="margin-top: 1.25rem; background:var(--bg-elevated); padding:1.5rem; border-radius:8px; border:1px solid var(--border-subtle);">
-                <label class="field-label" for="campus-impact-statement"
-                    style="font-weight:600; margin-bottom:0.5rem; display:block;">Your Organizational &amp; Team Impact
-                    Statement <span class="required-indicator">Required</span></label>
-                <textarea id="campus-impact-statement" class="text-area-large" rows="6"
-                    placeholder="Describe what you've done at UMBC in student organizations and competitive teams: competitions, hackathons/CTFs, projects led, leadership roles, or club initiatives..."></textarea>
-            </div>
-
-            <label class="required-response"><input type="checkbox" id="no-impact-statement"> I do not have any
-                organizational or competitive team impact yet.</label>
-            <p id="impact-statement-error" class="required-error" role="alert" hidden></p>
-
-            <div class="nav-button-row"
-                style="margin-top: 2rem; display: flex; justify-content: space-between; align-items:center;">
-                <button type="button" class="secondary-btn" id="btn-back-to-other-orgs">&larr; Back to Other
-                    Organizations</button>
-                <div style="display:flex; align-items:center; gap:1rem;">
-                    <span id="spinner-generate-report" class="spinner" hidden aria-hidden="true"></span>
-                    <button type="button" class="submit-btn" id="btn-submit-involvement-report">
-                        Submit &amp; Generate Involvement Report &rarr;
-                    </button>
+                <div class="dock-avatar-indicator active" data-avatar="3">
+                    <div class="dock-circle dock-orange"></div><span class="dock-label">Involvement</span>
                 </div>
-            </div>
-        </div>
-
-    </div>
-</div>
-
-<!-- =========================================================================
-     STAGE C: SECTION 3 FINAL REPORT
-     Rendered ONLY after Question 3 is submitted
-     ========================================================================= -->
-<div id="section-report-stage" class="section-report-stage" hidden>
-    <!-- Top Avatar Dock & Mentor Thought Bubble -->
-    <div id="avatar-stage" class="avatar-stage-wrapper">
-        <div class="avatar-dock" aria-label="Advisory Council Avatars">
-            <div class="dock-avatar-indicator" data-avatar="1">
-                <div class="dock-circle dock-blue"></div>
-                <span class="dock-label">Foundations</span>
-            </div>
-            <div class="dock-avatar-indicator" data-avatar="2">
-                <div class="dock-circle dock-green"></div>
-                <span class="dock-label">Courses</span>
-            </div>
-            <div class="dock-avatar-indicator active" data-avatar="3">
-                <div class="dock-circle dock-orange"></div>
-                <span class="dock-label">Involvement</span>
-            </div>
-            <div class="dock-avatar-indicator" data-avatar="4">
-                <div class="dock-circle dock-purple"></div>
-                <span class="dock-label">Career</span>
-            </div>
-        </div>
-
-        <div class="advisor-interaction-row">
-            <div class="avatar-container">
-                <div id="active-avatar-circle" class="avatar-circle avatar-3-orange">
-                    <span class="avatar-glyph">🏛️</span>
-                    <span class="avatar-number-badge">A3</span>
+                <div class="dock-avatar-indicator" data-avatar="4">
+                    <div class="dock-circle dock-purple"></div><span class="dock-label">Career</span>
                 </div>
-                <span class="avatar-name-tag">Avatar 3 (Orange)</span>
             </div>
 
             <div class="thought-bubble-container">
@@ -243,62 +101,206 @@
                     </div>
                     <div class="thought-body">
                         <p id="thought-bubble-text" class="thought-text">
-                            Avatar 3 is analyzing your student organization involvement, leadership roles, and
-                            outlier impact statement against high-performing alumni pathways in Tiger Data.
+                            Select your student organizations, search for additional clubs, and share your unique campus
+                            impact initiatives.
                         </p>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="interactive-screen">
-        <p class="eyebrow">Section 3 of 5 &bull; Campus Involvement Report</p>
-        <h2 class="step-heading">Campus Engagement &amp; Outlier Trajectory Analysis</h2>
-        <p class="step-description">
-            Direct comparative evaluation of your extracurricular footprint, leadership density, and unique project
-            impact:
-        </p>
+        <div id="section-3-container" class="interactive-screen">
+            <!-- SCREEN 1: POPULAR MATCHES CHECKLIST -->
+            <div id="substep-popular-activities" class="substep-block">
+                <p class="eyebrow">Section 3 of 5 &bull; Question 1 of 3</p>
+                <h2 class="step-heading">Which of these student organizations and teams are you involved in? <span
+                        class="required-indicator">Required response</span></h2>
+                <p class="step-description">
+                    Top student organizations and competitive technical teams frequented by alumni in <strong
+                        id="student-industry-label" style="color:var(--accent-orange);">your field</strong>:
+                </p>
 
-        <!-- Dynamic Visual Metrics Breakdown -->
-        <div id="involvement-metrics-container" class="involvement-metrics-container" style="margin-top: 1.5rem;"></div>
+                <div id="popular-activities-spinner" class="loading-state-container"
+                    style="display:flex; align-items:center; gap:0.75rem; padding:1.5rem 0;">
+                    <span class="spinner"></span>
+                    <span style="color:var(--text-secondary); font-size:0.9rem;">Benchmarking popular student
+                        organizations...</span>
+                </div>
 
-        <!-- Data Table: Most Popular Campus Organizations & Teams in Database -->
-        <div id="clubs-table-container" class="clubs-table-card" style="margin-top: 2rem;">
-            <div class="matches-header">
-                <h3 class="matches-title">📊 Most Popular Organizations &amp; Teams in Database</h3>
-                <span class="matches-subtitle">Participation benchmarks across all enrolled computing &amp; engineering
-                    students</span>
+                <div id="popular-activities-grid" class="activities-checklist-grid" style="margin-top: 1rem;"></div>
+
+                <label class="required-response"
+                    style="margin-top: 1rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer;">
+                    <input type="checkbox" id="none-popular-activities"> I am not currently active in any listed student
+                    organizations.
+                </label>
+                <p id="popular-activities-error" class="required-error" role="alert" hidden></p>
+
+                <div class="form-navigation-row" style="margin-top: 2rem; display: flex; justify-content: flex-end;">
+                    <button type="button" class="primary-btn submit-btn" id="btn-to-other-orgs">
+                        Continue to Other Organizations &rarr;
+                    </button>
+                </div>
             </div>
-            <div class="table-responsive" style="margin-top: 1rem; overflow-x: auto;">
-                <table class="clubs-data-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 8%;">Rank</th>
-                            <th style="width: 32%;">Organization / Team</th>
-                            <th style="width: 22%;">Category</th>
-                            <th style="width: 18%;">Active Students</th>
-                            <th style="width: 20%;">Career Alignment</th>
-                        </tr>
-                    </thead>
-                    <tbody id="clubs-table-body"></tbody>
-                </table>
+
+            <!-- SCREEN 2: OTHER ORGANIZATIONS & INITIATIVES -->
+            <div id="substep-other-orgs" class="substep-block" hidden>
+                <p class="eyebrow">Section 3 of 5 &bull; Question 2 of 3</p>
+                <h2 class="step-heading">Are you a part of any other organizations or groups on campus? <span
+                        class="required-indicator">Required response</span></h2>
+                <p class="step-description">
+                    Search and select any additional registered student organizations, fraternities/sororities,
+                    hackathon teams, or campus groups:
+                </p>
+
+                <div class="form-field" style="margin-top: 1.25rem;">
+                    <label class="field-label" for="org-search-input">Search Campus Organizations <span
+                            class="required-indicator">Required</span></label>
+                    <div class="autocomplete-search-wrapper">
+                        <input type="text" id="org-search-input" class="text-input autocomplete-search-input"
+                            placeholder="Type organization name (e.g. CyberDawgs, Data Science Collective, Robotics)..."
+                            autocomplete="off" />
+                        <div id="org-autocomplete-dropdown" class="autocomplete-dropdown-menu" hidden></div>
+                    </div>
+                    <div id="selected-org-chips" class="planned-courses-chips" style="margin-top: 0.75rem;"></div>
+                </div>
+
+                <div class="form-field" style="margin-top: 1.5rem;">
+                    <label class="field-label" for="custom-org-input">Other Independent Activities or Unlisted
+                        Initiatives (Optional)</label>
+                    <input type="text" id="custom-org-input" class="text-input"
+                        placeholder="e.g. Open Source Project Contributor, Local Hackathon Organizer" />
+                </div>
+
+                <label class="required-response"
+                    style="margin-top: 1rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer;">
+                    <input type="checkbox" id="none-other-orgs"> I do not have other student organizations to add.
+                </label>
+                <p id="other-orgs-error" class="required-error" role="alert" hidden></p>
+
+                <div class="form-navigation-row"
+                    style="margin-top: 2rem; display: flex; justify-content: space-between;">
+                    <button type="button" class="secondary-btn" id="btn-back-to-popular">&larr; Back</button>
+                    <button type="button" class="primary-btn submit-btn" id="btn-to-impact-statement">
+                        Continue to Impact Statement &rarr;
+                    </button>
+                </div>
+            </div>
+
+            <!-- SCREEN 3: CAMPUS IMPACT STATEMENT -->
+            <div id="substep-impact-statement" class="substep-block" hidden>
+                <p class="eyebrow">Section 3 of 5 &bull; Question 3 of 3</p>
+                <h2 class="step-heading">Tell me about what you've done outside of academics at your college. <span
+                        class="required-indicator">Required response</span></h2>
+                <p class="step-description">
+                    Describe any personal initiatives, leadership accomplishments, hackathons, lab contributions, or
+                    distinctive projects. This narrative is used for <strong>outlier alumni matching</strong>:
+                </p>
+
+                <div class="form-field" style="margin-top: 1.25rem;">
+                    <label class="field-label" for="campus-impact-statement">Distinctive Impact Statement &amp;
+                        Experience Narrative <span class="required-indicator">Required</span></label>
+                    <textarea id="campus-impact-statement" class="text-input" rows="5"
+                        placeholder="e.g., Led a team of 4 at HackUMBC to build an accessibility app, volunteered as a peer tutor in discrete math, organized guest lectures for the cyber club, or managed cloud infra for open-source project..."></textarea>
+                </div>
+
+                <label class="required-response"
+                    style="margin-top: 1rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer;">
+                    <input type="checkbox" id="no-impact-statement"> I do not have a specific campus impact initiative
+                    to describe yet.
+                </label>
+                <p id="impact-statement-error" class="required-error" role="alert" hidden></p>
+
+                <div class="form-navigation-row"
+                    style="margin-top: 2rem; display: flex; justify-content: space-between; align-items:center;">
+                    <button type="button" class="secondary-btn" id="btn-back-to-other-orgs">&larr; Back</button>
+                    <div style="display:flex; align-items:center; gap:1rem;">
+                        <span id="spinner-generate-report" class="spinner" hidden aria-hidden="true"></span>
+                        <button type="button" class="primary-btn submit-btn" id="btn-submit-involvement-report">
+                            Submit &amp; Generate Involvement Report &rarr;
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     STAGE C: SECTION 3 FINAL REPORT (CLONED SPLIT LAYOUT)
+     ========================================================================= -->
+<div id="section-report-stage" class="section-questions-stage section1-fullscreen" hidden>
+    <aside id="avatar-stage-report" class="section1-avatar-panel" aria-label="Avatar 3, Student Engagement Mentor">
+        <div class="avatar-circle avatar-3-orange avatar-image-frame">
+            <img src="/Users/owenpennington/Desktop/Hackathon/career_quiz/static/images/CourseAdvisorFemale.PNG"
+                alt="Avatar 3" class="avatar-portrait"
+                onerror="this.src='{{ url_for('static', filename='images/CourseAdvisorFemale.PNG') }}'" />
+        </div>
+    </aside>
+
+    <div class="section1-content-panel">
+        <div class="section1-advisor-panel avatar-stage-wrapper">
+            <div class="avatar-dock" aria-label="Advisory Council Avatars">
+                <div class="dock-avatar-indicator" data-avatar="1">
+                    <div class="dock-circle dock-blue"></div><span class="dock-label">Foundations</span>
+                </div>
+                <div class="dock-avatar-indicator" data-avatar="2">
+                    <div class="dock-circle dock-green"></div><span class="dock-label">Courses</span>
+                </div>
+                <div class="dock-avatar-indicator active" data-avatar="3">
+                    <div class="dock-circle dock-orange"></div><span class="dock-label">Involvement</span>
+                </div>
+                <div class="dock-avatar-indicator" data-avatar="4">
+                    <div class="dock-circle dock-purple"></div><span class="dock-label">Career</span>
+                </div>
+            </div>
+
+            <div class="thought-bubble-container">
+                <div class="thought-bubble" id="report-thought-bubble">
+                    <div class="thought-header">
+                        <div class="thought-speaker-info">
+                            <span class="thought-badge-dot"
+                                style="background-color:var(--avatar-orange); box-shadow:0 0 6px var(--avatar-orange);"></span>
+                            <span class="thought-persona-title" style="color:var(--avatar-orange);">Student Engagement
+                                Mentor</span>
+                        </div>
+                    </div>
+                    <div class="thought-body">
+                        <p class="thought-text" id="report-thought-bubble-text">
+                            Involvement evaluation complete. Here is your co-curricular positioning and outlier alumni
+                            matches.
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Top 3 Alumni Involvement & Outlier Matches Display -->
-        <div id="section-3-matches-container" class="matches-data-container" style="margin-top: 2.5rem;">
-            <div class="matches-header">
-                <h3 class="matches-title">Top 3 Alumni Involvement &amp; Outlier Matches</h3>
-                <span class="matches-subtitle">Graduates who leveraged similar co-curricular activities and unique
-                    project ownership</span>
-            </div>
-            <div id="section-3-matches-grid" class="alumni-match-grid"></div>
+        <div class="interactive-screen">
+            <p class="eyebrow">Section 3 of 5 &bull; Campus Involvement Report</p>
+            <h2 class="step-heading">Co-Curricular Engagement &amp; Outlier Trajectory</h2>
+            <p class="step-description">
+                Direct comparative breakdown of your student involvement and distinctive leadership against alumni
+                benchmarks:
+            </p>
 
-            <div class="nav-button-row" style="display: flex; justify-content: flex-end; margin-top: 2rem;">
-                <button type="button" class="submit-btn" id="btn-next-to-section-4">
-                    Proceed to Section 4: Skills &amp; Experience &rarr;
-                </button>
+            <!-- Dynamic Visual Involvement Metrics Container -->
+            <div id="involvement-metrics-container" class="involvement-metrics-container" style="margin-top: 1.5rem;">
+            </div>
+
+            <!-- Top 3 Alumni Matches Display at the Very Bottom -->
+            <div id="section-3-matches-container" class="matches-data-container" style="margin-top: 2.5rem;">
+                <div class="matches-header">
+                    <h3 class="matches-title">Top 3 Student &amp; Alumni Involvement Matches</h3>
+                    <span class="matches-subtitle">Graduates who shared your engagement trajectory and extracurricular
+                        focus</span>
+                </div>
+                <div id="section-3-matches-grid" class="alumni-match-grid"></div>
+
+                <div class="form-navigation-row" style="display: flex; justify-content: flex-end; margin-top: 2rem;">
+                    <button type="button" class="primary-btn submit-btn" id="btn-next-to-section-4">
+                        Proceed to Section 4: Professional Involvement &rarr;
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -306,5 +308,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/section3.js', v='80') }}"></script>
+<script src="{{ url_for('static', filename='js/section3.js', v='130') }}"></script>
 {% endblock %}

@@ -4,6 +4,7 @@
 
 {% block progress_label %}Section 5 of 5 &bull; Synthesis &amp; Final Report{% endblock %}
 {% block progress_percent %}100%{% endblock %}
+{% block page_wrapper_class %}section1-immersive{% endblock %}
 
 {% block content %}
 <!-- =========================================================================
@@ -13,7 +14,8 @@
 <div id="section-intro-stage" class="section-intro-stage section5-intro-hero" data-section="5">
     <div class="intro-avatar-wrapper section5-large-avatar-wrap">
         <div class="intro-avatar-circle avatar-1-blue avatar-image-frame section5-hero-avatar-frame">
-            <img src="{{ url_for('static', filename='images/Avatar1.PNG') }}" alt="Avatar 1" class="avatar-portrait" />
+            <img src="/Users/owenpennington/Desktop/Hackathon/career_quiz/static/images/Avatar1.PNG" alt="Avatar 1"
+                class="avatar-portrait" onerror="this.src='{{ url_for('static', filename='images/Avatar1.PNG') }}'" />
         </div>
         <span class="intro-role-subtitle">Academic Foundations Advisor</span>
     </div>
@@ -40,7 +42,7 @@
         </p>
     </div>
 
-    <button type="button" class="submit-btn intro-continue-btn" id="btn-start-section-questions">
+    <button type="button" class="primary-btn intro-continue-btn" id="btn-start-section-questions">
         Continue to Report &rarr;
     </button>
 </div>
@@ -77,8 +79,9 @@
             <div class="section5-avatar-half">
                 <div id="active-avatar-circle"
                     class="avatar-circle avatar-1-blue avatar-image-frame section5-hero-avatar-circle">
-                    <img src="{{ url_for('static', filename='images/Avatar1.PNG') }}" alt="Avatar 1"
-                        class="avatar-portrait section5-hero-portrait" />
+                    <img src="/Users/owenpennington/Desktop/Hackathon/career_quiz/static/images/Avatar1.PNG"
+                        alt="Avatar 1" class="avatar-portrait section5-hero-portrait"
+                        onerror="this.src='{{ url_for('static', filename='images/Avatar1.PNG') }}'" />
                 </div>
                 <span class="avatar-name-tag section5-avatar-tag">Avatar 1 &bull; Academic Foundations Advisor</span>
             </div>
@@ -235,5 +238,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/section5.js', v='110') }}"></script>
+<script src="{{ url_for('static', filename='js/section5.js', v='130') }}"></script>
 {% endblock %}

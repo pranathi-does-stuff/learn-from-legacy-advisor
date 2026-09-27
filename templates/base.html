@@ -12,12 +12,12 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap"
         rel="stylesheet" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='81') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='130') }}" />
     {% block head %}{% endblock %}
 </head>
 
 <body>
-    <div class="page-wrapper">
+    <div class="page-wrapper {% block page_wrapper_class %}{% endblock %}">
         <!-- Hidden Audio Element for reliable playback across pages -->
         <audio id="advisor-audio-element" preload="auto" hidden></audio>
 
@@ -51,7 +51,7 @@
     </div>
 
     <!-- Core Cross-Page Quiz State & Voice Handler -->
-    <script src="{{ url_for('static', filename='js/quiz_state.js', v='80') }}"></script>
+    <script src="{{ url_for('static', filename='js/quiz_state.js', v='130') }}"></script>
     <script>
         (function () {
             var pf = document.getElementById('progress-fill');

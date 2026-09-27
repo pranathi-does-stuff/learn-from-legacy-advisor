@@ -1,22 +1,23 @@
 {% extends "base.html" %}
 
-{% block title %}Section 4 &bull; Skills &amp; Experience &bull; Legacy Advisory{% endblock %}
+{% block title %}Section 4 &bull; Professional Involvement &bull; Legacy Advisory{% endblock %}
 
-{% block progress_label %}Section 4 of 5 &bull; Skills &amp; Experience{% endblock %}
+{% block progress_label %}Section 4 of 5 &bull; Professional Involvement{% endblock %}
 {% block progress_percent %}80%{% endblock %}
+{% block page_wrapper_class %}section1-immersive{% endblock %}
 
 {% block content %}
 <!-- =========================================================================
      STAGE A: STANDALONE AVATAR INTRODUCTION SCREEN
-     Avatar with Dialogue Bubble introducing themself before asking questions
+     Avatar 4 (Purple) introduces Professional Involvement
      ========================================================================= -->
 <div id="section-intro-stage" class="section-intro-stage" data-section="4">
     <div class="intro-avatar-wrapper">
-        <div class="intro-avatar-circle avatar-4-purple">
-            <span class="intro-avatar-glyph">🚀</span>
-            <span class="intro-avatar-badge">A4</span>
+        <div class="intro-avatar-circle avatar-4-purple avatar-image-frame">
+            <img src="/Users/owenpennington/Desktop/Hackathon/career_quiz/static/images/ProfessionalCharacter1.PNG"
+                alt="Avatar 4" class="avatar-portrait"
+                onerror="this.src='{{ url_for('static', filename='images/ProfessionalCharacter1.PNG') }}'" />
         </div>
-        <h2 class="intro-persona-title">Avatar 4 (Purple)</h2>
         <span class="intro-role-subtitle">Career &amp; Industry Strategist</span>
     </div>
 
@@ -38,50 +39,44 @@
             </div>
         </div>
         <p id="advisor-intro-message" class="intro-dialogue-text">
-            Greetings! I am Avatar 4, your Career &amp; Industry Strategist. I benchmark your technical proficiencies,
-            certifications, and internship milestones against alumni with a similar major and an industry inferred
-            from your target industry and career goals. Their profiles appear at the end of this section.
+            Greetings! I am Avatar 4, your Career &amp; Industry Strategist. I evaluate your technical toolsets,
+            experiential milestones, and professional job history against real alumni placement records in Tiger Data to
+            recommend top employers and strategic next steps.
         </p>
     </div>
 
-    <button type="button" class="submit-btn intro-continue-btn" id="btn-start-section-questions">
-        Continue to Skills &amp; Experience &rarr;
+    <button type="button" class="primary-btn intro-continue-btn" id="btn-start-section-questions">
+        Begin Section 4: Questions &rarr;
     </button>
 </div>
 
 <!-- =========================================================================
-     STAGE B: SECTION 4 QUESTIONS & SKILLS
-     Appears after user clicks "Continue to Skills & Experience"
+     STAGE B: SECTION 4 QUESTIONS (CLONED SECTION 1 SPLIT FULLSCREEN LAYOUT)
      ========================================================================= -->
-<div id="section-questions-stage" class="section-questions-stage" hidden>
-    <!-- Top Avatar Dock & Thought Bubble -->
-    <div id="avatar-stage" class="avatar-stage-wrapper">
-        <div class="avatar-dock" aria-label="Advisory Council Avatars">
-            <div class="dock-avatar-indicator" data-avatar="1">
-                <div class="dock-circle dock-blue"></div>
-                <span class="dock-label">Foundations</span>
-            </div>
-            <div class="dock-avatar-indicator" data-avatar="2">
-                <div class="dock-circle dock-green"></div>
-                <span class="dock-label">Courses</span>
-            </div>
-            <div class="dock-avatar-indicator" data-avatar="3">
-                <div class="dock-circle dock-orange"></div>
-                <span class="dock-label">Involvement</span>
-            </div>
-            <div class="dock-avatar-indicator active" data-avatar="4">
-                <div class="dock-circle dock-purple"></div>
-                <span class="dock-label">Career</span>
-            </div>
+<div id="section-questions-stage" class="section-questions-stage section1-fullscreen" hidden>
+    <aside id="avatar-stage" class="section1-avatar-panel" aria-label="Avatar 4, Career & Industry Strategist">
+        <div id="active-avatar-circle" class="avatar-circle avatar-4-purple avatar-image-frame">
+            <img src="/Users/owenpennington/Desktop/Hackathon/career_quiz/static/images/ProfessionalCharacter1.PNG"
+                alt="Avatar 4" class="avatar-portrait"
+                onerror="this.src='{{ url_for('static', filename='images/ProfessionalCharacter1.PNG') }}'" />
         </div>
+    </aside>
 
-        <div class="advisor-interaction-row">
-            <div class="avatar-container">
-                <div id="active-avatar-circle" class="avatar-circle avatar-4-purple">
-                    <span class="avatar-glyph">🚀</span>
-                    <span class="avatar-number-badge">A4</span>
+    <div class="section1-content-panel">
+        <div class="section1-advisor-panel avatar-stage-wrapper">
+            <div class="avatar-dock" aria-label="Advisory Council Avatars">
+                <div class="dock-avatar-indicator" data-avatar="1">
+                    <div class="dock-circle dock-blue"></div><span class="dock-label">Foundations</span>
                 </div>
-                <span class="avatar-name-tag">Avatar 4 (Purple)</span>
+                <div class="dock-avatar-indicator" data-avatar="2">
+                    <div class="dock-circle dock-green"></div><span class="dock-label">Courses</span>
+                </div>
+                <div class="dock-avatar-indicator" data-avatar="3">
+                    <div class="dock-circle dock-orange"></div><span class="dock-label">Involvement</span>
+                </div>
+                <div class="dock-avatar-indicator active" data-avatar="4">
+                    <div class="dock-circle dock-purple"></div><span class="dock-label">Career</span>
+                </div>
             </div>
 
             <div class="thought-bubble-container">
@@ -106,91 +101,331 @@
                     </div>
                     <div class="thought-body">
                         <p id="thought-bubble-text" class="thought-text">
-                                            The skill buttons are examples to help describe your profile. At the end, you can compare
-                                            your skills and experience with alumni matched to your major and an industry inferred from
-                                            your target industry and career goals.
+                            List your technical and soft skills, select the experiential milestones you've completed,
+                            and share your recent roles.
                         </p>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
         <div id="section-4-container" class="interactive-screen">
-            <div id="section4-skills-page">
-        <p class="eyebrow">Section 4 of 5 &bull; Skills &amp; Experience</p>
-        <h2 class="step-heading">Technical Skills, Certifications &amp; Internships</h2>
-        <p class="step-description">
-            Use the skill examples below to describe your background. At the end of this section, alumni profiles
-            matched to your major and an industry inferred from your target industry and career goals will show
-            related skills, internship histories, and career outcomes.
-        </p>
+            <!-- SCREEN 1: GENERAL SKILLS (DYNAMIC TAG-INPUT) -->
+            <div id="substep-general-skills" class="substep-page">
+                <p class="eyebrow">Section 4 of 5 &bull; Question 1 of 3</p>
+                <h2 class="step-heading">What are your general skills?</h2>
+                <p class="step-description">
+                    Add your technical proficiencies, frameworks, programming languages, and soft skills. Type each
+                    skill
+                    and press <kbd>Enter</kbd> or <kbd>,</kbd> to create a tag.
+                </p>
 
-        <!-- Skills & Experience Card -->
-        <div class="course-planner-card" style="margin-bottom: 1.5rem;">
-            <h4 class="card-subtitle">Technical Skills From Similar Alumni</h4>
-            <p id="skill-source-summary" class="card-subtext" aria-live="polite">Loading matched alumni skill examples...</p>
-            <p class="card-subtext">Select the skills that fit you or enter your own below. Full alumni profiles remain at the end of the section.</p>
+                <div class="form-field" style="margin-top: 1.25rem;">
+                    <label class="field-label" for="skills-tag-input">
+                        Your Skills &amp; Proficiencies <span class="required-indicator">Required (at least 1)</span>
+                    </label>
 
-            <div id="quick-skills-container" class="skill-pills-wrap"
-                style="display:flex; flex-wrap:wrap; gap:0.5rem; margin:1rem 0;" aria-live="polite">
-                <span class="card-subtext">Loading skills from matched alumni profiles...</span>
+                    <div class="tag-input-box" onclick="document.getElementById('skills-tag-input').focus()">
+                        <div id="skills-chips-wrapper" class="tag-chips-wrapper"></div>
+                        <input type="text" id="skills-tag-input" class="tag-text-input"
+                            placeholder="Type a skill (e.g., Python, Docker, AWS, React, Communication) and press Enter..."
+                            autocomplete="off" />
+                    </div>
+
+                    <div class="suggested-skills-section" style="margin-top: 1.35rem;">
+                        <label class="field-label" style="font-size:0.8rem; color:var(--text-secondary);">
+                            ⚡ Quick Suggestions (Click to add or remove):
+                        </label>
+                        <div id="suggested-skills-pills" class="skill-pills-wrap"
+                            style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-top:0.5rem;">
+                            <button type="button" class="skill-pill" data-skill="Python">Python</button>
+                            <button type="button" class="skill-pill" data-skill="Java">Java</button>
+                            <button type="button" class="skill-pill" data-skill="C++">C++</button>
+                            <button type="button" class="skill-pill" data-skill="JavaScript">JavaScript</button>
+                            <button type="button" class="skill-pill" data-skill="React">React</button>
+                            <button type="button" class="skill-pill" data-skill="SQL / PostgreSQL">SQL /
+                                PostgreSQL</button>
+                            <button type="button" class="skill-pill" data-skill="AWS">AWS</button>
+                            <button type="button" class="skill-pill" data-skill="Docker">Docker</button>
+                            <button type="button" class="skill-pill" data-skill="Git / GitHub">Git / GitHub</button>
+                            <button type="button" class="skill-pill" data-skill="Machine Learning">Machine
+                                Learning</button>
+                            <button type="button" class="skill-pill" data-skill="Linux">Linux</button>
+                            <button type="button" class="skill-pill" data-skill="Cybersecurity">Cybersecurity</button>
+                            <button type="button" class="skill-pill" data-skill="Leadership">Leadership</button>
+                            <button type="button" class="skill-pill" data-skill="Technical Communication">Technical
+                                Communication</button>
+                            <button type="button" class="skill-pill" data-skill="Project Management">Project
+                                Management</button>
+                        </div>
+                    </div>
+
+                    <p id="skills-required-error" class="required-error" role="alert" hidden></p>
+                </div>
+
+                <div class="form-navigation-row" style="display:flex; justify-content:flex-end; margin-top:2rem;">
+                    <button type="button" class="primary-btn submit-btn" id="btn-to-experience-categories">
+                        Continue to Experience Categories &rarr;
+                    </button>
+                </div>
             </div>
 
-            <div style="margin-top: 1rem;">
-                <label class="field-label" for="user-skills-input">Technical Proficiencies &amp; Certifications (Comma
-                    Separated) <span class="required-indicator">Required</span></label>
-                <input type="text" id="user-skills-input" class="text-input"
-                    placeholder="e.g. Python, AWS, Docker, React, PostgreSQL" required aria-required="true" />
+            <!-- SCREEN 2: EXPERIENCE CATEGORIES (7 EXACT CATEGORIES + DETAIL POPUPS) -->
+            <div id="substep-experience-categories" class="substep-page" hidden>
+                <p class="eyebrow">Section 4 of 5 &bull; Question 2 of 3</p>
+                <h2 class="step-heading">Have you completed or are you currently completing any of the following?</h2>
+                <p class="step-description">
+                    Select all categories that apply. For each selected category, provide your role, organization, and
+                    duration below.
+                </p>
+
+                <div class="experience-categories-wrapper" style="margin-top: 1.25rem;">
+                    <div class="experience-categories-grid" id="experience-categories-grid">
+                        <!-- 1. Internships -->
+                        <div class="experience-category-card" data-category="Internships">
+                            <input type="checkbox" class="experience-cat-checkbox" value="Internships"
+                                id="cat-internships">
+                            <span class="exp-card-icon">💼</span>
+                            <div class="exp-card-content">
+                                <div class="exp-card-title">Internships</div>
+                                <div class="exp-card-desc">Summer or semester industry technical internships at tech,
+                                    defense, finance, or corporate employers.</div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Co-op -->
+                        <div class="experience-category-card" data-category="Co-op">
+                            <input type="checkbox" class="experience-cat-checkbox" value="Co-op" id="cat-coop">
+                            <span class="exp-card-icon">🏢</span>
+                            <div class="exp-card-content">
+                                <div class="exp-card-title">Co-op</div>
+                                <div class="exp-card-desc">Multi-term or rotational full-time experiential work program
+                                    alternating with academic terms.</div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Research -->
+                        <div class="experience-category-card" data-category="Research">
+                            <input type="checkbox" class="experience-cat-checkbox" value="Research" id="cat-research">
+                            <span class="exp-card-icon">🔬</span>
+                            <div class="exp-card-content">
+                                <div class="exp-card-title">Research</div>
+                                <div class="exp-card-desc">Undergraduate lab research, REUs, faculty investigations,
+                                    experiments, or published papers.</div>
+                            </div>
+                        </div>
+
+                        <!-- 4. Tutoring -->
+                        <div class="experience-category-card" data-category="Tutoring">
+                            <input type="checkbox" class="experience-cat-checkbox" value="Tutoring" id="cat-tutoring">
+                            <span class="exp-card-icon">📚</span>
+                            <div class="exp-card-content">
+                                <div class="exp-card-title">Tutoring</div>
+                                <div class="exp-card-desc">Academic tutoring or teaching assistantship in computing,
+                                    mathematics, or foundational courses.</div>
+                            </div>
+                        </div>
+
+                        <!-- 5. Campus Job -->
+                        <div class="experience-category-card" data-category="Campus Job">
+                            <input type="checkbox" class="experience-cat-checkbox" value="Campus Job"
+                                id="cat-campus-job">
+                            <span class="exp-card-icon">🏛️</span>
+                            <div class="exp-card-content">
+                                <div class="exp-card-title">Campus Job</div>
+                                <div class="exp-card-desc">On-campus employment such as IT helpdesk, lab staff, student
+                                    operations, or tech support.</div>
+                            </div>
+                        </div>
+
+                        <!-- 6. Peer Mentoring -->
+                        <div class="experience-category-card" data-category="Peer Mentoring">
+                            <input type="checkbox" class="experience-cat-checkbox" value="Peer Mentoring"
+                                id="cat-peer-mentoring">
+                            <span class="exp-card-icon">🤝</span>
+                            <div class="exp-card-content">
+                                <div class="exp-card-title">Peer Mentoring</div>
+                                <div class="exp-card-desc">Guiding first-year/transfer students, affinity group
+                                    mentorship, or scholar program leadership.</div>
+                            </div>
+                        </div>
+
+                        <!-- 7. Certifications -->
+                        <div class="experience-category-card" data-category="Certifications">
+                            <input type="checkbox" class="experience-cat-checkbox" value="Certifications"
+                                id="cat-certifications">
+                            <span class="exp-card-icon">📜</span>
+                            <div class="exp-card-content">
+                                <div class="exp-card-title">Certifications</div>
+                                <div class="exp-card-desc">Industry credentials such as AWS Certified, CompTIA
+                                    Security+, Azure, Google Cloud, or Cisco.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DYNAMIC POPUP / EXPANDED DETAILS PANELS FOR SELECTED CATEGORIES -->
+                    <div id="category-details-container" class="category-details-container"
+                        style="display:none; flex-direction:column; gap:1.25rem; margin-top:1.5rem;">
+                    </div>
+
+                    <label class="required-response"
+                        style="margin-top: 1.35rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer;">
+                        <input type="checkbox" id="none-experience-categories"> I haven't completed any of these
+                        categories yet.
+                    </label>
+
+                    <p id="experience-categories-error" class="required-error" role="alert" hidden></p>
+                </div>
+
+                <div class="form-navigation-row" style="display:flex; justify-content:space-between; margin-top:2rem;">
+                    <button type="button" class="secondary-btn" id="btn-back-to-skills">&larr; Back</button>
+                    <button type="button" class="primary-btn submit-btn" id="btn-to-job-experience">Continue to Job
+                        Experience
+                        &rarr;</button>
+                </div>
             </div>
 
-            <div style="margin-top: 1rem;">
-                <label class="field-label" for="user-internships-input">Internships, Part-Time Industry Roles, or Prior
-                    Work History <span class="required-indicator">Required response</span></label>
-                <textarea id="user-internships-input" class="text-input" rows="3"
-                    placeholder="e.g., Summer 2025 Software Engineering Intern at Northrop Grumman; Undergrad Research Assistant"></textarea>
-            </div>
-            <label class="required-response"><input type="checkbox" id="no-prior-experience"> I do not have prior work or internship experience yet.</label>
-            <p id="professional-required-error" class="required-error" role="alert" hidden></p>
+            <!-- SCREEN 3: JOB EXPERIENCE (DYNAMIC ROLES) -->
+            <div id="substep-job-experience" class="substep-page" hidden>
+                <p class="eyebrow">Section 4 of 5 &bull; Question 3 of 3</p>
+                <h2 class="step-heading">Tell us about your recent job experience.</h2>
+                <p class="step-description">
+                    Capture recent roles, teaching assistantships, part-time jobs, internships, or campus positions.
+                </p>
 
-            <div style="display:flex; align-items:center; gap:1rem; margin-top:1rem;">
-                <button type="button" class="secondary-btn" id="btn-update-professional">
-                    🔄 Recalculate Career Trajectory Benchmarks
-                </button>
-                <span id="spinner-section-4" class="spinner" hidden aria-hidden="true"></span>
+                <div class="job-experience-wrapper" style="margin-top: 1.25rem;">
+                    <div id="job-roles-container" class="job-roles-container"
+                        style="display:flex; flex-direction:column; gap:1.25rem;"></div>
+
+                    <div
+                        style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:1rem; margin-top:1.35rem; padding-top:1rem; border-top:1px dashed var(--border-subtle);">
+                        <button type="button" class="secondary-btn" id="btn-add-job-role">
+                            + Add another role
+                        </button>
+                        <label class="required-response"
+                            style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer;">
+                            <input type="checkbox" id="no-prior-job-experience"> I do not have prior job experience yet.
+                        </label>
+                    </div>
+
+                    <p id="job-experience-error" class="required-error" role="alert" hidden></p>
+                </div>
+
+                <div class="form-navigation-row"
+                    style="display:flex; justify-content:space-between; align-items:center; margin-top:2rem;">
+                    <button type="button" class="secondary-btn" id="btn-back-to-categories">&larr; Back</button>
+                    <div style="display:flex; align-items:center; gap:1rem;">
+                        <span id="spinner-generate-report" class="spinner" hidden aria-hidden="true"></span>
+                        <button type="button" class="primary-btn submit-btn" id="btn-submit-professional-report">
+                            Submit &amp; Generate Career Report &rarr;
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     STAGE C: SECTION 4 FINAL REPORT (CLONED SPLIT FULLSCREEN LAYOUT)
+     ========================================================================= -->
+<div id="section-report-stage" class="section-questions-stage section1-fullscreen" hidden>
+    <aside id="avatar-stage-report" class="section1-avatar-panel" aria-label="Avatar 4, Career & Industry Strategist">
+        <div class="avatar-circle avatar-4-purple avatar-image-frame">
+            <img src="/Users/owenpennington/Desktop/Hackathon/career_quiz/static/images/ProfessionalCharacter1.PNG"
+                alt="Avatar 4" class="avatar-portrait"
+                onerror="this.src='{{ url_for('static', filename='images/ProfessionalCharacter1.PNG') }}'" />
+        </div>
+    </aside>
+
+    <div class="section1-content-panel">
+        <div class="section1-advisor-panel avatar-stage-wrapper">
+            <div class="avatar-dock" aria-label="Advisory Council Avatars">
+                <div class="dock-avatar-indicator" data-avatar="1">
+                    <div class="dock-circle dock-blue"></div><span class="dock-label">Foundations</span>
+                </div>
+                <div class="dock-avatar-indicator" data-avatar="2">
+                    <div class="dock-circle dock-green"></div><span class="dock-label">Courses</span>
+                </div>
+                <div class="dock-avatar-indicator" data-avatar="3">
+                    <div class="dock-circle dock-orange"></div><span class="dock-label">Involvement</span>
+                </div>
+                <div class="dock-avatar-indicator active" data-avatar="4">
+                    <div class="dock-circle dock-purple"></div><span class="dock-label">Career</span>
+                </div>
+            </div>
+
+            <div class="thought-bubble-container">
+                <div class="thought-bubble" id="report-thought-bubble">
+                    <div class="thought-header">
+                        <div class="thought-speaker-info">
+                            <span class="thought-badge-dot"
+                                style="background-color:var(--avatar-purple); box-shadow:0 0 6px var(--avatar-purple);"></span>
+                            <span class="thought-persona-title" style="color:var(--avatar-purple);">Career &amp;
+                                Industry Strategist</span>
+                        </div>
+                    </div>
+                    <div class="thought-body">
+                        <p id="report-thought-bubble-text" class="thought-text">
+                            Analyzing your skills and career milestones against Tiger Data alumni records...
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="nav-button-row" style="display:flex; justify-content:flex-end; margin-top:2rem;">
-            <button type="button" class="submit-btn" id="btn-view-related-alumni">
-                View Related Alumni Profiles &rarr;
-            </button>
-        </div>
-      </div>
+        <div id="section-4-report-container" class="interactive-screen">
+            <p class="eyebrow">Section 4 Report &bull; Career &amp; Industry Trajectory</p>
+            <h2 class="step-heading">Recommended Companies, Industries &amp; Next Steps</h2>
+            <p class="step-description">
+                Grounded in successful alumni outcomes matching your technical skills, experience profile, and target
+                career path.
+            </p>
 
-      <div id="section4-alumni-page" hidden>
-        <p class="eyebrow">Section 4 of 5 &bull; Career Benchmarks</p>
-        <h2 class="step-heading">Alumni With Related Career Paths</h2>
-        <p class="step-description">These profiles are matched by major and an industry inferred from your target industry and career goals.</p>
-
-        <div id="section-4-matches-container" class="matches-data-container">
-            <div class="matches-header">
-                <span class="matches-subtitle">Compare their technical skills, internship histories, and career outcomes with your own.</span>
+            <!-- Recommended Companies Showcase -->
+            <div class="prof-report-card" style="margin-top: 1.5rem;">
+                <div class="card-subtitle" style="font-size:1.1rem; font-weight:600; margin-bottom:0.5rem;">🏢
+                    Recommended Companies &amp; Target Employers</div>
+                <p class="card-subtext" style="font-size:0.88rem; color:var(--text-secondary); margin-bottom:1rem;">
+                    Employers from Tiger Data that actively hire students with your skill portfolio and experience
+                    background:
+                </p>
+                <div id="recommended-companies-grid" class="companies-showcase-grid"></div>
             </div>
-            <div id="section-4-matches-grid" class="alumni-match-grid"></div>
 
-            <div class="nav-button-row" style="display:flex; justify-content:space-between; margin-top:2rem;">
-                <button type="button" class="secondary-btn" id="btn-back-to-skills">&larr; Back to Skills &amp; Experience</button>
-                <button type="button" class="submit-btn" id="btn-next-to-section-5">
+            <!-- Opportunities to Pursue -->
+            <div class="prof-report-card" style="margin-top: 1.5rem;">
+                <div class="card-subtitle" style="font-size:1.1rem; font-weight:600; margin-bottom:0.5rem;">🎯
+                    Opportunities to Pursue Next</div>
+                <p class="card-subtext" style="font-size:0.88rem; color:var(--text-secondary); margin-bottom:1rem;">
+                    High-ROI experiential milestones, recruiting sprint windows, and credentials to target next:
+                </p>
+                <div id="opportunities-grid" class="opportunities-grid"></div>
+            </div>
+
+            <!-- Alumni Matches -->
+            <div class="prof-report-card" style="margin-top: 1.5rem;">
+                <div class="card-subtitle" style="font-size:1.1rem; font-weight:600; margin-bottom:0.5rem;">👥 Top
+                    Alumni Career Trajectory Benchmarks</div>
+                <p class="card-subtext" style="font-size:0.88rem; color:var(--text-secondary); margin-bottom:1rem;">
+                    Compare your technical skills and internship progression with top-earning alumni in your target
+                    industry:
+                </p>
+                <div id="section-4-matches-grid" class="alumni-match-grid"></div>
+            </div>
+
+            <!-- Proceed to Section 5 Navigation -->
+            <div class="form-navigation-row"
+                style="margin-top:2.5rem; margin-bottom:1rem; display: flex; justify-content: flex-end;">
+                <button type="button" class="primary-btn submit-btn" id="btn-next-to-section-5">
                     Proceed to Section 5: Synthesis &amp; Final Report &rarr;
                 </button>
             </div>
         </div>
-      </div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/section4.js', v='40') }}"></script>
+<script src="{{ url_for('static', filename='js/section4.js', v='130') }}"></script>
 {% endblock %}

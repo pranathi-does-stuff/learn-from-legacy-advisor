@@ -22,12 +22,17 @@ const DEFAULT_QUIZ_STATE = {
         selectedActivities: [],
         customActivity: "",
         skills: "",
+        skillsList: [],
+        experienceCategories: [],
+        categoryDetails: {},
+        jobRoles: [],
         internships: "",
         noRequiredCourses: false,
         noElectives: false,
         noPlannedCourses: false,
         noCurrentActivities: false,
         noPriorExperience: false,
+        noPriorJobExperience: false,
     },
     sections: {
         1: null,
@@ -201,7 +206,7 @@ const QuizApp = {
                     this.setAudioWavesVisual(false);
                 };
 
-                audioEl.onerror = (err) => {
+                audioEl.onerror = () => {
                     this.setAudioWavesVisual(false);
                     this.currentAudio = null;
                     window.currentAudio = null;
@@ -213,6 +218,18 @@ const QuizApp = {
                     playPromise.catch((err) => {
                         console.log("Audio autoplay prevented or error:", err);
                         this.setAudioWavesVisual(false);
+
+                        // If autoplay blocked by browser policy, queue playback on first user interaction
+                        const unlockHandler = () => {
+                            document.removeEventListener("pointerdown", unlockHandler);
+                            document.removeEventListener("click", unlockHandler);
+                            audioEl.play().then(() => {
+                                this.setAudioWavesVisual(true);
+                            }).catch(() => { });
+                        };
+                        document.addEventListener("pointerdown", unlockHandler, { once: true });
+                        document.addEventListener("click", unlockHandler, { once: true });
+
                         resolve(false);
                     });
                 }
@@ -229,6 +246,11 @@ const QuizApp = {
             if (!("speechSynthesis" in window) || !text) return resolve(false);
 
             try {
+                if (window.speechSynthesis.paused) {
+                    window.speechSynthesis.resume();
+                }
+                window.speechSynthesis.cancel();
+
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.rate = 1.0;
 
@@ -264,16 +286,55 @@ const QuizApp = {
         }
     },
 
+    async playAvatarDialogue(text, avatarNum = 1) {
+        if (!text) return;
+        this.avatarSayTextOnly(text, avatarNum);
+
+        // Attempt server-side ElevenLabs audio generation
+        try {
+            const res = await fetch("/api/section-voice", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: text, avatar_num: avatarNum }),
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.audio) {
+                    const played = await this.playBase64Audio(data.audio);
+                    if (played) return;
+                }
+            }
+        } catch (_e) { }
+
+        // Fallback to Web Speech API
+        await this.speakWebSpeech(text, avatarNum);
+    },
+
     avatarSayTextOnly(text, avatarNum) {
-        const bubble = document.getElementById("thought-bubble");
+        const introMsg = document.getElementById("advisor-intro-message");
+        if (introMsg) {
+            introMsg.textContent = text;
+        }
         const bubbleText = document.getElementById("thought-bubble-text");
         if (bubbleText) {
             bubbleText.textContent = text;
         }
+        const reportBubbleText = document.getElementById("report-thought-bubble-text");
+        if (reportBubbleText) {
+            reportBubbleText.textContent = text;
+        }
+
+        const bubble = document.getElementById("thought-bubble");
         if (bubble) {
             bubble.classList.remove("pop");
             void bubble.offsetWidth;
             bubble.classList.add("pop");
+        }
+        const reportBubble = document.getElementById("report-thought-bubble");
+        if (reportBubble) {
+            reportBubble.classList.remove("pop");
+            void reportBubble.offsetWidth;
+            reportBubble.classList.add("pop");
         }
     },
 
@@ -320,16 +381,25 @@ const QuizApp = {
         internshipsInput: (val) => `Logged work experience: "${val}". Internships correlate with 40%+ higher starting offers.`,
     },
 
-    bindVoiceReplayListeners() {
-        const replayBtn = document.getElementById("voice-replay-btn") || document.getElementById("intro-replay-voice-btn");
+    bindVoiceReplayListeners(avatarNum = 1) {
+        const replayBtn = document.getElementById("voice-replay-btn");
         if (replayBtn) {
-            replayBtn.addEventListener("click", () => {
-                const bubbleText = document.getElementById("thought-bubble-text") || document.getElementById("advisor-intro-message");
+            replayBtn.onclick = () => {
+                const bubbleText = document.getElementById("thought-bubble-text") || document.getElementById("report-thought-bubble-text");
                 const text = bubbleText ? bubbleText.textContent.trim() : "";
                 if (text) {
-                    this.speakWebSpeech(text, 1);
+                    this.playAvatarDialogue(text, avatarNum);
                 }
-            });
+            };
+        }
+        const introReplayBtn = document.getElementById("intro-replay-voice-btn");
+        if (introReplayBtn) {
+            introReplayBtn.onclick = () => {
+                const introText = document.getElementById("advisor-intro-message")?.textContent?.trim() || "";
+                if (introText) {
+                    this.playAvatarDialogue(introText, avatarNum);
+                }
+            };
         }
     },
 };

@@ -4,6 +4,7 @@
 
 {% block progress_label %}Section 2 of 5 &bull; Course Advising{% endblock %}
 {% block progress_percent %}40%{% endblock %}
+{% block page_wrapper_class %}section1-immersive{% endblock %}
 
 {% block content %}
 <!-- =========================================================================
@@ -12,11 +13,11 @@
      ========================================================================= -->
 <div id="section-intro-stage" class="section-intro-stage" data-section="2">
     <div class="intro-avatar-wrapper">
-        <div class="intro-avatar-circle avatar-2-green">
-            <span class="intro-avatar-glyph">📚</span>
-            <span class="intro-avatar-badge">A2</span>
+        <div class="intro-avatar-circle avatar-2-green avatar-image-frame">
+            <img src="/Users/owenpennington/Desktop/Hackathon/career_quiz/static/images/AvatarFemaleCampusInvolvement.PNG"
+                alt="Avatar 2" class="avatar-portrait"
+                onerror="this.src='{{ url_for('static', filename='images/AvatarFemaleCampusInvolvement.PNG') }}'" />
         </div>
-        <h2 class="intro-persona-title">Avatar 2 (Green)</h2>
         <span class="intro-role-subtitle">Course Advising Specialist</span>
     </div>
 
@@ -43,176 +44,42 @@
         </p>
     </div>
 
-    <button type="button" class="submit-btn intro-continue-btn" id="btn-start-section-questions">
+    <button type="button" class="primary-btn intro-continue-btn" id="btn-start-section-questions">
         Begin Section 2: Questions &rarr;
     </button>
 </div>
 
 <!-- =========================================================================
-     STAGE B: SEQUENTIAL 3-QUESTION FLOW (One Question per Screen)
-     Recommendations & matches suppressed until final report!
+     STAGE B: SECTION 2 QUESTIONS (CLONED SECTION 1 SPLIT FULLSCREEN LAYOUT)
      ========================================================================= -->
-<div id="section-questions-stage" class="section-questions-stage" hidden>
-    <div id="section-2-container" class="interactive-screen">
-
-        <!-- =================================================================
-             SCREEN 1: REQUIRED COURSES CHECKLIST
-             ================================================================= -->
-        <div id="substep-required-courses" class="substep-block">
-            <div class="step-badge-row">
-                <span class="step-pill">Section 2 of 5</span>
-                <span class="step-pill active-pill">Question 1 of 3</span>
-            </div>
-            <h2 class="step-heading">Have you taken any of these required courses? <span
-                    class="required-indicator">Required response</span></h2>
-            <p class="step-description">
-                Check off all core courses you have completed or are currently taking for <strong
-                    id="student-major-label" style="color:var(--accent-gold);">your major</strong>:
-            </p>
-
-            <div id="required-loading-spinner" class="loading-state-container"
-                style="display:flex; align-items:center; gap:0.75rem; padding:1.5rem 0;">
-                <span class="spinner"></span>
-                <span style="color:var(--text-secondary); font-size:0.9rem;">Loading required core curriculum from Tiger
-                    Data...</span>
-            </div>
-
-            <div id="required-courses-grid" class="course-checklist-grid" style="margin-top: 1rem;"></div>
-            <label class="required-response"><input type="checkbox" id="none-required-courses"> I have not taken any of
-                these courses.</label>
-            <p id="required-courses-error" class="required-error" role="alert" hidden></p>
-
-            <div class="nav-button-row" style="margin-top: 2rem; display: flex; justify-content: flex-end;">
-                <button type="button" class="submit-btn" id="btn-to-electives">
-                    Continue to Electives &rarr;
-                </button>
-            </div>
+<div id="section-questions-stage" class="section-questions-stage section1-fullscreen" hidden>
+    <aside id="avatar-stage" class="section1-avatar-panel" aria-label="Avatar 2, Course Advising Specialist">
+        <div id="active-avatar-circle" class="avatar-circle avatar-2-green avatar-image-frame">
+            <img src="/Users/owenpennington/Desktop/Hackathon/career_quiz/static/images/AvatarFemaleCampusInvolvement.PNG"
+                alt="Avatar 2" class="avatar-portrait"
+                onerror="this.src='{{ url_for('static', filename='images/AvatarFemaleCampusInvolvement.PNG') }}'" />
         </div>
+    </aside>
 
-        <!-- =================================================================
-             SCREEN 2: POPULAR ELECTIVES CHECKLIST
-             ================================================================= -->
-        <div id="substep-electives" class="substep-block" hidden>
-            <div class="step-badge-row">
-                <span class="step-pill">Section 2 of 5</span>
-                <span class="step-pill active-pill">Question 2 of 3</span>
-            </div>
-            <h2 class="step-heading" id="electives-question-heading">Which of these electives have you taken? <span
-                    class="required-indicator">Required response</span></h2>
-            <p class="step-description">
-                Select any non-required electives you have taken from the most popular courses among successful alumni
-                in <strong id="student-industry-label" style="color:var(--accent-emerald);">your target field</strong>:
-            </p>
-
-            <div id="electives-loading-spinner" class="loading-state-container"
-                style="display:none; align-items:center; gap:0.75rem; padding:1.5rem 0;">
-                <span class="spinner"></span>
-                <span style="color:var(--text-secondary); font-size:0.9rem;">Benchmarking popular electives...</span>
-            </div>
-
-            <div id="popular-electives-grid" class="course-checklist-grid" style="margin-top: 1rem;"></div>
-
-            <div class="course-planner-card"
-                style="margin-top: 1.5rem; background:var(--bg-elevated); padding:1.25rem; border-radius:8px; border:1px solid var(--border-subtle);">
-                <label class="field-label" for="custom-electives-input"
-                    style="font-weight:600; margin-bottom:0.4rem; display:block;">Other Electives or Special Topics
-                    Taken (Comma-separated, Optional)</label>
-                <input type="text" id="custom-electives-input" class="text-input"
-                    placeholder="e.g. CMSC 491 (Deep Learning), MATH 221, ENGL 393" />
-            </div>
-            <label class="required-response"><input type="checkbox" id="none-electives"> I have not taken any of these
-                or other electives.</label>
-            <p id="electives-error" class="required-error" role="alert" hidden></p>
-
-            <div class="nav-button-row" style="margin-top: 2rem; display: flex; justify-content: space-between;">
-                <button type="button" class="secondary-btn" id="btn-back-to-required">&larr; Back to Required</button>
-                <button type="button" class="submit-btn" id="btn-to-planned">
-                    Continue to Planned Courses &rarr;
-                </button>
-            </div>
-        </div>
-
-        <!-- =================================================================
-             SCREEN 3: PLANNED COURSES SELECTION (AUTOCOMPLETE SEARCH BAR)
-             ================================================================= -->
-        <div id="substep-planned" class="substep-block" hidden>
-            <div class="step-badge-row">
-                <span class="step-pill">Section 2 of 5</span>
-                <span class="step-pill active-pill">Question 3 of 3</span>
-            </div>
-            <h2 class="step-heading">What classes are you planning on taking? <span class="required-indicator">Required
-                    response</span></h2>
-            <p class="step-description">
-                Search and select upcoming courses from the catalog to build your planned graduation schedule:
-            </p>
-            <p id="zero-credit-course-note" class="step-description" hidden>
-                Since you have zero completed credits, the questions about courses already taken are skipped.
-            </p>
-
-            <div class="course-planner-card"
-                style="margin-top: 1.25rem; background:var(--bg-elevated); padding:1.5rem; border-radius:8px; border:1px solid var(--border-subtle);">
-                <label class="field-label" for="planned-course-search"
-                    style="font-weight:600; margin-bottom:0.5rem; display:block;">Search Course Catalog <span
-                        class="required-indicator">Required</span></label>
-                <div class="autocomplete-search-wrapper">
-                    <input type="text" id="planned-course-search" class="autocomplete-search-input"
-                        placeholder="Type course code or name (e.g. CMSC 471, Machine Learning, Database)..."
-                        autocomplete="off" />
-                    <div id="autocomplete-dropdown" class="autocomplete-dropdown-menu" hidden></div>
+    <div class="section1-content-panel">
+        <div class="section1-advisor-panel avatar-stage-wrapper">
+            <div class="avatar-dock" aria-label="Advisory Council Avatars">
+                <div class="dock-avatar-indicator" data-avatar="1">
+                    <div class="dock-circle dock-blue"></div>
+                    <span class="dock-label">Foundations</span>
                 </div>
-
-                <div id="planned-courses-chips" class="planned-courses-chips"></div>
-            </div>
-            <p id="planned-courses-error" class="required-error" role="alert" hidden></p>
-
-            <div class="nav-button-row"
-                style="margin-top: 2rem; display: flex; justify-content: space-between; align-items:center;">
-                <button type="button" class="secondary-btn" id="btn-back-to-electives">&larr; Back to Electives</button>
-                <div style="display:flex; align-items:center; gap:1rem;">
-                    <span id="spinner-generate-report" class="spinner" hidden aria-hidden="true"></span>
-                    <button type="button" class="submit-btn" id="btn-submit-course-report">
-                        Submit &amp; Generate Course Report &rarr;
-                    </button>
+                <div class="dock-avatar-indicator active" data-avatar="2">
+                    <div class="dock-circle dock-green"></div>
+                    <span class="dock-label">Courses</span>
                 </div>
-            </div>
-        </div>
-
-    </div>
-</div>
-
-<!-- =========================================================================
-     STAGE C: SECTION 2 FINAL REPORT
-     Rendered ONLY after Question 3 is submitted
-     ========================================================================= -->
-<div id="section-report-stage" class="section-report-stage" hidden>
-    <!-- Top Avatar Dock & Advisor Thought Bubble -->
-    <div id="avatar-stage" class="avatar-stage-wrapper">
-        <div class="avatar-dock" aria-label="Advisory Council Avatars">
-            <div class="dock-avatar-indicator" data-avatar="1">
-                <div class="dock-circle dock-blue"></div>
-                <span class="dock-label">Foundations</span>
-            </div>
-            <div class="dock-avatar-indicator active" data-avatar="2">
-                <div class="dock-circle dock-green"></div>
-                <span class="dock-label">Courses</span>
-            </div>
-            <div class="dock-avatar-indicator" data-avatar="3">
-                <div class="dock-circle dock-orange"></div>
-                <span class="dock-label">Involvement</span>
-            </div>
-            <div class="dock-avatar-indicator" data-avatar="4">
-                <div class="dock-circle dock-purple"></div>
-                <span class="dock-label">Career</span>
-            </div>
-        </div>
-
-        <div class="advisor-interaction-row">
-            <div class="avatar-container">
-                <div id="active-avatar-circle" class="avatar-circle avatar-2-green">
-                    <span class="avatar-glyph">📚</span>
-                    <span class="avatar-number-badge">A2</span>
+                <div class="dock-avatar-indicator" data-avatar="3">
+                    <div class="dock-circle dock-orange"></div>
+                    <span class="dock-label">Involvement</span>
                 </div>
-                <span class="avatar-name-tag">Avatar 2 (Green)</span>
+                <div class="dock-avatar-indicator" data-avatar="4">
+                    <div class="dock-circle dock-purple"></div>
+                    <span class="dock-label">Career</span>
+                </div>
             </div>
 
             <div class="thought-bubble-container">
@@ -237,38 +104,200 @@
                     </div>
                     <div class="thought-body">
                         <p id="thought-bubble-text" class="thought-text">
-                            Avatar 2 is evaluating your completed and planned courses against required degree milestones
-                            and top alumni outcomes.
+                            Select any completed core coursework and electives, then search the catalog to plan future
+                            semesters.
                         </p>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="interactive-screen">
-        <p class="eyebrow">Section 2 of 5 &bull; Course Advising Report</p>
-        <h2 class="step-heading">Course Trajectory &amp; Curriculum Analysis</h2>
-        <p class="step-description">
-            Direct comparative breakdown of your coursework against historical alumni records in Tiger Data:
-        </p>
+        <div id="section-2-container" class="interactive-screen">
+            <!-- SCREEN 1: REQUIRED COURSES CHECKLIST -->
+            <div id="substep-required-courses" class="substep-block">
+                <p class="eyebrow">Section 2 of 5 &bull; Question 1 of 3</p>
+                <h2 class="step-heading">Have you taken any of these required courses? <span
+                        class="required-indicator">Required response</span></h2>
+                <p class="step-description">
+                    Check off all core courses you have completed or are currently taking for <strong
+                        id="student-major-label" style="color:var(--accent-gold);">your major</strong>:
+                </p>
 
-        <!-- Dynamic 5-Card Class Analysis Breakdown -->
-        <div id="class-analysis-container" class="class-analysis-container" style="margin-top: 1.5rem;"></div>
+                <div id="required-loading-spinner" class="loading-state-container"
+                    style="display:flex; align-items:center; gap:0.75rem; padding:1.5rem 0;">
+                    <span class="spinner"></span>
+                    <span style="color:var(--text-secondary); font-size:0.9rem;">Loading required core curriculum from
+                        Tiger Data...</span>
+                </div>
 
-        <!-- Top 3 Alumni Matches Display at the Very Bottom -->
-        <div id="section-2-matches-container" class="matches-data-container" style="margin-top: 2.5rem;">
-            <div class="matches-header">
-                <h3 class="matches-title">Top 3 Student &amp; Alumni Coursework Matches</h3>
-                <span class="matches-subtitle">Graduates who shared your exact foundational course sequence and target
-                    industry</span>
+                <div id="required-courses-grid" class="course-checklist-grid" style="margin-top: 1rem;"></div>
+                <label class="required-response"
+                    style="margin-top: 1rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer;">
+                    <input type="checkbox" id="none-required-courses"> I have not taken any of these courses.
+                </label>
+                <p id="required-courses-error" class="required-error" role="alert" hidden></p>
+
+                <div class="form-navigation-row" style="margin-top: 2rem; display: flex; justify-content: flex-end;">
+                    <button type="button" class="primary-btn submit-btn" id="btn-to-electives">
+                        Continue to Electives &rarr;
+                    </button>
+                </div>
             </div>
-            <div id="section-2-matches-grid" class="alumni-match-grid"></div>
 
-            <div class="nav-button-row" style="display: flex; justify-content: flex-end; margin-top: 2rem;">
-                <button type="button" class="submit-btn" id="btn-next-to-section-3">
-                    Proceed to Section 3: Campus Involvement &rarr;
-                </button>
+            <!-- SCREEN 2: POPULAR ELECTIVES CHECKLIST -->
+            <div id="substep-electives" class="substep-block" hidden>
+                <p class="eyebrow">Section 2 of 5 &bull; Question 2 of 3</p>
+                <h2 class="step-heading" id="electives-question-heading">Which of these electives have you taken? <span
+                        class="required-indicator">Required response</span></h2>
+                <p class="step-description">
+                    Select any non-required electives you have taken from the most popular courses among successful
+                    alumni in <strong id="student-industry-label" style="color:var(--accent-emerald);">your target
+                        field</strong>:
+                </p>
+
+                <div id="electives-loading-spinner" class="loading-state-container"
+                    style="display:none; align-items:center; gap:0.75rem; padding:1.5rem 0;">
+                    <span class="spinner"></span>
+                    <span style="color:var(--text-secondary); font-size:0.9rem;">Benchmarking popular
+                        electives...</span>
+                </div>
+
+                <div id="popular-electives-grid" class="course-checklist-grid" style="margin-top: 1rem;"></div>
+
+                <div class="form-field" style="margin-top: 1.5rem;">
+                    <label class="field-label" for="custom-electives-input">Other Electives or Special Topics Taken
+                        (Comma-separated, Optional)</label>
+                    <input type="text" id="custom-electives-input" class="text-input"
+                        placeholder="e.g. CMSC 491 (Deep Learning), MATH 221, ENGL 393" />
+                </div>
+                <label class="required-response"
+                    style="margin-top: 1rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer;">
+                    <input type="checkbox" id="none-electives"> I have not taken any of these or other electives.
+                </label>
+                <p id="electives-error" class="required-error" role="alert" hidden></p>
+
+                <div class="form-navigation-row"
+                    style="margin-top: 2rem; display: flex; justify-content: space-between;">
+                    <button type="button" class="secondary-btn" id="btn-back-to-required">&larr; Back</button>
+                    <button type="button" class="primary-btn submit-btn" id="btn-to-planned">
+                        Continue to Planned Courses &rarr;
+                    </button>
+                </div>
+            </div>
+
+            <!-- SCREEN 3: PLANNED COURSES SELECTION -->
+            <div id="substep-planned" class="substep-block" hidden>
+                <p class="eyebrow">Section 2 of 5 &bull; Question 3 of 3</p>
+                <h2 class="step-heading">What classes are you planning on taking? <span
+                        class="required-indicator">Required response</span></h2>
+                <p class="step-description">
+                    Search and select upcoming courses from the catalog to build your planned graduation schedule:
+                </p>
+                <p id="zero-credit-course-note" class="step-description" hidden>
+                    Since you have zero completed credits, the questions about courses already taken are skipped.
+                </p>
+
+                <div class="form-field" style="margin-top: 1.25rem;">
+                    <label class="field-label" for="planned-course-search">Search Course Catalog <span
+                            class="required-indicator">Required</span></label>
+                    <div class="autocomplete-search-wrapper">
+                        <input type="text" id="planned-course-search" class="text-input autocomplete-search-input"
+                            placeholder="Type course code or name (e.g. CMSC 471, Machine Learning, Database)..."
+                            autocomplete="off" />
+                        <div id="autocomplete-dropdown" class="autocomplete-dropdown-menu" hidden></div>
+                    </div>
+
+                    <div id="planned-courses-chips" class="planned-courses-chips" style="margin-top: 0.75rem;"></div>
+                </div>
+                <p id="planned-courses-error" class="required-error" role="alert" hidden></p>
+
+                <div class="form-navigation-row"
+                    style="margin-top: 2rem; display: flex; justify-content: space-between; align-items:center;">
+                    <button type="button" class="secondary-btn" id="btn-back-to-electives">&larr; Back</button>
+                    <div style="display:flex; align-items:center; gap:1rem;">
+                        <span id="spinner-generate-report" class="spinner" hidden aria-hidden="true"></span>
+                        <button type="button" class="primary-btn submit-btn" id="btn-submit-course-report">
+                            Submit &amp; Generate Course Report &rarr;
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     STAGE C: SECTION 2 FINAL REPORT (CLONED SPLIT LAYOUT)
+     ========================================================================= -->
+<div id="section-report-stage" class="section-questions-stage section1-fullscreen" hidden>
+    <aside id="avatar-stage-report" class="section1-avatar-panel" aria-label="Avatar 2, Course Advising Specialist">
+        <div class="avatar-circle avatar-2-green avatar-image-frame">
+            <img src="/Users/owenpennington/Desktop/Hackathon/career_quiz/static/images/AvatarFemaleCampusInvolvement.PNG"
+                alt="Avatar 2" class="avatar-portrait"
+                onerror="this.src='{{ url_for('static', filename='images/AvatarFemaleCampusInvolvement.PNG') }}'" />
+        </div>
+    </aside>
+
+    <div class="section1-content-panel">
+        <div class="section1-advisor-panel avatar-stage-wrapper">
+            <div class="avatar-dock" aria-label="Advisory Council Avatars">
+                <div class="dock-avatar-indicator" data-avatar="1">
+                    <div class="dock-circle dock-blue"></div><span class="dock-label">Foundations</span>
+                </div>
+                <div class="dock-avatar-indicator active" data-avatar="2">
+                    <div class="dock-circle dock-green"></div><span class="dock-label">Courses</span>
+                </div>
+                <div class="dock-avatar-indicator" data-avatar="3">
+                    <div class="dock-circle dock-orange"></div><span class="dock-label">Involvement</span>
+                </div>
+                <div class="dock-avatar-indicator" data-avatar="4">
+                    <div class="dock-circle dock-purple"></div><span class="dock-label">Career</span>
+                </div>
+            </div>
+
+            <div class="thought-bubble-container">
+                <div class="thought-bubble" id="report-thought-bubble">
+                    <div class="thought-header">
+                        <div class="thought-speaker-info">
+                            <span class="thought-badge-dot"
+                                style="background-color:var(--avatar-green); box-shadow:0 0 6px var(--avatar-green);"></span>
+                            <span class="thought-persona-title" style="color:var(--avatar-green);">Course Advising
+                                Specialist</span>
+                        </div>
+                    </div>
+                    <div class="thought-body">
+                        <p class="thought-text" id="report-thought-bubble-text">
+                            Coursework evaluation complete. Here is your curriculum alignment and alumni benchmarks.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="interactive-screen">
+            <p class="eyebrow">Section 2 of 5 &bull; Course Advising Report</p>
+            <h2 class="step-heading">Course Trajectory &amp; Curriculum Analysis</h2>
+            <p class="step-description">
+                Direct comparative breakdown of your coursework against historical alumni records in Tiger Data:
+            </p>
+
+            <!-- Dynamic 5-Card Class Analysis Breakdown -->
+            <div id="class-analysis-container" class="class-analysis-container" style="margin-top: 1.5rem;"></div>
+
+            <!-- Top 3 Alumni Matches Display at the Very Bottom -->
+            <div id="section-2-matches-container" class="matches-data-container" style="margin-top: 2.5rem;">
+                <div class="matches-header">
+                    <h3 class="matches-title">Top 3 Student &amp; Alumni Coursework Matches</h3>
+                    <span class="matches-subtitle">Graduates who shared your exact foundational course sequence and
+                        target industry</span>
+                </div>
+                <div id="section-2-matches-grid" class="alumni-match-grid"></div>
+
+                <div class="form-navigation-row" style="display: flex; justify-content: flex-end; margin-top: 2rem;">
+                    <button type="button" class="primary-btn submit-btn" id="btn-next-to-section-3">
+                        Proceed to Section 3: Campus Involvement &rarr;
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -276,5 +305,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/section2.js', v='55') }}"></script>
+<script src="{{ url_for('static', filename='js/section2.js', v='130') }}"></script>
 {% endblock %}

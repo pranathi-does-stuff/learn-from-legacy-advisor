@@ -89,7 +89,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Play Avatar 2 Intro Speech
     setTimeout(async () => {
         try {
-            await QuizApp.playReportAudio(introText, null, 2);
+            await QuizApp.playAvatarDialogue(introText, 2);
         } catch (e) {
             console.log("Intro audio playback:", e);
         }
@@ -97,11 +97,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (introReplayBtn) {
         introReplayBtn.addEventListener("click", () => {
-            QuizApp.playReportAudio(introText, null, 2);
+            QuizApp.playAvatarDialogue(introText, 2);
         });
     }
 
-    // Begin Section Button (Removes intro stage & opens Screen 1)
+    // Begin Section Button (Removes intro stage & opens Screen 1 in split layout)
     if (btnStartQuestions) {
         btnStartQuestions.addEventListener("click", () => {
             QuizApp.stopAllSpeech();
@@ -111,7 +111,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (questionsStage) {
                 questionsStage.hidden = false;
                 questionsStage.removeAttribute("hidden");
-                questionsStage.style.display = "block";
+                questionsStage.style.display = "grid";
+                document.querySelector(".page-wrapper")?.classList.add("section1-immersive");
+                window.scrollTo({ top: 0, behavior: "smooth" });
                 if (hasZeroCompletedCredits) {
                     takenRequired.clear();
                     takenElectives.clear();
@@ -126,8 +128,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                         noElectives: true,
                     });
                     showSubstep(subPlanned);
+                    QuizApp.playAvatarDialogue("Since you are just starting out with 0 completed credits, let's plan the courses you want to take next.", 2);
                 } else {
                     showSubstep(subRequired);
+                    QuizApp.playAvatarDialogue("Let's review the required core courses for your major. Check off any that you have completed.", 2);
                 }
             }
             loadCourseOptions();
@@ -417,12 +421,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
             QuizApp.updateUserData({ takenRequiredCourses: Array.from(takenRequired), noRequiredCourses: Boolean(noneRequiredCheckbox?.checked) });
             showSubstep(subElectives);
+            QuizApp.playAvatarDialogue("Great, now let's look at your electives.", 2);
         });
     }
 
     if (btnBackToRequired) {
         btnBackToRequired.addEventListener("click", () => {
             showSubstep(subRequired);
+            QuizApp.playAvatarDialogue("Review or update your required core coursework.", 2);
         });
     }
 
@@ -444,12 +450,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
             QuizApp.updateUserData({ takenElectives: Array.from(takenElectives), noElectives: Boolean(noneElectivesCheckbox?.checked) });
             showSubstep(subPlanned);
+            QuizApp.playAvatarDialogue("Excellent. Now search and select upcoming courses from the catalog to build your planned schedule.", 2);
         });
     }
 
     if (btnBackToElectives) {
         btnBackToElectives.addEventListener("click", () => {
             showSubstep(subElectives);
+            QuizApp.playAvatarDialogue("Review or update your elective selections.", 2);
         });
     }
 
@@ -486,7 +494,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     const reportData = await res.json();
                     QuizApp.saveSectionData(2, reportData);
 
-                    // Hide Question Stage & Reveal Section 2 Final Report Stage
+                    // Hide Question Stage & Reveal Section 2 Final Report Stage (Split Grid Layout)
                     if (questionsStage) {
                         questionsStage.hidden = true;
                         questionsStage.style.display = "none";
@@ -494,20 +502,18 @@ document.addEventListener("DOMContentLoaded", async () => {
                     if (reportStage) {
                         reportStage.hidden = false;
                         reportStage.removeAttribute("hidden");
-                        reportStage.style.display = "block";
+                        reportStage.style.display = "grid";
+                        document.querySelector(".page-wrapper")?.classList.add("section1-immersive");
                         window.scrollTo({ top: 0, behavior: "smooth" });
                     }
 
-                    // Render 5-Card Class Analysis breakdown and Top 3 Matches at the bottom
+                    // Render 5-Card Class Analysis breakdown (Monochromatic Green) and Top 3 Matches at the bottom
                     renderClassAnalysis(reportData.class_analysis);
                     renderTopAlumniMatches(reportData.matches);
 
                     // Play Avatar 2 speech synthesis
                     if (reportData.text) {
-                        QuizApp.avatarSayTextOnly(reportData.text, 2);
-                    }
-                    if (reportData.audio) {
-                        QuizApp.playReportAudio(reportData.text, reportData.audio, 2);
+                        QuizApp.playAvatarDialogue(reportData.text, 2);
                     }
                 } else {
                     alert("Server returned an error while generating course analysis. Please try again.");
@@ -522,7 +528,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-    // Render Class Analysis Comparative Breakdown
+    // Render Class Analysis Comparative Breakdown (Strictly Monochromatic Emerald Green Theme)
     const renderClassAnalysis = (analysis) => {
         const container = document.getElementById("class-analysis-container");
         if (!container || !analysis) return;
@@ -535,7 +541,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         container.innerHTML = `
             <!-- Card 1: Completed Required Core -->
-            <div class="analysis-card">
+            <div class="analysis-card" style="border-left: 4px solid var(--accent-emerald);">
                 <div class="analysis-card-header">
                     <span class="analysis-card-title">✅ Completed Required Core</span>
                     <span class="analysis-count-badge badge-completed">${completedReq.length} Courses</span>
@@ -551,26 +557,26 @@ document.addEventListener("DOMContentLoaded", async () => {
             </div>
 
             <!-- Card 2: Remaining Required Core -->
-            <div class="analysis-card">
+            <div class="analysis-card" style="border-left: 4px solid var(--accent-emerald);">
                 <div class="analysis-card-header">
                     <span class="analysis-card-title">${QuizApp.escapeHtml(analysis.missing_required_title || "⚠️ Remaining Required Core")}</span>
-                    <span class="analysis-count-badge badge-missing">${missingReq.length} Remaining</span>
+                    <span class="analysis-count-badge badge-completed">${missingReq.length} Remaining</span>
                 </div>
                 <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:0.6rem;">
                     ${QuizApp.escapeHtml(analysis.missing_required_subtitle || "Major core courses still needed for degree:")}
                 </p>
                 <div class="analysis-course-list">
                     ${missingReq.length > 0 ? missingReq.slice(0, 8).map((c) => `
-                        <span class="analysis-course-pill pill-amber" title="${QuizApp.escapeHtml(c.course_title)}">
+                        <span class="analysis-course-pill pill-green" title="${QuizApp.escapeHtml(c.course_title)}">
                             <strong>${QuizApp.escapeHtml(c.course_id)}</strong> &bull; ${QuizApp.escapeHtml(c.credits)}cr
                         </span>
                     `).join("") : `<span style="color:var(--accent-emerald); font-size:0.8rem;">✓ All core requirements cleared!</span>`}
                 </div>
-                ${analysis.missing_required_note ? `<p style="font-size:0.75rem; color:var(--accent-gold); margin-top:0.4rem; font-style:italic;">${QuizApp.escapeHtml(analysis.missing_required_note)}</p>` : ""}
+                ${analysis.missing_required_note ? `<p style="font-size:0.75rem; color:var(--accent-emerald); margin-top:0.4rem; font-style:italic;">${QuizApp.escapeHtml(analysis.missing_required_note)}</p>` : ""}
             </div>
 
             <!-- Card 3: Completed Electives -->
-            <div class="analysis-card">
+            <div class="analysis-card" style="border-left: 4px solid var(--accent-emerald);">
                 <div class="analysis-card-header">
                     <span class="analysis-card-title">🌟 Completed Electives</span>
                     <span class="analysis-count-badge badge-completed">${completedElec.length} Taken</span>
@@ -586,15 +592,15 @@ document.addEventListener("DOMContentLoaded", async () => {
             </div>
 
             <!-- Card 4: Recommended High-Yield Electives for Career -->
-            <div class="analysis-card">
+            <div class="analysis-card" style="border-left: 4px solid var(--accent-emerald);">
                 <div class="analysis-card-header">
                     <span class="analysis-card-title">🚀 Top Career Electives</span>
-                    <span class="analysis-count-badge badge-recommended">Dataset Matches</span>
+                    <span class="analysis-count-badge badge-completed">Dataset Matches</span>
                 </div>
                 <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:0.6rem;">High-yield electives taken by top-earning alumni in your industry:</p>
                 <div class="analysis-course-list">
                     ${recommendedElec.length > 0 ? recommendedElec.map((c) => `
-                        <span class="analysis-course-pill pill-purple" title="Skills: ${QuizApp.escapeHtml(c.skill_tags || '')}">
+                        <span class="analysis-course-pill pill-green" title="Skills: ${QuizApp.escapeHtml(c.skill_tags || '')}">
                             <strong>${QuizApp.escapeHtml(c.course_id)}</strong> (${QuizApp.escapeHtml(c.course_title)})
                         </span>
                     `).join("") : `<span style="color:var(--text-muted); font-size:0.8rem;">Standard elective tracks</span>`}
@@ -602,25 +608,25 @@ document.addEventListener("DOMContentLoaded", async () => {
             </div>
 
             <!-- Card 5: Planned Coursework Roadmap -->
-            <div class="analysis-card" style="grid-column: 1 / -1;">
+            <div class="analysis-card" style="grid-column: 1 / -1; border-left: 4px solid var(--accent-emerald);">
                 <div class="analysis-card-header">
                     <span class="analysis-card-title">📅 Planned Coursework Roadmap</span>
-                    <span class="analysis-count-badge badge-planned">${plannedList.length} Planned</span>
+                    <span class="analysis-count-badge badge-completed">${plannedList.length} Planned</span>
                 </div>
                 <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:0.6rem;">Your upcoming target courses:</p>
                 <div class="analysis-course-list">
                     ${plannedList.length > 0 ? plannedList.map((c) => `
-                        <span class="analysis-course-pill pill-blue">
+                        <span class="analysis-course-pill pill-green">
                             <strong>${QuizApp.escapeHtml(c.course_id)}</strong> &bull; ${QuizApp.escapeHtml(c.course_title)}
                         </span>
                     `).join("") : `<span style="color:var(--text-muted); font-size:0.8rem;">None specified</span>`}
-                    ${analysis.custom_planned ? `<span class="analysis-course-pill pill-blue">Notes: ${QuizApp.escapeHtml(analysis.custom_planned)}</span>` : ""}
+                    ${analysis.custom_planned ? `<span class="analysis-course-pill pill-green">Notes: ${QuizApp.escapeHtml(analysis.custom_planned)}</span>` : ""}
                 </div>
             </div>
         `;
     };
 
-    // Render Top 3 Alumni Matches at the bottom of the report
+    // Render Top 3 Alumni Matches at the bottom of the report (Monochromatic Green)
     const renderTopAlumniMatches = (matches) => {
         const grid = document.getElementById("section-2-matches-grid");
         if (!grid) return;
@@ -635,17 +641,17 @@ document.addEventListener("DOMContentLoaded", async () => {
             const card = document.createElement("div");
             card.className = "alumni-card";
             const electivesList = (m.key_electives || ["CMSC 471 (AI)", "CMSC 441 (Algorithms)"])
-                .map((el) => `<span class="highlight-tag" style="color:#86efac;">${QuizApp.escapeHtml(el)}</span>`)
+                .map((el) => `<span class="highlight-tag" style="background:rgba(32, 88, 62, 0.1); color:#20583E; border:1px solid rgba(32, 88, 62, 0.3);">${QuizApp.escapeHtml(el)}</span>`)
                 .join("");
 
             card.innerHTML = `
                 <div>
                     <div class="card-top-row">
-                        <span class="alum-id-badge">Alumni Match #${idx + 1}</span>
+                        <span class="alum-id-badge" style="background:rgba(32, 88, 62, 0.12); color:#20583E;">Alumni Match #${idx + 1}</span>
                         <span class="alum-salary-badge">${QuizApp.escapeHtml(m.first_job_annual_salary_usd || "$105,000")}</span>
                     </div>
                     <h4 class="alum-role-title">${QuizApp.escapeHtml(m.first_job_title || "Software Engineer")}</h4>
-                    <p class="alum-employer">${QuizApp.escapeHtml(m.first_employer || "Tech Leader")} &bull; <span style="color:var(--avatar-green);">${QuizApp.escapeHtml(state.user.major || "Computer Science")}</span></p>
+                    <p class="alum-employer">${QuizApp.escapeHtml(m.first_employer || "Tech Leader")} &bull; <span style="color:var(--accent-emerald); font-weight:600;">${QuizApp.escapeHtml(state.user.major || "Computer Science")}</span></p>
                     <p style="font-size:0.83rem; color:var(--text-secondary); margin-bottom:0.75rem;">
                         ${QuizApp.escapeHtml(m.match_reason || "Shared core sequences with high-earning career outcome.")}
                     </p>
@@ -668,5 +674,5 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-    QuizApp.bindVoiceReplayListeners();
+    QuizApp.bindVoiceReplayListeners(2);
 });
