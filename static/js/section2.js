@@ -40,13 +40,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     const electivesSpinner = document.getElementById("electives-loading-spinner");
     const customElectivesInput = document.getElementById("custom-electives-input");
     const noneElectivesCheckbox = document.getElementById("none-electives");
+    const electivesQuestionHeading = document.getElementById("electives-question-heading");
     const btnBackToRequired = document.getElementById("btn-back-to-required");
     const btnToPlanned = document.getElementById("btn-to-planned");
 
-    // Screen 3 Elements
-    const catalogPills = document.getElementById("catalog-course-pills");
-    const customPlannedInput = document.getElementById("custom-planned-input");
-    const noPlannedCoursesCheckbox = document.getElementById("no-planned-courses");
+    // Screen 3 Elements (Live Autocomplete Search Bar)
+    const searchInput = document.getElementById("planned-course-search");
+    const dropdownMenu = document.getElementById("autocomplete-dropdown");
+    const chipsContainer = document.getElementById("planned-courses-chips");
     const btnBackToElectives = document.getElementById("btn-back-to-electives");
     const btnSubmitReport = document.getElementById("btn-submit-course-report");
     const spinnerGenerateReport = document.getElementById("spinner-generate-report");
@@ -72,7 +73,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const plannedCourses = new Set(state.user.plannedCourses || []);
     if (noneRequiredCheckbox) noneRequiredCheckbox.checked = Boolean(state.user.noRequiredCourses);
     if (noneElectivesCheckbox) noneElectivesCheckbox.checked = Boolean(state.user.noElectives);
-    if (noPlannedCoursesCheckbox) noPlannedCoursesCheckbox.checked = Boolean(state.user.noPlannedCourses);
 
     const showValidationError = (id, message) => {
         const error = document.getElementById(id);
@@ -101,6 +101,39 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
+    // Begin Section Button (Removes intro stage & opens Screen 1)
+    if (btnStartQuestions) {
+        btnStartQuestions.addEventListener("click", () => {
+            QuizApp.stopAllSpeech();
+            if (introStage) {
+                introStage.remove();
+            }
+            if (questionsStage) {
+                questionsStage.hidden = false;
+                questionsStage.removeAttribute("hidden");
+                questionsStage.style.display = "block";
+                if (hasZeroCompletedCredits) {
+                    takenRequired.clear();
+                    takenElectives.clear();
+                    if (noneRequiredCheckbox) noneRequiredCheckbox.checked = true;
+                    if (noneElectivesCheckbox) noneElectivesCheckbox.checked = true;
+                    if (customElectivesInput) customElectivesInput.value = "";
+                    QuizApp.updateUserData({
+                        takenRequiredCourses: [],
+                        noRequiredCourses: true,
+                        takenElectives: [],
+                        customElectives: "",
+                        noElectives: true,
+                    });
+                    showSubstep(subPlanned);
+                } else {
+                    showSubstep(subRequired);
+                }
+            }
+            loadCourseOptions();
+        });
+    }
+
     // Helper: Screen Switcher (Ensures one screen per step)
     const showSubstep = (activeStepEl) => {
         [subRequired, subElectives, subPlanned].forEach((el) => {
@@ -124,6 +157,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         try {
             const params = new URLSearchParams({
                 major: state.user.major || "Computer Science",
+                minor: state.user.minor || "",
+                majorTrack: state.user.majorTrack || "",
+                creditsCompleted: state.user.creditsCompleted || "15",
                 targetCompanyIndustry: state.user.targetCompanyIndustry || "",
                 careerGoals: state.user.careerGoals || "",
             });
@@ -132,7 +168,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                 cachedCourseOptions = await res.json();
                 renderScreen1Required(cachedCourseOptions.required_courses || []);
                 renderScreen2Electives(cachedCourseOptions.popular_electives || []);
-                renderScreen3CatalogPills(cachedCourseOptions.all_catalog_courses || []);
+
+                // Dynamic Text Phrasing for Electives based on Credits
+                if (electivesQuestionHeading) {
+                    const phrasing = cachedCourseOptions.dynamic_phrasing || (Number(state.user.creditsCompleted) <= 30 ? "Do any of these electives interest you?" : "Which of these electives have you taken?");
+                    electivesQuestionHeading.innerHTML = `${phrasing} <span class="required-indicator">Required response</span>`;
+                }
+
+                renderPlannedChips();
                 return cachedCourseOptions;
             }
         } catch (err) {
@@ -143,7 +186,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     };
 
-    // Render Screen 1: Required Core Checklist
+    // Render Screen 1: Required Core Checklist (Tiered & Major-Specific)
     const renderScreen1Required = (courses) => {
         if (!requiredGrid) return;
         requiredGrid.innerHTML = "";
@@ -233,33 +276,102 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     };
 
-    // Render Screen 3: Planned Courses Catalog Pills
-    const renderScreen3CatalogPills = (allCatalog) => {
-        if (!catalogPills) return;
-        catalogPills.innerHTML = "";
+    // =========================================================================
+    // SCREEN 3: LIVE AUTOCOMPLETE SEARCH BAR & CHIPS BEHAVIOR
+    // =========================================================================
+    const renderPlannedChips = () => {
+        if (!chipsContainer) return;
+        chipsContainer.innerHTML = "";
+        if (plannedCourses.size === 0) {
+            chipsContainer.innerHTML = '<span style="color:var(--text-muted); font-size:0.85rem;">No courses planned yet. Search and select classes from the dropdown.</span>';
+            return;
+        }
 
-        allCatalog.forEach((c) => {
-            const isSelected = plannedCourses.has(c.course_id);
-            const pill = document.createElement("button");
-            pill.type = "button";
-            pill.className = `skill-pill ${isSelected ? "active" : ""}`;
-            pill.textContent = `${c.course_id} - ${c.course_title}`;
-            pill.addEventListener("click", () => {
-                const nowSelected = !plannedCourses.has(c.course_id);
-                if (nowSelected) {
-                    plannedCourses.add(c.course_id);
-                    if (noPlannedCoursesCheckbox) noPlannedCoursesCheckbox.checked = false;
-                    pill.classList.add("active");
-                } else {
-                    plannedCourses.delete(c.course_id);
-                    pill.classList.remove("active");
-                }
-                QuizApp.updateUserData({ plannedCourses: Array.from(plannedCourses), noPlannedCourses: false });
-                clearValidationError("planned-courses-error");
+        plannedCourses.forEach((cId) => {
+            const chip = document.createElement("span");
+            chip.className = "planned-course-chip";
+            chip.innerHTML = `
+                <span>${QuizApp.escapeHtml(cId)}</span>
+                <button type="button" class="chip-remove-btn" title="Remove ${QuizApp.escapeHtml(cId)}">&times;</button>
+            `;
+            chip.querySelector(".chip-remove-btn").addEventListener("click", () => {
+                plannedCourses.delete(cId);
+                renderPlannedChips();
+                QuizApp.updateUserData({ plannedCourses: Array.from(plannedCourses) });
             });
-            catalogPills.appendChild(pill);
+            chipsContainer.appendChild(chip);
         });
     };
+
+    const renderAutocompleteDropdown = (results) => {
+        if (!dropdownMenu) return;
+        dropdownMenu.innerHTML = "";
+
+        if (!results || results.length === 0) {
+            dropdownMenu.innerHTML = `<div class="autocomplete-empty">No matching courses found in catalog.</div>`;
+            dropdownMenu.hidden = false;
+            return;
+        }
+
+        results.forEach((item) => {
+            const isAlreadyAdded = plannedCourses.has(item.course_id);
+            const el = document.createElement("div");
+            el.className = `autocomplete-item ${isAlreadyAdded ? "highlighted" : ""}`;
+            el.innerHTML = `
+                <div class="autocomplete-item-top">
+                    <span class="autocomplete-item-code">${QuizApp.escapeHtml(item.course_id)}</span>
+                    <span class="autocomplete-item-credits">${item.credits} Credits &bull; ${QuizApp.escapeHtml(item.course_level || "Upper")}</span>
+                </div>
+                <div class="autocomplete-item-title">${QuizApp.escapeHtml(item.course_title)}</div>
+                ${item.skill_tags ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.2rem;">${QuizApp.escapeHtml(item.skill_tags)}</div>` : ""}
+            `;
+            el.addEventListener("click", () => {
+                plannedCourses.add(item.course_id);
+                renderPlannedChips();
+                QuizApp.updateUserData({ plannedCourses: Array.from(plannedCourses) });
+                clearValidationError("planned-courses-error");
+                if (searchInput) searchInput.value = "";
+                dropdownMenu.hidden = true;
+            });
+            dropdownMenu.appendChild(el);
+        });
+        dropdownMenu.hidden = false;
+    };
+
+    let autocompleteTimer = null;
+    if (searchInput) {
+        searchInput.addEventListener("input", (e) => {
+            clearTimeout(autocompleteTimer);
+            const query = e.target.value.trim();
+            if (!query) {
+                if (dropdownMenu) dropdownMenu.hidden = true;
+                return;
+            }
+            autocompleteTimer = setTimeout(async () => {
+                try {
+                    const res = await fetch(`/api/search-classes?q=${encodeURIComponent(query)}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        renderAutocompleteDropdown(data.results || []);
+                    }
+                } catch (err) {
+                    console.warn("Autocomplete fetch error:", err);
+                }
+            }, 180);
+        });
+
+        searchInput.addEventListener("focus", () => {
+            if (searchInput.value.trim().length > 0 && dropdownMenu && dropdownMenu.children.length > 0) {
+                dropdownMenu.hidden = false;
+            }
+        });
+    }
+
+    document.addEventListener("click", (e) => {
+        if (dropdownMenu && !dropdownMenu.contains(e.target) && e.target !== searchInput) {
+            dropdownMenu.hidden = true;
+        }
+    });
 
     const clearChecklist = (grid) => {
         grid?.querySelectorAll(".course-check-item").forEach((card) => {
@@ -288,16 +400,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         clearValidationError("electives-error");
     });
 
-    noPlannedCoursesCheckbox?.addEventListener("change", () => {
-        if (noPlannedCoursesCheckbox.checked) {
-            plannedCourses.clear();
-            catalogPills?.querySelectorAll(".skill-pill.active").forEach((pill) => pill.classList.remove("active"));
-            if (customPlannedInput) customPlannedInput.value = "";
-        }
-        QuizApp.updateUserData({ plannedCourses: Array.from(plannedCourses), customPlannedCourses: customPlannedInput?.value || "", noPlannedCourses: noPlannedCoursesCheckbox.checked });
-        clearValidationError("planned-courses-error");
-    });
-
     customElectivesInput?.addEventListener("input", () => {
         if (customElectivesInput.value.trim()) {
             if (noneElectivesCheckbox) noneElectivesCheckbox.checked = false;
@@ -305,46 +407,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
         clearValidationError("electives-error");
     });
-    customPlannedInput?.addEventListener("input", () => {
-        if (customPlannedInput.value.trim()) {
-            if (noPlannedCoursesCheckbox) noPlannedCoursesCheckbox.checked = false;
-            QuizApp.updateUserData({ customPlannedCourses: customPlannedInput.value, noPlannedCourses: false });
-        }
-        clearValidationError("planned-courses-error");
-    });
-
-    // Begin Section Button (Removes intro stage & opens Screen 1)
-    if (btnStartQuestions) {
-        btnStartQuestions.addEventListener("click", () => {
-            QuizApp.stopAllSpeech();
-            if (introStage) {
-                introStage.remove();
-            }
-            if (questionsStage) {
-                questionsStage.hidden = false;
-                questionsStage.removeAttribute("hidden");
-                questionsStage.style.display = "block";
-                if (hasZeroCompletedCredits) {
-                    takenRequired.clear();
-                    takenElectives.clear();
-                    if (noneRequiredCheckbox) noneRequiredCheckbox.checked = true;
-                    if (noneElectivesCheckbox) noneElectivesCheckbox.checked = true;
-                    if (customElectivesInput) customElectivesInput.value = "";
-                    QuizApp.updateUserData({
-                        takenRequiredCourses: [],
-                        noRequiredCourses: true,
-                        takenElectives: [],
-                        customElectives: "",
-                        noElectives: true,
-                    });
-                    showSubstep(subPlanned);
-                } else {
-                    showSubstep(subRequired);
-                }
-            }
-            loadCourseOptions();
-        });
-    }
 
     // Screen Navigation Listeners
     if (btnToElectives) {
@@ -394,10 +456,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Submit Question 3 -> Generate Section 2 Report
     if (btnSubmitReport) {
         btnSubmitReport.addEventListener("click", async () => {
-            if (!plannedCourses.size && !customPlannedInput?.value.trim() && !noPlannedCoursesCheckbox?.checked) {
-                showValidationError("planned-courses-error", "Select planned courses, enter them below, or confirm that you do not have any planned yet.");
-                return;
-            }
             const spinner = document.getElementById("spinner-generate-report");
             if (spinner) {
                 spinner.hidden = false;
@@ -405,13 +463,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
             btnSubmitReport.disabled = true;
 
-            const customPlanned = customPlannedInput ? customPlannedInput.value.trim() : "";
             QuizApp.updateUserData({
                 takenRequiredCourses: Array.from(takenRequired),
                 takenElectives: Array.from(takenElectives),
                 plannedCourses: Array.from(plannedCourses),
-                customPlannedCourses: customPlanned,
-                noPlannedCourses: Boolean(noPlannedCoursesCheckbox?.checked),
+                noPlannedCourses: plannedCourses.size === 0,
             });
 
             const updatedState = QuizApp.getQuizState();
@@ -497,10 +553,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             <!-- Card 2: Remaining Required Core -->
             <div class="analysis-card">
                 <div class="analysis-card-header">
-                    <span class="analysis-card-title">⚠️ Remaining Required Core</span>
+                    <span class="analysis-card-title">${QuizApp.escapeHtml(analysis.missing_required_title || "⚠️ Remaining Required Core")}</span>
                     <span class="analysis-count-badge badge-missing">${missingReq.length} Remaining</span>
                 </div>
-                <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:0.6rem;">Major core courses still needed for degree:</p>
+                <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:0.6rem;">
+                    ${QuizApp.escapeHtml(analysis.missing_required_subtitle || "Major core courses still needed for degree:")}
+                </p>
                 <div class="analysis-course-list">
                     ${missingReq.length > 0 ? missingReq.slice(0, 8).map((c) => `
                         <span class="analysis-course-pill pill-amber" title="${QuizApp.escapeHtml(c.course_title)}">
@@ -508,6 +566,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                         </span>
                     `).join("") : `<span style="color:var(--accent-emerald); font-size:0.8rem;">✓ All core requirements cleared!</span>`}
                 </div>
+                ${analysis.missing_required_note ? `<p style="font-size:0.75rem; color:var(--accent-gold); margin-top:0.4rem; font-style:italic;">${QuizApp.escapeHtml(analysis.missing_required_note)}</p>` : ""}
             </div>
 
             <!-- Card 3: Completed Electives -->

@@ -234,9 +234,12 @@ def _load_course_catalog() -> dict:
 def get_course_options():
     """
     Dynamically return:
-    1. required_courses: Only required core courses for the user's specific major.
-    2. popular_electives: Non-required electives taken by top-earning alumni in target career.
-    3. all_catalog_courses: Full catalog for planned course selection.
+    1. required_courses: Major-specific required courses filtered by credit tier (max 6-8).
+    2. popular_electives: Electives filtered by popularity among alumni/students sharing Major, Minor, Track, and Career Path (max 6-8).
+    3. dynamic_phrasing: Heading text based on credits:
+       - <= 30 credits: "Do any of these electives interest you?"
+       - > 30 credits: "Which of these electives have you taken?"
+    4. all_catalog_courses: Full catalog for planned course selection.
     """
     if request.method == "POST":
         payload = request.get_json(silent=True) or {}
@@ -244,19 +247,29 @@ def get_course_options():
         payload = request.args
 
     major = (payload.get("major") or "Computer Science").strip()
+    minor = (payload.get("minor") or "").strip()
+    major_track = (payload.get("majorTrack") or payload.get("track") or "").strip()
     target_ind = (payload.get("targetCompanyIndustry") or payload.get("industry") or "").strip()
     career_goals = (payload.get("careerGoals") or payload.get("goals") or "").strip()
 
+    try:
+        credits_completed = float(payload.get("creditsCompleted") or payload.get("credits") or payload.get("credits_completed") or 15)
+    except (ValueError, TypeError):
+        credits_completed = 15.0
+
     catalog_dict = _load_course_catalog()
 
-    subject_map = {
-        "Computer Science": "CMSC",
-        "Information Systems": "IS",
-        "Data Science": "DATA",
-        "Cybersecurity": "CMSC",
-        "Computer Engineering": "CMPE",
+    # 1. Filter out general education subjects and ensure strictly related to major discipline
+    GEN_ED_EXCLUDE = {"ENGL", "HIST", "PHIL", "ARTH", "MUSC", "PSYC", "SOCY", "SPAN", "CHEM", "BIOL"}
+
+    discipline_subject_map = {
+        "Computer Science": {"CMSC"},
+        "Information Systems": {"IS", "MGMT", "ACCT", "ECON"},
+        "Data Science": {"DATA", "CMSC", "STAT"},
+        "Cybersecurity": {"CMSC", "IS"},
+        "Computer Engineering": {"CMPE", "CMSC"},
     }
-    subj = subject_map.get(major, "CMSC")
+    allowed_major_subjects = discipline_subject_map.get(major, {"CMSC"})
 
     required_courses = []
     electives_pool = []
@@ -268,10 +281,17 @@ def get_course_options():
         req_majors = [m.strip() for m in (c.get("required_for_majors") or "").split("|") if m]
         c_subj = c.get("subject") or cid[:4]
 
+        # Extract numeric catalog level
+        try:
+            course_num = int("".join(filter(str.isdigit, str(c.get("catalog_number") or cid))))
+        except ValueError:
+            course_num = 200
+
         item = {
             "course_id": cid,
             "subject": c_subj,
-            "catalog_number": c.get("catalog_number", ""),
+            "catalog_number": c.get("catalog_number", str(course_num)),
+            "course_num": course_num,
             "course_title": ctitle,
             "credits": int(c.get("credits", 3) or 3),
             "course_level": c.get("course_level", "Upper"),
@@ -281,29 +301,45 @@ def get_course_options():
         }
         all_catalog.append(item)
 
-        is_required = (major in req_majors) or (ctype == "Core" and (c_subj == subj or major == "Computer Science"))
-        if is_required:
-            required_courses.append(item)
-        elif ctype in ("Elective", "Specialized", "Upper"):
+        # Exclude gen-eds from major requirements
+        if c_subj in GEN_ED_EXCLUDE:
+            continue
+
+        # Check if strictly related to major discipline
+        is_major_discipline = (c_subj in allowed_major_subjects) or (major in req_majors)
+
+        if is_major_discipline and (ctype in ("Core", "Capstone") or major in req_majors):
+            # Credit-based Tier Filtering:
+            # - credits < 30: Show only lower-level (100/200 level)
+            # - credits >= 30 and credits <= 80: Show mid-to-high level (200/300/400 level)
+            # - credits > 80: Show only high-level (300/400 level)
+            if credits_completed < 30:
+                if course_num < 300:
+                    required_courses.append(item)
+            elif credits_completed <= 80:
+                if 200 <= course_num <= 499:
+                    required_courses.append(item)
+            else:  # credits > 80
+                if course_num >= 300:
+                    required_courses.append(item)
+        elif ctype in ("Elective", "Specialized", "Upper") and is_major_discipline:
             electives_pool.append(item)
 
-    # Sort required courses by catalog number / level
-    required_courses.sort(key=lambda x: (0 if x["course_level"] == "Lower" else 1, x["course_id"]))
+    # Sort required courses by catalog number
+    required_courses.sort(key=lambda x: (0 if x["course_level"] == "Lower" else 1, x["course_num"], x["course_id"]))
+    # Limit to 6-8 required courses
+    required_courses = required_courses[:8]
 
-    # Rank electives by popularity among top-earning alumni in this major / career
+    # 2. Electives Popularity Query (Major, Minor, Track, Career Path)
     top_alumni_cids = set()
     if ALUMNI_CSV.exists():
         try:
             with ALUMNI_CSV.open("r", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
                 for row in reader:
-                    try:
-                        sal = float(row.get("first_job_annual_salary_usd", 0))
-                        row_maj = row.get("major", "")
-                        if (row_maj == major or not row_maj) and sal >= 70000:
-                            top_alumni_cids.add(row.get("campus_id"))
-                    except (ValueError, TypeError):
-                        pass
+                    row_maj = row.get("major", "")
+                    if row_maj == major or not row_maj:
+                        top_alumni_cids.add(row.get("campus_id"))
         except Exception as exc:
             print(f"Warning: Failed reading alumni.csv for electives: {exc}")
 
@@ -322,18 +358,26 @@ def get_course_options():
 
     max_count = max(elective_counts.values()) if elective_counts else 100
     ranked_electives = []
-    combined_keywords = f"{target_ind} {career_goals}".lower()
+    combined_keywords = f"{target_ind} {career_goals} {major_track} {minor}".lower()
 
     for e in electives_pool:
         cid = e["course_id"]
         cnt = elective_counts.get(cid, 0)
         boost = 0
+
+        # Career / Industry alignment boost
         if any(k in combined_keywords for k in ["ai", "data", "ml", "machine"]) and any(k in e["skill_tags"].lower() for k in ["ai", "data", "python", "mining", "learning", "statistics"]):
-            boost += 40
+            boost += 50
         if any(k in combined_keywords for k in ["security", "cyber", "defense", "clearance"]) and any(k in e["skill_tags"].lower() for k in ["security", "crypto", "network", "linux"]):
-            boost += 40
+            boost += 50
         if any(k in combined_keywords for k in ["web", "software", "cloud", "fullstack", "dev"]) and any(k in e["skill_tags"].lower() for k in ["web", "cloud", "software", "testing", "design", "sql"]):
+            boost += 50
+
+        # Track / Minor alignment boost
+        if major_track and major_track != "Not Applicable" and major_track.lower() in e["skill_tags"].lower():
             boost += 40
+        if minor and minor != "Not Applicable" and minor.lower() in (e["subject"].lower() + " " + e["course_title"].lower() + " " + e["skill_tags"].lower()):
+            boost += 30
 
         e_copy = dict(e)
         e_copy["alumni_count"] = cnt
@@ -344,12 +388,117 @@ def get_course_options():
     ranked_electives.sort(key=lambda x: x["score"], reverse=True)
     all_catalog.sort(key=lambda x: x["course_id"])
 
+    # Dynamic phrasing based on credits
+    dynamic_phrasing = "Do any of these electives interest you?" if credits_completed <= 30 else "Which of these electives have you taken?"
+
     return jsonify({
         "major": major,
+        "credits_completed": credits_completed,
+        "dynamic_phrasing": dynamic_phrasing,
         "required_courses": required_courses,
-        "popular_electives": ranked_electives[:12],
+        "popular_electives": ranked_electives[:8],
         "all_catalog_courses": all_catalog,
     }), 200
+
+
+@app.route("/api/search-classes", methods=["GET"])
+def search_classes():
+    """
+    Live autocomplete search endpoint for course catalog.
+    Queries PostgreSQL using ILIKE across course_id, course_title, and subject.
+    """
+    query = (request.args.get("q") or "").strip()
+    if not query:
+        return jsonify({"results": []}), 200
+
+    search_pattern = f"%{query}%"
+    results = []
+
+    if TIGER_DATA_URL:
+        try:
+            with get_db_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        """
+                        SELECT course_id, course_title, subject, catalog_number, credits, course_level, course_type, skill_tags
+                        FROM course_catalog
+                        WHERE course_id ILIKE %s
+                           OR course_title ILIKE %s
+                           OR (subject || ' ' || catalog_number) ILIKE %s
+                           OR skill_tags ILIKE %s
+                        ORDER BY
+                            CASE WHEN course_id ILIKE %s THEN 0
+                                 WHEN course_title ILIKE %s THEN 1
+                                 ELSE 2 END,
+                            course_id ASC
+                        LIMIT 12;
+                        """,
+                        (search_pattern, search_pattern, search_pattern, search_pattern, f"{query}%", f"{query}%"),
+                    )
+                    for row in cur.fetchall():
+                        results.append({
+                            "course_id": row[0],
+                            "course_title": row[1],
+                            "subject": row[2],
+                            "catalog_number": row[3],
+                            "credits": int(row[4]) if row[4] else 3,
+                            "course_level": row[5] or "Upper",
+                            "course_type": row[6] or "Elective",
+                            "skill_tags": (row[7] or "").replace("|", ", "),
+                            "display_name": f"{row[0]}: {row[1]} ({row[4] or 3} cr)",
+                        })
+        except Exception as exc:
+            print(f"Warning: Database search_classes failed, using CSV fallback: {exc}")
+
+    # Fallback to local catalog index if database is not active or returns empty
+    if not results:
+        catalog_dict = _load_course_catalog()
+        q_clean = query.lower().replace(" ", "")
+        q_words = query.lower().split()
+        matched = []
+
+        for cid, c in catalog_dict.items():
+            cid_clean = cid.lower().replace(" ", "")
+            ctitle = (c.get("course_title") or "").lower()
+            csubj = (c.get("subject") or "").lower()
+            cat_num = str(c.get("catalog_number") or "").lower()
+            skill_tags = (c.get("skill_tags") or "").lower()
+            full_str = f"{cid} {ctitle} {csubj} {cat_num} {skill_tags}".lower()
+
+            score = 0
+            if q_clean == cid_clean:
+                score += 100
+            elif cid_clean.startswith(q_clean):
+                score += 80
+            elif q_clean in cid_clean:
+                score += 60
+            elif ctitle.startswith(query.lower()):
+                score += 70
+            elif all(w in full_str for w in q_words):
+                score += 40
+            elif any(w in full_str for w in q_words):
+                score += 20
+
+            if score > 0:
+                matched.append((
+                    score,
+                    {
+                        "course_id": cid,
+                        "course_title": c.get("course_title") or cid,
+                        "subject": c.get("subject", ""),
+                        "catalog_number": c.get("catalog_number", ""),
+                        "credits": int(c.get("credits", 3) or 3),
+                        "course_level": c.get("course_level", "Upper"),
+                        "course_type": c.get("course_type", "Elective"),
+                        "skill_tags": (c.get("skill_tags") or "").replace("|", ", "),
+                        "display_name": f"{cid}: {c.get('course_title') or cid} ({c.get('credits', 3) or 3} cr)",
+                    }
+                ))
+
+        matched.sort(key=lambda x: x[0], reverse=True)
+        results = [m[1] for m in matched[:12]]
+
+    return jsonify({"results": results}), 200
 
 
 def _infer_industry_label(raw_industry, career_goals, major):
@@ -915,7 +1064,7 @@ def query_tiger_data(section_name: str, user_data: dict) -> list:
 # GEMINI GENERATIVE TEXT INTEGRATION (google-genai SDK)
 # ==============================================================================
 
-def generate_gemini_advice(section_name: str, user_data: dict, matches: list) -> str:
+def generate_gemini_advice(section_name: str, user_data: dict, matches: list, class_analysis: dict = None) -> str:
     """
     Prompt Gemini via the google-genai SDK:
     'Act as an expert academic advisor. Based on this user data and these database matches,
@@ -949,6 +1098,14 @@ def generate_gemini_advice(section_name: str, user_data: dict, matches: list) ->
         "More than 4 years": "Tone: Pragmatic, decisive, accelerating degree completion and leveraging hands-on experience.",
     }
     tone_instruction = tone_guidelines.get(class_year, "Tone: Professional, direct, and tailored to their academic stage.")
+
+    is_tone_shift = bool(class_analysis and class_analysis.get("tone_shift"))
+    if is_tone_shift:
+        tone_instruction += (
+            " Special Directive for Course Advising: The student has completed their upper-level major coursework requirements, "
+            "and only foundational/general education courses outside their major department (such as ENGL 100) remain. "
+            "Shift your tone to clearly and warmly remind them: 'You should complete these if you have not already.'"
+        )
 
     prompt = f"""Act as an expert academic advisor. Based on this user data and these database matches, write a 2 to 3 sentence message giving the student targeted advice for their {section_title}. Base your tone strictly on their class year.
 
@@ -1006,7 +1163,13 @@ Guidelines:
             )
 
     elif "course" in clean_section_key or "2" in clean_section_key:
-        if is_underclassman:
+        if is_tone_shift:
+            return (
+                f"You have cleared your upper-level {major} core coursework requirements! If you have not yet completed "
+                f"foundational general education courses outside your major department—such as ENGL 100—you should complete these if you have not already, "
+                f"to guarantee your degree pacing remains on track for graduation."
+            )
+        elif is_underclassman:
             return (
                 f"You need to prioritize completing your foundational major core sequence before attempting advanced tracks "
                 f"in {target_industry}. Benchmark data shows that alumni who mastered Algorithms and Systems early gained "
@@ -1105,6 +1268,55 @@ def generate_elevenlabs_tts(
     return ""
 
 
+def _parse_prerequisites(prereq_str: str) -> list:
+    """Extract individual course IDs from a prerequisite_ids string."""
+    if not prereq_str or str(prereq_str).strip().lower() in ("not applicable", "none", "n/a"):
+        return []
+    cleaned = (
+        str(prereq_str)
+        .replace("|", " ")
+        .replace(";", " ")
+        .replace(",", " ")
+        .replace(" or ", " ")
+        .replace(" and ", " ")
+    )
+    tokens = cleaned.split()
+    prereqs = []
+    for token in tokens:
+        t = token.strip().upper().replace(" ", "")
+        if t and len(t) >= 5 and any(char.isdigit() for char in t):
+            prereqs.append(t)
+    return prereqs
+
+
+def _resolve_all_prerequisites(taken_course_ids: set, catalog_dict: dict) -> set:
+    """
+    Given a set of completed course IDs, recursively identify all prerequisites
+    and return the full transitive closure of completed + inferred prerequisite course IDs.
+    """
+    all_completed = set(taken_course_ids)
+    queue = list(taken_course_ids)
+    visited = set(taken_course_ids)
+
+    norm_catalog = {k.upper().replace(" ", ""): v for k, v in catalog_dict.items()}
+
+    while queue:
+        current_cid = queue.pop(0)
+        cat_info = norm_catalog.get(current_cid)
+        if cat_info:
+            raw_prereqs = cat_info.get("prerequisite_ids") or ""
+            parsed = _parse_prerequisites(raw_prereqs)
+            for p in parsed:
+                p_clean = p.upper().replace(" ", "")
+                if p_clean not in all_completed:
+                    all_completed.add(p_clean)
+                    if p_clean not in visited:
+                        visited.add(p_clean)
+                        queue.append(p_clean)
+
+    return all_completed
+
+
 @app.route("/api/section1-voice", methods=["POST"])
 def generate_section1_voice():
     payload = request.get_json(silent=True) or {}
@@ -1136,26 +1348,57 @@ def analyze_student_coursework(user_data: dict) -> dict:
     """
     Direct comparative breakdown comparing classes the user has already taken
     against required major core and high-yield electives recommended by the dataset.
+    Implements:
+    1. Prerequisite Inference: If a course has been completed, all its prerequisites are
+       assumed to be completed and removed from remaining courses.
+    2. Tier Filter: If higher-level courses were shown in the required section, lower-level
+       courses in the student's major/minor discipline are omitted from remaining required core.
+    3. Gen-Ed Exception: Lower-level courses NOT directly affiliated with the user's major/minor
+       (e.g., ENGL 100) are always preserved and shown.
+    4. Tone Shift: If no higher-level major courses remain and only non-major lower-level courses
+       remain, the tone shifts to 'You should complete these if you have not already'.
     """
     major = (user_data.get("major") or "Computer Science").strip()
+    minor = (user_data.get("minor") or "").strip()
     target_ind = (user_data.get("targetCompanyIndustry") or "").strip()
     career_goals = (user_data.get("careerGoals") or "").strip()
 
-    taken_req = [c.upper().replace(" ", "") for c in (user_data.get("takenRequiredCourses") or user_data.get("taken_required_courses") or [])]
-    taken_elec = [c.upper().replace(" ", "") for c in (user_data.get("takenElectives") or user_data.get("taken_electives") or [])]
+    try:
+        credits_completed = int(user_data.get("creditsCompleted") or user_data.get("credits_completed") or 0)
+    except (ValueError, TypeError):
+        credits_completed = 0
+
+    raw_taken_req = [c.upper().replace(" ", "") for c in (user_data.get("takenRequiredCourses") or user_data.get("taken_required_courses") or [])]
+    raw_taken_elec = [c.upper().replace(" ", "") for c in (user_data.get("takenElectives") or user_data.get("taken_electives") or [])]
     planned = user_data.get("plannedCourses") or user_data.get("planned_courses") or []
     custom_planned = (user_data.get("customPlannedCourses") or user_data.get("custom_planned_courses") or "").strip()
 
     catalog_dict = _load_course_catalog()
 
-    subject_map = {
-        "Computer Science": "CMSC",
-        "Information Systems": "IS",
-        "Data Science": "DATA",
-        "Cybersecurity": "CMSC",
-        "Computer Engineering": "CMPE",
+    # Transitive prerequisite closure: all prerequisites of completed courses are assumed completed
+    user_taken_set = set(raw_taken_req + raw_taken_elec)
+    inferred_all_completed = _resolve_all_prerequisites(user_taken_set, catalog_dict)
+
+    major_disciplines = {
+        "Computer Science": {"CMSC", "CMPE"},
+        "Information Systems": {"IS"},
+        "Data Science": {"DATA"},
+        "Cybersecurity": {"CMSC", "IS"},
+        "Computer Engineering": {"CMPE", "ENEE"},
+        "Health Informatics": {"IS", "BTEC", "HAPP"},
     }
-    subj = subject_map.get(major, "CMSC")
+    minor_disciplines = {
+        "Mathematics": {"MATH"},
+        "Statistics": {"STAT"},
+        "Economics": {"ECON"},
+        "Business Administration": {"MGMT", "ACCT", "ECON"},
+        "Cybersecurity": {"CMSC", "IS"},
+        "Data Science": {"DATA"},
+    }
+
+    major_affiliated_subjects = major_disciplines.get(major, {"CMSC"})
+    minor_affiliated_subjects = minor_disciplines.get(minor, set()) if minor and minor != "Not Applicable" else set()
+    all_affiliated_subjects = major_affiliated_subjects | minor_affiliated_subjects
 
     all_required_objs = []
     electives_pool_objs = []
@@ -1163,44 +1406,107 @@ def analyze_student_coursework(user_data: dict) -> dict:
     for cid, c in catalog_dict.items():
         req_majors = [m.strip() for m in (c.get("required_for_majors") or "").split("|") if m]
         c_subj = c.get("subject") or cid[:4]
+        cat_num_raw = c.get("catalog_number", "0")
+        try:
+            course_num = int("".join(filter(str.isdigit, str(cat_num_raw))))
+        except ValueError:
+            course_num = 0
+
         ctype = c.get("course_type") or "Core"
+        is_affiliated = c_subj in all_affiliated_subjects
 
         info = {
             "course_id": cid,
             "course_title": c.get("course_title") or cid,
+            "subject": c_subj,
+            "catalog_number": cat_num_raw,
+            "course_num": course_num,
             "credits": int(c.get("credits", 3) or 3),
             "course_level": c.get("course_level", "Upper"),
+            "course_type": ctype,
             "skill_tags": (c.get("skill_tags") or "").replace("|", ", "),
             "difficulty_index": float(c.get("difficulty_index", 3.0) or 3.0),
+            "is_major_affiliated": is_affiliated,
         }
 
-        if (major in req_majors) or (ctype == "Core" and (c_subj == subj or major == "Computer Science")):
+        is_major_req = (major in req_majors) or (ctype in ("Core", "Required", "Foundation") and is_affiliated)
+        is_gen_ed_req = (major in req_majors) and not is_affiliated
+
+        if is_major_req or is_gen_ed_req:
             all_required_objs.append(info)
         elif ctype in ("Elective", "Specialized", "Upper"):
             electives_pool_objs.append(info)
 
-    all_required_objs.sort(key=lambda x: (0 if x["course_level"] == "Lower" else 1, x["course_id"]))
+    all_required_objs.sort(key=lambda x: (0 if x["course_level"] == "Lower" else 1, x["course_num"], x["course_id"]))
 
     completed_required = []
-    missing_required = []
+    raw_missing_required = []
 
     for req in all_required_objs:
         cid_clean = req["course_id"].upper().replace(" ", "")
-        if any(cid_clean == t or cid_clean in t or t in cid_clean for t in taken_req):
+        if cid_clean in inferred_all_completed or any(cid_clean == t or cid_clean in t or t in cid_clean for t in inferred_all_completed):
             completed_required.append(req)
         else:
-            missing_required.append(req)
+            raw_missing_required.append(req)
 
     completed_electives = []
     for cid, c in catalog_dict.items():
         cid_clean = cid.upper().replace(" ", "")
-        if any(cid_clean == t or cid_clean in t or t in cid_clean for t in taken_elec):
-            completed_electives.append({
-                "course_id": cid,
-                "course_title": c.get("course_title") or cid,
-                "credits": int(c.get("credits", 3) or 3),
-                "skill_tags": (c.get("skill_tags") or "").replace("|", ", "),
-            })
+        if cid_clean in inferred_all_completed or any(cid_clean == t or cid_clean in t or t in cid_clean for t in raw_taken_elec):
+            if not any(r["course_id"].upper().replace(" ", "") == cid_clean for r in completed_required):
+                completed_electives.append({
+                    "course_id": cid,
+                    "course_title": c.get("course_title") or cid,
+                    "credits": int(c.get("credits", 3) or 3),
+                    "skill_tags": (c.get("skill_tags") or "").replace("|", ", "),
+                })
+
+    # Filter remaining required courses based on credit tier:
+    # If the user was shown higher-level courses, do NOT show lower-level courses in major/minor disciplines.
+    # EXCEPTION: Courses not directly affiliated with the user's major/minor (e.g. ENGL 100) are ALWAYS shown!
+    missing_required = []
+    for req in raw_missing_required:
+        is_affiliated = req["is_major_affiliated"]
+        c_num = req["course_num"]
+
+        if is_affiliated:
+            if credits_completed > 80:
+                # Shown high-level courses (300+); filter out lower level (<300) major courses
+                if c_num >= 300:
+                    missing_required.append(req)
+            elif credits_completed >= 30:
+                # Shown mid/high-level courses (200+); filter out lower level (<200) major courses
+                if c_num >= 200:
+                    missing_required.append(req)
+            else:
+                # Shown lower level courses (<30 credits)
+                missing_required.append(req)
+        else:
+            # Non-affiliated foundational/general education course (e.g. ENGL 100, etc.)
+            missing_required.append(req)
+
+    # Check for Tone Shift:
+    # If there are no higher-level major courses left for the user to take and there are lower-level courses
+    # not in the department of that major, the tone shifts to "you should complete these if you have not already"
+    remaining_higher_major = [c for c in missing_required if c["is_major_affiliated"] and c["course_num"] >= 300]
+    remaining_non_dept_lower = [c for c in missing_required if not c["is_major_affiliated"] and c["course_num"] < 300]
+
+    tone_shift = False
+    if len(remaining_higher_major) == 0 and len(remaining_non_dept_lower) > 0:
+        tone_shift = True
+        missing_required_title = "⚠️ Foundational & General Education Core"
+        missing_required_subtitle = "You should complete these if you have not already:"
+        missing_required_note = "All upper-level major requirements are complete. Make sure you have completed these foundational/general education requirements if you have not already."
+    elif len(missing_required) == 0:
+        tone_shift = False
+        missing_required_title = "✅ Core Requirements Complete"
+        missing_required_subtitle = "All required core and degree courses cleared!"
+        missing_required_note = ""
+    else:
+        tone_shift = False
+        missing_required_title = "⚠️ Remaining Required Core"
+        missing_required_subtitle = "Major core courses still needed for degree:"
+        missing_required_note = ""
 
     taken_all_cids = set([c["course_id"].upper().replace(" ", "") for c in (completed_required + completed_electives)])
 
@@ -1251,6 +1557,10 @@ def analyze_student_coursework(user_data: dict) -> dict:
         "major": major,
         "completed_required": completed_required,
         "missing_required": missing_required,
+        "missing_required_title": missing_required_title,
+        "missing_required_subtitle": missing_required_subtitle,
+        "missing_required_note": missing_required_note,
+        "tone_shift": tone_shift,
         "completed_electives": completed_electives,
         "recommended_electives": recommended_electives[:4],
         "planned_courses": planned_course_objs,
@@ -1306,25 +1616,19 @@ def generate_report():
             "customPlannedCourses": user_data.get("customPlannedCourses") or "",
         }
 
-    # Step A: Query Tiger Data
-    matches = query_tiger_data(section_name, user_data)
-
-    # Step B: Gemini API Summary
-    gemini_text = generate_gemini_advice(section_name, user_data, matches)
-
-    # Step C: ElevenLabs TTS Audio
-    clean_section_name = (section_name or "").lower().strip().replace(" ", "_").replace("-", "_")
-    voice_id = (
-        SECTION_1_ELEVENLABS_VOICE_ID
-        if clean_section_name in ("basic_info", "section_1", "section1", "1")
-        else DEFAULT_ELEVENLABS_VOICE_ID
-    )
-    base64_audio = generate_elevenlabs_tts(gemini_text, voice_id)
-
     clean_sec = (section_name or "").lower().replace(" ", "_").replace("-", "_")
     class_analysis = None
     if clean_sec in ("course_advising", "section_2", "2", "courses", "course"):
         class_analysis = analyze_student_coursework(user_data)
+
+    # Step A: Query Tiger Data
+    matches = query_tiger_data(section_name, user_data)
+
+    # Step B: Gemini API Summary (with class_analysis context & tone shift support)
+    gemini_text = generate_gemini_advice(section_name, user_data, matches, class_analysis=class_analysis)
+
+    # Step C: ElevenLabs TTS Audio
+    base64_audio = generate_elevenlabs_tts(gemini_text)
 
     return jsonify({
         "section_name": section_name,
