@@ -208,7 +208,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     <div class="course-chk-top">
                         <span class="course-chk-code">${QuizApp.escapeHtml(e.course_id)}</span>
                         <span class="course-chk-credits">${QuizApp.escapeHtml(e.credits)} Credits</span>
-                        <span class="course-chk-level" style="background:rgba(168, 85, 247, 0.2); color:#d8b4fe;">Popular Elective</span>
+                        <span class="course-chk-level" style="background:rgba(112, 75, 137, 0.12); color:#59366F;">Popular Elective</span>
                     </div>
                     <div class="course-chk-title">${QuizApp.escapeHtml(e.course_title)}</div>
                     ${e.skill_tags ? `<div class="course-chk-tags">${QuizApp.escapeHtml(e.skill_tags)}</div>` : ""}

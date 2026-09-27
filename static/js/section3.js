@@ -74,7 +74,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const card = document.createElement("div");
                 card.className = "alumni-card";
                 const actsList = (m.activities_joined || ["HackUMBC", "ACM Student Chapter"])
-                    .map((a) => `<span class="highlight-tag" style="color:#fdba74;">${QuizApp.escapeHtml(a)}</span>`)
+                    .map((a) => `<span class="highlight-tag" style="color:#80510C;">${QuizApp.escapeHtml(a)}</span>`)
                     .join("");
 
                 card.innerHTML = `
@@ -85,7 +85,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                         </div>
                         <h4 class="alum-role-title">${QuizApp.escapeHtml(m.first_job_title || "Software Engineer")}</h4>
                         <p class="alum-employer">${QuizApp.escapeHtml(m.first_employer || "Amazon")} &bull; <span style="color:var(--avatar-orange);">${QuizApp.escapeHtml(m.major || "Computer Science")}</span></p>
-                        <div style="background-color:rgba(0,0,0,0.25); padding:0.6rem; border-radius:6px; margin-bottom:0.6rem;">
+                        <div style="background-color:var(--bg-inset); padding:0.6rem; border-radius:6px; margin-bottom:0.6rem;">
                             <span style="font-size:0.68rem; text-transform:uppercase; color:var(--text-muted); font-weight:600;">Campus Engagement Record</span>
                             <p style="font-size:0.78rem; color:var(--text-secondary); margin-top:0.25rem;">
                                 ${QuizApp.escapeHtml(m.outlier_story || "Built award-winning hackathon project and led student workshops.")}

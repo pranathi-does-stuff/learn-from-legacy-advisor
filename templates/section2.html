@@ -110,7 +110,7 @@
             <div id="popular-electives-grid" class="course-checklist-grid" style="margin-top: 1rem;"></div>
 
             <div class="course-planner-card"
-                style="margin-top: 1.5rem; background:rgba(15, 23, 42, 0.6); padding:1.25rem; border-radius:8px; border:1px solid var(--border-subtle);">
+                style="margin-top: 1.5rem; background:var(--bg-elevated); padding:1.25rem; border-radius:8px; border:1px solid var(--border-subtle);">
                 <label class="field-label" for="custom-electives-input"
                     style="font-weight:600; margin-bottom:0.4rem; display:block;">Other Electives or Special Topics
                     Taken (Comma-separated, Optional)</label>
@@ -146,20 +146,20 @@
             </p>
 
             <div class="course-planner-card"
-                style="margin-top: 1rem; background:rgba(15, 23, 42, 0.6); padding:1.25rem; border-radius:8px; border:1px solid var(--border-subtle);">
+                style="margin-top: 1rem; background:var(--bg-elevated); padding:1.25rem; border-radius:8px; border:1px solid var(--border-subtle);">
                     <h4 class="card-subtitle" style="margin-bottom:0.4rem; color:var(--accent-gold);">Select Upcoming
                     Coursework from Catalog</h4>
                 <p class="card-subtext" style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:0.75rem;">
                     Click course pills to toggle them in your planned schedule:</p>
                 <div id="catalog-course-pills" class="skill-pills-wrap"
-                    style="display:flex; flex-wrap:wrap; gap:0.5rem; max-height:220px; overflow-y:auto; padding:0.75rem; background:rgba(0,0,0,0.3); border-radius:6px; border:1px solid var(--border-subtle);">
+                    style="display:flex; flex-wrap:wrap; gap:0.5rem; max-height:220px; overflow-y:auto; padding:0.75rem; background:var(--bg-inset); border-radius:6px; border:1px solid var(--border-subtle);">
                 </div>
             </div>
             <label class="required-response"><input type="checkbox" id="no-planned-courses"> I do not have any courses planned yet.</label>
             <p id="planned-courses-error" class="required-error" role="alert" hidden></p>
 
             <div class="course-planner-card"
-                style="margin-top: 1rem; background:rgba(15, 23, 42, 0.6); padding:1.25rem; border-radius:8px; border:1px solid var(--border-subtle);">
+                style="margin-top: 1rem; background:var(--bg-elevated); padding:1.25rem; border-radius:8px; border:1px solid var(--border-subtle);">
                 <label class="field-label" for="custom-planned-input"
                     style="font-weight:600; margin-bottom:0.4rem; display:block;">Planned Future Courses, Senior
                     Electives &amp; Capstones (Optional if selecting from the catalog)</label>
@@ -278,5 +278,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/section2.js', v='52') }}"></script>
+<script src="{{ url_for('static', filename='js/section2.js', v='53') }}"></script>
 {% endblock %}

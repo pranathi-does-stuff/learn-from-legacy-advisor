@@ -803,7 +803,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const card = document.createElement("div");
             card.className = "alumni-card";
             const skillsList = (m.skills_mastered || ["Python", "AWS", "SQL", "Git"])
-                .map((s) => `<span class="highlight-tag" style="color:#c4b5fd;">${escapeHtml(s)}</span>`)
+                .map((s) => `<span class="highlight-tag" style="color:#59366F;">${escapeHtml(s)}</span>`)
                 .join("");
             const internList = (m.internships_held || [])
                 .slice(0, 2)
@@ -818,7 +818,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
                     <h4 class="alum-role-title">${escapeHtml(m.first_job_title || "Software Specialist")}</h4>
                     <p class="alum-employer">${escapeHtml(m.first_employer || "Tech Company")} &bull; <span style="color:var(--avatar-purple);">${escapeHtml(m.internship_count || 2)} Internships</span></p>
-                    <div style="background-color:rgba(0,0,0,0.25); padding:0.6rem; border-radius:6px; margin-bottom:0.6rem;">
+                    <div style="background-color:var(--bg-inset); padding:0.6rem; border-radius:6px; margin-bottom:0.6rem;">
                         <span style="font-size:0.68rem; text-transform:uppercase; color:var(--text-muted); font-weight:600;">Internship History</span>
                         ${internList || "<div style='font-size:0.78rem; color:var(--text-secondary);'>Pre-grad summer internship</div>"}
                     </div>

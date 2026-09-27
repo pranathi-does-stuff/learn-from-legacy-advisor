@@ -143,8 +143,8 @@
 
             <!-- Persistence & Action Callout -->
             <div class="action-card"
-                style="background:linear-gradient(135deg, rgba(30,41,59,0.8), rgba(15,23,42,0.9)); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:1.5rem; margin-top:2rem;">
-                <h4 style="color:#f8fafc; font-size:1.1rem; margin-bottom:0.5rem;">Tiger Data Archival &amp; Next Steps
+                style="background:var(--bg-elevated); border:1px solid var(--border-subtle); border-radius:12px; padding:1.5rem; margin-top:2rem;">
+                <h4 style="color:var(--text-primary); font-size:1.1rem; margin-bottom:0.5rem;">Tiger Data Archival &amp; Next Steps
                 </h4>
                 <p style="color:var(--text-secondary); font-size:0.88rem; margin-bottom:1.25rem;">
                     Save this customized 4-year graduation and career roadmap directly to the Tiger Data repository to
@@ -152,7 +152,7 @@
                 </p>
 
                 <div id="save-confirmation-msg" class="success-banner"
-                    style="background:rgba(16,185,129,0.15); border:1px solid #10b981; color:#34d399; padding:0.75rem 1rem; border-radius:8px; margin-bottom:1rem; font-size:0.9rem;"
+                    style="background:rgba(39,104,74,0.1); border:1px solid rgba(39,104,74,0.28); color:var(--accent-emerald); padding:0.75rem 1rem; border-radius:8px; margin-bottom:1rem; font-size:0.9rem;"
                     hidden></div>
 
                 <div style="display:flex; flex-wrap:wrap; align-items:center; gap:1rem;">
@@ -171,5 +171,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/section5.js', v='35') }}"></script>
+<script src="{{ url_for('static', filename='js/section5.js', v='36') }}"></script>
 {% endblock %}
