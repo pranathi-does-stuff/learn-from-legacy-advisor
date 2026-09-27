@@ -25,7 +25,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     const subPlanned = document.getElementById("substep-planned");
     const zeroCreditCourseNote = document.getElementById("zero-credit-course-note");
     const creditValue = state.user.creditsCompleted;
-    const hasZeroCompletedCredits = creditValue !== null && creditValue !== undefined && String(creditValue).trim() !== "" && Number(creditValue) === 0;
+    const hasRecordedCredits = creditValue !== null && creditValue !== undefined && String(creditValue).trim() !== "";
+    const completedCredits = hasRecordedCredits ? Number(creditValue) : NaN;
+    const hasZeroCompletedCredits = hasRecordedCredits && completedCredits === 0;
+    const isEarlyCreditStudent = Number.isFinite(completedCredits) && completedCredits < 30;
+    const shouldSkipCompletedCourseQuestions = hasZeroCompletedCredits;
 
     // Screen 1 Elements
     const majorLabel = document.getElementById("student-major-label");
@@ -41,6 +45,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const customElectivesInput = document.getElementById("custom-electives-input");
     const noneElectivesCheckbox = document.getElementById("none-electives");
     const electivesQuestionHeading = document.getElementById("electives-question-heading");
+    const electivesQuestionDescription = document.getElementById("electives-question-description");
+    const customElectivesLabel = document.getElementById("custom-electives-label");
+    const noneElectivesLabel = document.getElementById("none-electives-label");
     const btnBackToRequired = document.getElementById("btn-back-to-required");
     const btnToPlanned = document.getElementById("btn-to-planned");
 
@@ -52,7 +59,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const btnSubmitReport = document.getElementById("btn-submit-course-report");
     const spinnerGenerateReport = document.getElementById("spinner-generate-report");
 
-    if (hasZeroCompletedCredits) {
+    if (shouldSkipCompletedCourseQuestions) {
         if (btnBackToElectives) btnBackToElectives.hidden = true;
         if (zeroCreditCourseNote) zeroCreditCourseNote.hidden = false;
         const plannedQuestionLabel = subPlanned?.querySelector(".step-badge.active-pill");
@@ -69,10 +76,33 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Initialize course tracking sets
     const takenRequired = new Set(state.user.takenRequiredCourses || []);
-    const takenElectives = new Set(state.user.takenElectives || []);
+    const electiveResponseMode = isEarlyCreditStudent ? "interest" : "completed";
+    const selectedElectives = new Set(isEarlyCreditStudent ? (state.user.interestedElectives || []) : (state.user.takenElectives || []));
     const plannedCourses = new Set(state.user.plannedCourses || []);
     if (noneRequiredCheckbox) noneRequiredCheckbox.checked = Boolean(state.user.noRequiredCourses);
-    if (noneElectivesCheckbox) noneElectivesCheckbox.checked = Boolean(state.user.noElectives);
+    if (noneElectivesCheckbox) noneElectivesCheckbox.checked = Boolean(isEarlyCreditStudent ? state.user.noInterestedElectives : state.user.noElectives);
+    if (customElectivesInput) customElectivesInput.value = isEarlyCreditStudent ? (state.user.customInterestedElectives || "") : (state.user.customElectives || "");
+
+    const saveElectiveAnswer = () => {
+        const customValue = customElectivesInput?.value || "";
+        const noSelection = Boolean(noneElectivesCheckbox?.checked);
+        if (isEarlyCreditStudent) {
+            QuizApp.updateUserData({
+                interestedElectives: Array.from(selectedElectives),
+                customInterestedElectives: customValue,
+                noInterestedElectives: noSelection,
+                takenElectives: [],
+                customElectives: "",
+                noElectives: false,
+            });
+        } else {
+            QuizApp.updateUserData({
+                takenElectives: Array.from(selectedElectives),
+                customElectives: customValue,
+                noElectives: noSelection,
+            });
+        }
+    };
 
     const showValidationError = (id, message) => {
         const error = document.getElementById(id);
@@ -86,14 +116,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (error) error.hidden = true;
     };
 
-    // Play Avatar 2 Intro Speech
-    setTimeout(async () => {
+    // Start Avatar 2's intro speech as soon as the page is initialized.
+    void (async () => {
         try {
             await QuizApp.playAvatarDialogue(introText, 2);
         } catch (e) {
             console.log("Intro audio playback:", e);
         }
-    }, 300);
+    })();
 
     if (introReplayBtn) {
         introReplayBtn.addEventListener("click", () => {
@@ -114,21 +144,24 @@ document.addEventListener("DOMContentLoaded", async () => {
                 questionsStage.style.display = "grid";
                 document.querySelector(".page-wrapper")?.classList.add("section1-immersive");
                 window.scrollTo({ top: 0, behavior: "smooth" });
-                if (hasZeroCompletedCredits) {
+                if (shouldSkipCompletedCourseQuestions) {
                     takenRequired.clear();
-                    takenElectives.clear();
+                    selectedElectives.clear();
                     if (noneRequiredCheckbox) noneRequiredCheckbox.checked = true;
                     if (noneElectivesCheckbox) noneElectivesCheckbox.checked = true;
                     if (customElectivesInput) customElectivesInput.value = "";
                     QuizApp.updateUserData({
                         takenRequiredCourses: [],
                         noRequiredCourses: true,
+                        interestedElectives: [],
+                        customInterestedElectives: "",
+                        noInterestedElectives: false,
                         takenElectives: [],
                         customElectives: "",
-                        noElectives: true,
+                        noElectives: false,
                     });
-                    showSubstep(subPlanned);
-                    QuizApp.playAvatarDialogue("Since you are just starting out with 0 completed credits, let's plan the courses you want to take next.", 2);
+                    showSubstep(subElectives);
+                    QuizApp.playAvatarDialogue("Since you are just starting out with no completed credits, tell me which electives you are interested in taking. I will use them to recommend a pathway, not count them as completed.", 2);
                 } else {
                     showSubstep(subRequired);
                     QuizApp.playAvatarDialogue("Let's review the required core courses for your major. Check off any that you have completed.", 2);
@@ -164,6 +197,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 minor: state.user.minor || "",
                 majorTrack: state.user.majorTrack || "",
                 creditsCompleted: state.user.creditsCompleted || "15",
+                classYear: state.user.classYear || "",
                 targetCompanyIndustry: state.user.targetCompanyIndustry || "",
                 careerGoals: state.user.careerGoals || "",
             });
@@ -175,8 +209,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 // Dynamic Text Phrasing for Electives based on Credits
                 if (electivesQuestionHeading) {
-                    const phrasing = cachedCourseOptions.dynamic_phrasing || (Number(state.user.creditsCompleted) <= 30 ? "Do any of these electives interest you?" : "Which of these electives have you taken?");
+                    const phrasing = cachedCourseOptions.dynamic_phrasing || (isEarlyCreditStudent ? "Are you interested in taking any of these electives?" : "Which of these electives have you taken?");
                     electivesQuestionHeading.innerHTML = `${phrasing} <span class="required-indicator">Required response</span>`;
+                }
+                if (electiveResponseMode === "interest") {
+                    if (electivesQuestionDescription) electivesQuestionDescription.innerHTML = `Choose electives that sound interesting from courses popular with alumni in <strong id="student-industry-label" style="color:var(--accent-emerald);">${QuizApp.escapeHtml(state.user.targetCompanyIndustry || state.user.careerGoals || "your target field")}</strong>. These will guide your recommended pathway and will not be recorded as completed.`;
+                    if (customElectivesLabel) customElectivesLabel.textContent = "Other Electives or Topics You Are Interested In (Comma-separated, Optional)";
+                    if (noneElectivesLabel) noneElectivesLabel.textContent = " I am not interested in any of these or other electives right now.";
+                    if (customElectivesInput) customElectivesInput.placeholder = "e.g. CMSC 491 (Deep Learning), MATH 221";
                 }
 
                 renderPlannedChips();
@@ -246,7 +286,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         electives.forEach((e) => {
-            const isChecked = takenElectives.has(e.course_id);
+            const isChecked = selectedElectives.has(e.course_id);
             const card = document.createElement("div");
             card.className = `course-check-item ${isChecked ? "checked" : ""}`;
             card.innerHTML = `
@@ -262,18 +302,18 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </div>
             `;
             card.addEventListener("click", () => {
-                const nowChecked = !takenElectives.has(e.course_id);
+                const nowChecked = !selectedElectives.has(e.course_id);
                 if (nowChecked) {
-                    takenElectives.add(e.course_id);
+                    selectedElectives.add(e.course_id);
                     if (noneElectivesCheckbox) noneElectivesCheckbox.checked = false;
                     card.classList.add("checked");
                     card.querySelector(".course-chk-box").textContent = "✓";
                 } else {
-                    takenElectives.delete(e.course_id);
+                    selectedElectives.delete(e.course_id);
                     card.classList.remove("checked");
                     card.querySelector(".course-chk-box").textContent = "";
                 }
-                QuizApp.updateUserData({ takenElectives: Array.from(takenElectives), noElectives: false });
+                saveElectiveAnswer();
                 clearValidationError("electives-error");
             });
             popularGrid.appendChild(card);
@@ -396,18 +436,18 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     noneElectivesCheckbox?.addEventListener("change", () => {
         if (noneElectivesCheckbox.checked) {
-            takenElectives.clear();
+            selectedElectives.clear();
             clearChecklist(popularGrid);
             if (customElectivesInput) customElectivesInput.value = "";
         }
-        QuizApp.updateUserData({ takenElectives: Array.from(takenElectives), customElectives: customElectivesInput?.value || "", noElectives: noneElectivesCheckbox.checked });
+        saveElectiveAnswer();
         clearValidationError("electives-error");
     });
 
     customElectivesInput?.addEventListener("input", () => {
         if (customElectivesInput.value.trim()) {
             if (noneElectivesCheckbox) noneElectivesCheckbox.checked = false;
-            QuizApp.updateUserData({ customElectives: customElectivesInput.value, noElectives: false });
+            saveElectiveAnswer();
         }
         clearValidationError("electives-error");
     });
@@ -421,7 +461,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
             QuizApp.updateUserData({ takenRequiredCourses: Array.from(takenRequired), noRequiredCourses: Boolean(noneRequiredCheckbox?.checked) });
             showSubstep(subElectives);
-            QuizApp.playAvatarDialogue("Great, now let's look at your electives.", 2);
+            const electivePrompt = isEarlyCreditStudent
+                ? (completedCredits === 0
+                    ? "Since you are just getting started, which of these electives are you interested in taking? I will use your choices to build a recommended pathway, not mark them as completed."
+                    : `With ${completedCredits} completed credits, which of these electives are you interested in taking next? I will use your choices to build a recommended pathway, not mark them as completed.`)
+                : "Great, now let's look at the electives you have completed.";
+            QuizApp.playAvatarDialogue(electivePrompt, 2);
         });
     }
 
@@ -434,23 +479,22 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (btnToPlanned) {
         btnToPlanned.addEventListener("click", () => {
-            if (!takenElectives.size && !customElectivesInput?.value.trim() && !noneElectivesCheckbox?.checked) {
-                showValidationError("electives-error", "Select any electives, enter other electives, or confirm that you have not taken any.");
+            if (!selectedElectives.size && !customElectivesInput?.value.trim() && !noneElectivesCheckbox?.checked) {
+                showValidationError("electives-error", isEarlyCreditStudent ? "Select electives that interest you, enter other interests, or confirm that none interest you right now." : "Select any electives, enter other electives, or confirm that you have not taken any.");
                 return;
             }
             if (customElectivesInput) {
                 const customVal = customElectivesInput.value.trim();
-                QuizApp.updateUserData({ customElectives: customVal });
-                if (customVal) {
+                if (customVal && !isEarlyCreditStudent) {
                     customVal.split(",").forEach((c) => {
                         const clean = c.trim().toUpperCase().replace(" ", "");
-                        if (clean) takenElectives.add(clean);
+                        if (clean) selectedElectives.add(clean);
                     });
                 }
             }
-            QuizApp.updateUserData({ takenElectives: Array.from(takenElectives), noElectives: Boolean(noneElectivesCheckbox?.checked) });
+            saveElectiveAnswer();
             showSubstep(subPlanned);
-            QuizApp.playAvatarDialogue("Excellent. Now search and select upcoming courses from the catalog to build your planned schedule.", 2);
+            QuizApp.playAvatarDialogue(isEarlyCreditStudent ? "Excellent. I will use those interests to shape your recommended pathway. Now select courses you are considering for your upcoming schedule." : "Excellent. Now search and select upcoming courses from the catalog to build your planned schedule.", 2);
         });
     }
 
@@ -473,7 +517,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             QuizApp.updateUserData({
                 takenRequiredCourses: Array.from(takenRequired),
-                takenElectives: Array.from(takenElectives),
+                takenElectives: isEarlyCreditStudent ? [] : Array.from(selectedElectives),
+                interestedElectives: isEarlyCreditStudent ? Array.from(selectedElectives) : [],
+                customInterestedElectives: isEarlyCreditStudent ? (customElectivesInput?.value.trim() || "") : "",
                 plannedCourses: Array.from(plannedCourses),
                 noPlannedCourses: plannedCourses.size === 0,
             });
@@ -513,7 +559,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                     // Play Avatar 2 speech synthesis
                     if (reportData.text) {
-                        QuizApp.playAvatarDialogue(reportData.text, 2);
+                        QuizApp.playReportAudio(reportData.text, reportData.audio, 2);
                     }
                 } else {
                     alert("Server returned an error while generating course analysis. Please try again.");
@@ -536,6 +582,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         const completedReq = analysis.completed_required || [];
         const missingReq = analysis.missing_required || [];
         const completedElec = analysis.completed_electives || [];
+        const interestedElec = analysis.interested_electives || [];
+        const isInterestReport = analysis.elective_response_mode === "interest";
+        const displayedElectives = isInterestReport ? interestedElec : completedElec;
         const recommendedElec = analysis.recommended_electives || [];
         const plannedList = analysis.planned_courses || [];
 
@@ -575,29 +624,29 @@ document.addEventListener("DOMContentLoaded", async () => {
                 ${analysis.missing_required_note ? `<p style="font-size:0.75rem; color:var(--accent-emerald); margin-top:0.4rem; font-style:italic;">${QuizApp.escapeHtml(analysis.missing_required_note)}</p>` : ""}
             </div>
 
-            <!-- Card 3: Completed Electives -->
+            <!-- Card 3: Elective history or freshman interests -->
             <div class="analysis-card" style="border-left: 4px solid var(--accent-emerald);">
                 <div class="analysis-card-header">
-                    <span class="analysis-card-title">🌟 Completed Electives</span>
-                    <span class="analysis-count-badge badge-completed">${completedElec.length} Taken</span>
+                    <span class="analysis-card-title">${isInterestReport ? "💡 Electives You're Interested In" : "🌟 Completed Electives"}</span>
+                    <span class="analysis-count-badge badge-completed">${displayedElectives.length} ${isInterestReport ? "Interests" : "Taken"}</span>
                 </div>
-                <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:0.6rem;">Electives &amp; specialized coursework recorded:</p>
+                <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:0.6rem;">${isInterestReport ? "These are interests that shape your pathway; they are not counted as completed coursework." : "Electives &amp; specialized coursework recorded:"}</p>
                 <div class="analysis-course-list">
-                    ${completedElec.length > 0 ? completedElec.map((c) => `
+                    ${displayedElectives.length > 0 ? displayedElectives.map((c) => `
                         <span class="analysis-course-pill pill-green" title="${QuizApp.escapeHtml(c.course_title)}">
                             <strong>${QuizApp.escapeHtml(c.course_id)}</strong>
                         </span>
-                    `).join("") : `<span style="color:var(--text-muted); font-size:0.8rem;">No electives taken yet</span>`}
+                    `).join("") : `<span style="color:var(--text-muted); font-size:0.8rem;">${isInterestReport ? "No elective interests selected yet" : "No electives taken yet"}</span>`}
                 </div>
             </div>
 
             <!-- Card 4: Recommended High-Yield Electives for Career -->
             <div class="analysis-card" style="border-left: 4px solid var(--accent-emerald);">
                 <div class="analysis-card-header">
-                    <span class="analysis-card-title">🚀 Top Career Electives</span>
-                    <span class="analysis-count-badge badge-completed">Dataset Matches</span>
+                    <span class="analysis-card-title">${isInterestReport ? "🧭 Recommended Elective Pathway" : "🚀 Top Career Electives"}</span>
+                    <span class="analysis-count-badge badge-completed">${isInterestReport ? "Next Steps" : "Dataset Matches"}</span>
                 </div>
-                <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:0.6rem;">High-yield electives taken by top-earning alumni in your industry:</p>
+                <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:0.6rem;">${isInterestReport ? "Your interests are prioritized first, alongside courses aligned with your goals." : "High-yield electives taken by alumni in your industry:"}</p>
                 <div class="analysis-course-list">
                     ${recommendedElec.length > 0 ? recommendedElec.map((c) => `
                         <span class="analysis-course-pill pill-green" title="Skills: ${QuizApp.escapeHtml(c.skill_tags || '')}">
@@ -670,7 +719,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (btnNext) {
         btnNext.addEventListener("click", () => {
             QuizApp.stopAllSpeech();
-            window.location.href = "/loading?next=3";
+            QuizApp.navigateWithTransition("/loading?next=3");
         });
     }
 

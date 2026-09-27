@@ -39,8 +39,9 @@
             </div>
         </div>
         <p id="advisor-intro-message" class="intro-dialogue-text">
-            Hello! I am Avatar 2, your Course Advising Specialist. Let's evaluate your coursework progression against
-            your major's required core curriculum and the high-impact electives taken by top alumni in your field.
+            With your foundation profile established, I am Avatar 2, your Course Advising Specialist. Let's evaluate
+            your coursework progression against your major's required core curriculum and the high-impact electives
+            taken by top alumni in your field.
         </p>
     </div>
 
@@ -126,8 +127,7 @@
                 <div id="required-loading-spinner" class="loading-state-container"
                     style="display:flex; align-items:center; gap:0.75rem; padding:1.5rem 0;">
                     <span class="spinner"></span>
-                    <span style="color:var(--text-secondary); font-size:0.9rem;">Loading required core curriculum from
-                        Tiger Data...</span>
+                    <span style="color:var(--text-secondary); font-size:0.9rem;">Loading required core curriculum...</span>
                 </div>
 
                 <div id="required-courses-grid" class="course-checklist-grid" style="margin-top: 1rem;"></div>
@@ -149,8 +149,8 @@
                 <p class="eyebrow">Section 2 of 5 &bull; Question 2 of 3</p>
                 <h2 class="step-heading" id="electives-question-heading">Which of these electives have you taken? <span
                         class="required-indicator">Required response</span></h2>
-                <p class="step-description">
-                    Select any non-required electives you have taken from the most popular courses among successful
+                <p class="step-description" id="electives-question-description">
+                    Select any non-required electives you have taken from popular courses among successful
                     alumni in <strong id="student-industry-label" style="color:var(--accent-emerald);">your target
                         field</strong>:
                 </p>
@@ -165,14 +165,14 @@
                 <div id="popular-electives-grid" class="course-checklist-grid" style="margin-top: 1rem;"></div>
 
                 <div class="form-field" style="margin-top: 1.5rem;">
-                    <label class="field-label" for="custom-electives-input">Other Electives or Special Topics Taken
+                    <label class="field-label" id="custom-electives-label" for="custom-electives-input">Other Electives or Special Topics Taken
                         (Comma-separated, Optional)</label>
                     <input type="text" id="custom-electives-input" class="text-input"
                         placeholder="e.g. CMSC 491 (Deep Learning), MATH 221, ENGL 393" />
                 </div>
                 <label class="required-response"
                     style="margin-top: 1rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer;">
-                    <input type="checkbox" id="none-electives"> I have not taken any of these or other electives.
+                    <input type="checkbox" id="none-electives"><span id="none-electives-label"> I have not taken any of these or other electives.</span>
                 </label>
                 <p id="electives-error" class="required-error" role="alert" hidden></p>
 
@@ -278,7 +278,7 @@
             <p class="eyebrow">Section 2 of 5 &bull; Course Advising Report</p>
             <h2 class="step-heading">Course Trajectory &amp; Curriculum Analysis</h2>
             <p class="step-description">
-                Direct comparative breakdown of your coursework against historical alumni records in Tiger Data:
+                Direct comparative breakdown of your coursework against historical alumni records:
             </p>
 
             <!-- Dynamic 5-Card Class Analysis Breakdown -->
@@ -305,5 +305,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/section2.js', v='130') }}"></script>
+<script src="{{ url_for('static', filename='js/section2.js', v='135') }}"></script>
 {% endblock %}

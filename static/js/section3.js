@@ -95,14 +95,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     };
 
-    // Auto-play Avatar 3 Introduction Audio
-    setTimeout(async () => {
+    // Start Avatar 3's intro speech as soon as the page is initialized.
+    void (async () => {
         try {
             await QuizApp.playAvatarDialogue(introText, 3);
         } catch (e) {
             console.log("Intro audio playback info:", e);
         }
-    }, 300);
+    })();
 
     if (introReplayBtn) {
         introReplayBtn.addEventListener("click", () => {
@@ -588,7 +588,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                     // Play Mentor Speech
                     if (reportData.text) {
-                        QuizApp.playAvatarDialogue(reportData.text, 3);
+                        QuizApp.playReportAudio(reportData.text, reportData.audio, 3);
                     }
                 } else {
                     alert("The server encountered an error while analyzing your campus involvement. Please try again.");
@@ -757,7 +757,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (btnNext) {
         btnNext.addEventListener("click", () => {
             QuizApp.stopAllSpeech();
-            window.location.href = "/loading?next=4";
+            QuizApp.navigateWithTransition("/loading?next=4");
         });
     }
 

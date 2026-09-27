@@ -7,6 +7,29 @@ document.addEventListener("DOMContentLoaded", async () => {
     const loadingScreen = document.getElementById("loading-screen");
     if (!loadingScreen) return;
 
+    const loadingTitle = document.getElementById("loading-title");
+    const loadingStatus = document.getElementById("loading-status");
+    const statusUpdates = [
+        ["Reviewing your profile", "Organizing your academic, involvement, and experience details..."],
+        ["Identifying your strongest matches", "Comparing your profile with relevant alumni pathways..."],
+        ["Preparing your next steps", "Shaping recommendations around your goals and current progress..."],
+        ["Almost ready", "Finalizing your personalized guidance..."],
+    ];
+    let statusIndex = 0;
+    const rotateStatus = () => {
+        if (!loadingStatus) return;
+        loadingStatus.classList.add("is-changing");
+        setTimeout(() => {
+            const [title, status] = statusUpdates[statusIndex % statusUpdates.length];
+            if (loadingTitle) loadingTitle.textContent = title;
+            loadingStatus.textContent = status;
+            loadingStatus.classList.remove("is-changing");
+            statusIndex += 1;
+        }, 180);
+    };
+    rotateStatus();
+    const statusTimer = setInterval(rotateStatus, 1700);
+
     const nextSec = parseInt(loadingScreen.getAttribute("data-next-sec") || "2", 10);
     const state = QuizApp.getQuizState();
 
@@ -47,7 +70,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Wait for both the minimum delay AND the API response
     await Promise.all([minDelayPromise, fetchReportPromise]);
+    clearInterval(statusTimer);
 
     // Transition smoothly to the combined section page (starts on Avatar Introduction stage)
-    window.location.href = `/section/${nextSec}`;
+    QuizApp.navigateWithTransition(`/section/${nextSec}`);
 });

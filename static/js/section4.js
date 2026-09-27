@@ -87,13 +87,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     const introText = introMsgEl ? introMsgEl.textContent.trim() : "";
     const introReplayBtn = document.getElementById("intro-replay-voice-btn");
 
-    setTimeout(async () => {
+    // Start Avatar 4's intro speech as soon as the page is initialized.
+    void (async () => {
         try {
             await QuizApp.playAvatarDialogue(introText, 4);
         } catch (e) {
             console.log("Intro audio playback info:", e);
         }
-    }, 300);
+    })();
 
     if (introReplayBtn) {
         introReplayBtn.addEventListener("click", () => {
@@ -140,7 +141,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // =========================================================================
     const chipsWrapper = document.getElementById("skills-chips-wrapper");
     const tagInput = document.getElementById("skills-tag-input");
-    const suggestedPills = document.querySelectorAll("#suggested-skills-pills .skill-pill");
+    const suggestedPillsContainer = document.getElementById("suggested-skills-pills");
     const skillsError = document.getElementById("skills-required-error");
     const btnToCategories = document.getElementById("btn-to-experience-categories");
 
@@ -155,11 +156,51 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const syncSuggestedPills = () => {
         const lowerList = activeSkills.map(s => s.toLowerCase());
-        suggestedPills.forEach(pill => {
+        suggestedPillsContainer?.querySelectorAll(".skill-pill").forEach(pill => {
             const skill = (pill.getAttribute("data-skill") || pill.textContent).trim().toLowerCase();
             const isActive = lowerList.some(s => s === skill || s.includes(skill) || skill.includes(s));
             pill.classList.toggle("active", isActive);
         });
+    };
+
+    const renderSuggestedSkills = (skills) => {
+        if (!suggestedPillsContainer) return;
+        suggestedPillsContainer.replaceChildren();
+
+        if (!Array.isArray(skills) || skills.length === 0) {
+            const message = document.createElement("span");
+            message.style.cssText = "color:var(--text-muted); font-size:0.85rem;";
+            message.textContent = "No matched alumni skill tags are available yet.";
+            suggestedPillsContainer.appendChild(message);
+            return;
+        }
+
+        skills.forEach((skill) => {
+            const pill = document.createElement("button");
+            pill.type = "button";
+            pill.className = "skill-pill";
+            pill.dataset.skill = skill;
+            pill.textContent = skill;
+            suggestedPillsContainer.appendChild(pill);
+        });
+        syncSuggestedPills();
+    };
+
+    const loadAlumniSkillSuggestions = async () => {
+        if (!suggestedPillsContainer) return;
+        try {
+            const response = await fetch("/api/professional-skill-suggestions", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ user_data: QuizApp.getQuizState().user }),
+            });
+            if (!response.ok) throw new Error(`Skill suggestions request failed (${response.status})`);
+            const data = await response.json();
+            renderSuggestedSkills(data.skills);
+        } catch (error) {
+            console.warn("Could not load alumni-matched skill suggestions:", error);
+            renderSuggestedSkills([]);
+        }
     };
 
     const renderSkillsChips = () => {
@@ -241,24 +282,26 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-    suggestedPills.forEach(pill => {
-        pill.addEventListener("click", () => {
-            const skill = (pill.getAttribute("data-skill") || pill.textContent).trim();
-            const index = activeSkills.findIndex(s => s.toLowerCase() === skill.toLowerCase());
+    suggestedPillsContainer?.addEventListener("click", (event) => {
+        const pill = event.target.closest(".skill-pill");
+        if (!pill || !suggestedPillsContainer.contains(pill)) return;
+        const skill = (pill.getAttribute("data-skill") || pill.textContent).trim();
+        if (!skill) return;
+        const index = activeSkills.findIndex(s => s.toLowerCase() === skill.toLowerCase());
 
-            if (index >= 0) {
-                activeSkills.splice(index, 1);
-                renderSkillsChips();
-                saveSkillsState();
-                QuizApp.avatarSayTextOnly(`Removed ${skill}.`, 4);
-            } else {
-                addSkill(skill);
-                QuizApp.avatarSayTextOnly(QuizApp.HARDCODED_REACTIONS.skill(skill), 4);
-            }
-        });
+        if (index >= 0) {
+            activeSkills.splice(index, 1);
+            renderSkillsChips();
+            saveSkillsState();
+            QuizApp.avatarSayTextOnly(`Removed ${skill}.`, 4);
+        } else {
+            addSkill(skill);
+            QuizApp.avatarSayTextOnly(QuizApp.HARDCODED_REACTIONS.skill(skill), 4);
+        }
     });
 
     renderSkillsChips();
+    loadAlumniSkillSuggestions();
 
     if (btnToCategories) {
         btnToCategories.addEventListener("click", () => {
@@ -300,10 +343,22 @@ document.addEventListener("DOMContentLoaded", async () => {
         ? { ...state.user.categoryDetails }
         : {};
 
-    const createCategoryDetailPanel = (catName) => {
-        const meta = CATEGORY_METADATA[catName] || {
+    const getBaseCategoryName = (detailKey) => String(detailKey).replace(/ #\d+$/, "");
+
+    const addCategoryEntry = (baseCategory) => {
+        let entryNumber = 2;
+        while (categoryDetailsMap[`${baseCategory} #${entryNumber}`]) entryNumber += 1;
+        const detailKey = `${baseCategory} #${entryNumber}`;
+        categoryDetailsMap[detailKey] = {};
+        syncCategoryDetailsPanels();
+        categoryDetailsContainer?.querySelector(`.category-detail-panel[data-category="${detailKey}"] input`)?.focus();
+    };
+
+    const createCategoryDetailPanel = (detailKey) => {
+        const baseCategory = getBaseCategoryName(detailKey);
+        const meta = CATEGORY_METADATA[baseCategory] || {
             icon: "💼",
-            title: `${catName} Details`,
+            title: `${baseCategory} Details`,
             badge: "Experience Category",
             field1: { label: "Role / Position", placeholder: "e.g., Role Title", key: "title" },
             field2: { label: "Organization / Employer", placeholder: "e.g., Organization", key: "employer" },
@@ -311,7 +366,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             desc: { label: "Key Responsibilities & Highlights", placeholder: "e.g., Summary of key activities and impact...", key: "description" },
         };
 
-        const existing = categoryDetailsMap[catName] || {};
+        const existing = categoryDetailsMap[detailKey] || {};
+        const entryLabel = detailKey === baseCategory ? meta.title : `${meta.title} (${detailKey})`;
         const val1 = existing.title || "";
         const val2 = existing.employer || "";
         const val3 = existing.timeActive || "";
@@ -319,33 +375,36 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const panel = document.createElement("div");
         panel.className = "category-detail-panel";
-        panel.dataset.category = catName;
+        panel.dataset.category = detailKey;
 
         panel.innerHTML = `
             <div class="category-detail-header">
                 <div class="category-detail-title">
                     <span>${meta.icon}</span>
-                    <span>${meta.title}</span>
+                    <span>${entryLabel}</span>
                 </div>
-                <span class="category-detail-badge">${meta.badge}</span>
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                    <span class="category-detail-badge">${meta.badge}</span>
+                    <button type="button" class="secondary-btn btn-add-category-instance" data-category="${QuizApp.escapeHtml(baseCategory)}" style="padding:0.35rem 0.55rem; font-size:0.72rem;">+ Add another ${QuizApp.escapeHtml(baseCategory)}</button>
+                </div>
             </div>
             <div class="category-detail-grid">
                 <div class="form-field">
                     <label class="field-label">${meta.field1.label} <span class="required-indicator">Required</span></label>
-                    <input type="text" class="text-input cat-input-field" data-cat="${catName}" data-field="${meta.field1.key}" placeholder="${meta.field1.placeholder}" value="${QuizApp.escapeHtml(val1)}" />
+                    <input type="text" class="text-input cat-input-field" data-cat="${detailKey}" data-field="${meta.field1.key}" placeholder="${meta.field1.placeholder}" value="${QuizApp.escapeHtml(val1)}" />
                 </div>
                 <div class="form-field">
                     <label class="field-label">${meta.field2.label} <span class="required-indicator">Required</span></label>
-                    <input type="text" class="text-input cat-input-field" data-cat="${catName}" data-field="${meta.field2.key}" placeholder="${meta.field2.placeholder}" value="${QuizApp.escapeHtml(val2)}" />
+                    <input type="text" class="text-input cat-input-field" data-cat="${detailKey}" data-field="${meta.field2.key}" placeholder="${meta.field2.placeholder}" value="${QuizApp.escapeHtml(val2)}" />
                 </div>
                 <div class="form-field">
                     <label class="field-label">${meta.field3.label} <span class="required-indicator">Required</span></label>
-                    <input type="text" class="text-input cat-input-field" data-cat="${catName}" data-field="${meta.field3.key}" placeholder="${meta.field3.placeholder}" value="${QuizApp.escapeHtml(val3)}" />
+                    <input type="text" class="text-input cat-input-field" data-cat="${detailKey}" data-field="${meta.field3.key}" placeholder="${meta.field3.placeholder}" value="${QuizApp.escapeHtml(val3)}" />
                 </div>
             </div>
             <div class="form-field">
                 <label class="field-label">${meta.desc.label} <span class="required-indicator">Required</span></label>
-                <textarea class="text-input cat-input-field" data-cat="${catName}" data-field="${meta.desc.key}" rows="2" placeholder="${meta.desc.placeholder}">${QuizApp.escapeHtml(valDesc)}</textarea>
+                <textarea class="text-input cat-input-field" data-cat="${detailKey}" data-field="${meta.desc.key}" rows="2" placeholder="${meta.desc.placeholder}">${QuizApp.escapeHtml(valDesc)}</textarea>
             </div>
         `;
 
@@ -360,6 +419,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                 QuizApp.updateUserData({ categoryDetails: categoryDetailsMap });
                 if (categoriesError) categoriesError.hidden = true;
             });
+        });
+
+        panel.querySelector(".btn-add-category-instance")?.addEventListener("click", () => {
+            addCategoryEntry(baseCategory);
         });
 
         return panel;
@@ -380,7 +443,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Remove panels for unselected categories
         categoryDetailsContainer.querySelectorAll(".category-detail-panel").forEach(panel => {
             const cat = panel.dataset.category;
-            if (!selectedCats.includes(cat)) {
+            if (!selectedCats.includes(getBaseCategoryName(cat))) {
                 panel.remove();
                 delete categoryDetailsMap[cat];
             }
@@ -394,6 +457,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                 categoryDetailsContainer.appendChild(newPanel);
             }
         });
+
+        Object.keys(categoryDetailsMap)
+            .filter(cat => cat !== getBaseCategoryName(cat) && selectedCats.includes(getBaseCategoryName(cat)))
+            .forEach(cat => {
+                if (!categoryDetailsContainer.querySelector(`.category-detail-panel[data-category="${cat}"]`)) {
+                    categoryDetailsContainer.appendChild(createCategoryDetailPanel(cat));
+                }
+            });
 
         QuizApp.updateUserData({ categoryDetails: categoryDetailsMap });
     };
@@ -491,7 +562,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             prefillJobRolesFromCategoryDetails();
 
             showScreen(3);
-            QuizApp.playAvatarDialogue("List your past internships, research positions, or employment history.", 4);
+            QuizApp.playAvatarDialogue("Your campus jobs are carried over. Add any additional employment roles not already listed.", 4);
         });
     }
 
@@ -532,8 +603,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             </div>
             <div class="form-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-top:0.75rem;">
                 <div class="form-field">
-                    <label class="field-label">Job Title <span class="required-indicator">Required</span></label>
-                    <input type="text" class="text-input role-title-input" placeholder="e.g., Teaching Assistant, Lead Teacher, or Axe Coach" value="${QuizApp.escapeHtml(title)}" />
+                    <label class="field-label">Employment Title <span class="required-indicator">Required</span></label>
+                    <input type="text" class="text-input role-title-input" placeholder="e.g., Retail Associate, Community Volunteer, or Freelance Developer" value="${QuizApp.escapeHtml(title)}" />
                 </div>
                 <div class="form-field">
                     <label class="field-label">Company / Organization <span class="required-indicator">Required</span></label>
@@ -579,10 +650,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         const currentRoles = collectJobRoles();
         if (currentRoles.length > 0) return; // User already entered roles
 
-        // Check if user entered Internship, Co-op, or Campus Job in Screen 2
+        // Campus jobs are the only category entries carried into additional employment.
         const candidateRoles = [];
-        ["Internships", "Co-op", "Campus Job", "Research", "Tutoring"].forEach(cat => {
-            const d = categoryDetailsMap[cat];
+        Object.entries(categoryDetailsMap)
+            .filter(([detailKey]) => getBaseCategoryName(detailKey) === "Campus Job")
+            .forEach(([cat, d]) => {
             if (d && (d.title || d.employer || d.description)) {
                 candidateRoles.push({
                     title: d.title || `${cat} Role`,
@@ -867,7 +939,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (btnNextToSection5) {
         btnNextToSection5.addEventListener("click", () => {
             QuizApp.stopAllSpeech();
-            window.location.href = "/loading?next=5";
+            QuizApp.navigateWithTransition("/loading?next=5");
         });
     }
 

@@ -34,11 +34,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (response.status === 402) {
                     const data = await response.json();
                     section1VoiceBlocked = true;
-                    console.warn(data.error || "The configured Section 1 voice is unavailable on this ElevenLabs plan.");
+                    console.warn(data.error || "The configured voice is unavailable on this plan.");
                 } else if (response.ok) {
                     const data = await response.json();
-                    if (data.audio && await QuizApp.playBase64Audio(data.audio)) return;
-                    console.warn("Section 1 ElevenLabs response contained no playable audio.");
+                    if (data.audio) {
+                        await QuizApp.playBase64Audio(data.audio);
+                        return;
+                    }
+                    console.warn("Voice response contained no playable audio.");
                 } else {
                     console.warn(`Section 1 voice endpoint returned HTTP ${response.status}.`);
                 }
@@ -52,8 +55,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     };
 
-    // Auto-play voice on load
-    setTimeout(() => saySection1Message(introText), 400);
+    // Start the advisor introduction as soon as this page is initialized.
+    void saySection1Message(introText);
 
     if (introReplayBtn) {
         introReplayBtn.addEventListener("click", () => {
@@ -450,7 +453,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             targetSalary: salaryInput?.value || "",
             careerGoals: goalsInput?.value || "",
         });
-        window.location.href = "/loading?next=2";
+        QuizApp.navigateWithTransition("/loading?next=2");
     });
 
     document.getElementById("voice-replay-btn")?.addEventListener("click", () => {

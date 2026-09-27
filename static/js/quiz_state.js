@@ -29,6 +29,9 @@ const DEFAULT_QUIZ_STATE = {
         internships: "",
         noRequiredCourses: false,
         noElectives: false,
+        interestedElectives: [],
+        customInterestedElectives: "",
+        noInterestedElectives: false,
         noPlannedCourses: false,
         noCurrentActivities: false,
         noPriorExperience: false,
@@ -145,6 +148,38 @@ const QuizApp = {
         sessionStorage.removeItem(STORAGE_KEY);
     },
 
+    navigateWithTransition(url) {
+        if (!url || document.documentElement.dataset.isNavigating === "true") return;
+        document.documentElement.dataset.isNavigating = "true";
+        document.querySelector(".page-wrapper")?.classList.remove("page-ready");
+        document.querySelector(".page-wrapper")?.classList.add("page-leaving");
+        window.setTimeout(() => {
+            window.location.assign(url);
+        }, 240);
+    },
+
+    clearCurrentUserData() {
+        const state = this.getQuizState();
+        const userId = state?.activeUserId;
+
+        this.stopAllSpeech();
+        this.resetQuizState();
+
+        if (!userId) return;
+        const payload = JSON.stringify({ user_id: userId });
+        try {
+            const blob = new Blob([payload], { type: "application/json" });
+            if (navigator.sendBeacon("/api/cleanup-user", blob)) return;
+        } catch (_e) { }
+
+        fetch("/api/cleanup-user", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: payload,
+            keepalive: true,
+        }).catch(() => { });
+    },
+
     // Audio Playback Engine (Strict Audio Management)
     currentAudio: null,
 
@@ -252,7 +287,8 @@ const QuizApp = {
                 window.speechSynthesis.cancel();
 
                 const utterance = new SpeechSynthesisUtterance(text);
-                utterance.rate = 1.0;
+                const rates = { 3: 1.15 };
+                utterance.rate = rates[avatarNum] || 1.0;
 
                 const pitches = { 1: 1.0, 2: 1.05, 3: 0.95, 4: 1.1, 5: 1.0 };
                 utterance.pitch = pitches[avatarNum] || 1.0;
@@ -277,9 +313,14 @@ const QuizApp = {
     },
 
     async playReportAudio(text, base64Audio, avatarNum = 1) {
+        // Report endpoints return the Gemini text together with its ElevenLabs
+        // audio. Keep the visible dialogue synchronized before playback begins.
+        if (text) {
+            this.avatarSayTextOnly(text, avatarNum);
+        }
         if (base64Audio) {
-            const played = await this.playBase64Audio(base64Audio);
-            if (played) return;
+            await this.playBase64Audio(base64Audio);
+            return;
         }
         if (text) {
             await this.speakWebSpeech(text, avatarNum);
@@ -300,13 +341,13 @@ const QuizApp = {
             if (res.ok) {
                 const data = await res.json();
                 if (data.audio) {
-                    const played = await this.playBase64Audio(data.audio);
-                    if (played) return;
+                    await this.playBase64Audio(data.audio);
+                    return;
                 }
             }
         } catch (_e) { }
 
-        // Fallback to Web Speech API
+        // Fallback to Web Speech API only if ElevenLabs generation was completely unavailable
         await this.speakWebSpeech(text, avatarNum);
     },
 
@@ -360,7 +401,7 @@ const QuizApp = {
             };
             return r[val] || `Noted your standing as ${val}.`;
         },
-        major: (val) => `Selected ${val}. Benchmarking against alumni distributions in Tiger Data.`,
+        major: (val) => `Selected ${val}. Benchmarking against alumni outcomes.`,
         track: (val) => `Specializing in ${val}. Aligning upper-level electives.`,
         gpa: (val) => {
             const n = parseFloat(val);

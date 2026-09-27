@@ -39,9 +39,9 @@
             </div>
         </div>
         <p id="advisor-intro-message" class="intro-dialogue-text">
-            Greetings! I am Avatar 4, your Career &amp; Industry Strategist. I evaluate your technical toolsets,
-            experiential milestones, and professional job history against real alumni placement records in Tiger Data to
-            recommend top employers and strategic next steps.
+            With your academic and involvement profile in place, I am Avatar 4, your Career &amp; Industry Strategist. I
+            evaluate your technical toolsets, experiential milestones, and professional job history against real alumni
+            placement records to recommend top employers and strategic next steps.
         </p>
     </div>
 
@@ -134,29 +134,14 @@
 
                     <div class="suggested-skills-section" style="margin-top: 1.35rem;">
                         <label class="field-label" style="font-size:0.8rem; color:var(--text-secondary);">
-                            ⚡ Quick Suggestions (Click to add or remove):
+                            ⚡ Alumni-Matched Quick Add (Click to add or remove):
                         </label>
                         <div id="suggested-skills-pills" class="skill-pills-wrap"
-                            style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-top:0.5rem;">
-                            <button type="button" class="skill-pill" data-skill="Python">Python</button>
-                            <button type="button" class="skill-pill" data-skill="Java">Java</button>
-                            <button type="button" class="skill-pill" data-skill="C++">C++</button>
-                            <button type="button" class="skill-pill" data-skill="JavaScript">JavaScript</button>
-                            <button type="button" class="skill-pill" data-skill="React">React</button>
-                            <button type="button" class="skill-pill" data-skill="SQL / PostgreSQL">SQL /
-                                PostgreSQL</button>
-                            <button type="button" class="skill-pill" data-skill="AWS">AWS</button>
-                            <button type="button" class="skill-pill" data-skill="Docker">Docker</button>
-                            <button type="button" class="skill-pill" data-skill="Git / GitHub">Git / GitHub</button>
-                            <button type="button" class="skill-pill" data-skill="Machine Learning">Machine
-                                Learning</button>
-                            <button type="button" class="skill-pill" data-skill="Linux">Linux</button>
-                            <button type="button" class="skill-pill" data-skill="Cybersecurity">Cybersecurity</button>
-                            <button type="button" class="skill-pill" data-skill="Leadership">Leadership</button>
-                            <button type="button" class="skill-pill" data-skill="Technical Communication">Technical
-                                Communication</button>
-                            <button type="button" class="skill-pill" data-skill="Project Management">Project
-                                Management</button>
+                            style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-top:0.5rem;"
+                            aria-live="polite">
+                            <span class="suggested-skills-loading" style="color:var(--text-muted); font-size:0.85rem;">
+                                Finding skills from your closest alumni matches...
+                            </span>
                         </div>
                     </div>
 
@@ -288,9 +273,10 @@
             <!-- SCREEN 3: JOB EXPERIENCE (DYNAMIC ROLES) -->
             <div id="substep-job-experience" class="substep-page" hidden>
                 <p class="eyebrow">Section 4 of 5 &bull; Question 3 of 3</p>
-                <h2 class="step-heading">Tell us about your recent job experience.</h2>
+                <h2 class="step-heading">Tell us about your additional employment.</h2>
                 <p class="step-description">
-                    Capture recent roles, teaching assistantships, part-time jobs, internships, or campus positions.
+                    Add paid, volunteer, or independent roles not already captured in your experience categories. Campus
+                    jobs selected above are carried here automatically; internships remain in the experience section.
                 </p>
 
                 <div class="job-experience-wrapper" style="margin-top: 1.25rem;">
@@ -300,7 +286,7 @@
                     <div
                         style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:1rem; margin-top:1.35rem; padding-top:1rem; border-top:1px dashed var(--border-subtle);">
                         <button type="button" class="secondary-btn" id="btn-add-job-role">
-                            + Add another role
+                            + Add another employment role
                         </button>
                         <label class="required-response"
                             style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer;">
@@ -367,7 +353,7 @@
                     </div>
                     <div class="thought-body">
                         <p id="report-thought-bubble-text" class="thought-text">
-                            Analyzing your skills and career milestones against Tiger Data alumni records...
+                            Analyzing your skills and career milestones against alumni records...
                         </p>
                     </div>
                 </div>
@@ -387,7 +373,7 @@
                 <div class="card-subtitle" style="font-size:1.1rem; font-weight:600; margin-bottom:0.5rem;">🏢
                     Recommended Companies &amp; Target Employers</div>
                 <p class="card-subtext" style="font-size:0.88rem; color:var(--text-secondary); margin-bottom:1rem;">
-                    Employers from Tiger Data that actively hire students with your skill portfolio and experience
+                    Employers that actively hire students with your skill portfolio and experience
                     background:
                 </p>
                 <div id="recommended-companies-grid" class="companies-showcase-grid"></div>
@@ -427,5 +413,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/section4.js', v='131') }}"></script>
+<script src="{{ url_for('static', filename='js/section4.js', v='136') }}"></script>
 {% endblock %}

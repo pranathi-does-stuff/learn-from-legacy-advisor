@@ -419,7 +419,7 @@ document.addEventListener("DOMContentLoaded", () => {
             avatar: 1,
         },
         4: {
-            text: "Now, define your target industry, compensation, and career goals so we can query Tiger Data for your baseline matches.",
+            text: "Now, define your target industry, compensation, and career goals so we can identify your baseline matches.",
             avatar: 1,
         },
         5: {

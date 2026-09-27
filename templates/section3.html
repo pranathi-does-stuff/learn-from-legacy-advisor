@@ -39,9 +39,9 @@
             </div>
         </div>
         <p id="advisor-intro-message" class="intro-dialogue-text">
-            Welcome! I am Avatar 3, your Student Engagement Mentor. Technical ability alone doesn't guarantee top
-            offers. I evaluate which student organizations, campus activities, leadership roles, and outlier initiatives
-            will give your profile a distinctive, competitive edge.
+            Building on your academic profile, I am Avatar 3, your Student Engagement Mentor. Technical ability alone
+            doesn't guarantee top offers. I evaluate which student organizations, campus activities, leadership roles,
+            and outlier initiatives will give your profile a distinctive, competitive edge.
         </p>
     </div>
 
@@ -234,7 +234,7 @@
         <div class="avatar-circle avatar-3-orange avatar-image-frame">
             <img src="/Users/owenpennington/Desktop/Hackathon/career_quiz/static/images/CourseAdvisorFemale.PNG"
                 alt="Avatar 3" class="avatar-portrait"
-                onerror="this.src='{{ url_for('static', filename='images/CourseAdvisorFemale.PNG') }}'" />
+                onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/CourseAdvisorFemale.PNG') }}';" />
         </div>
     </aside>
 
@@ -308,5 +308,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/section3.js', v='130') }}"></script>
+<script src="{{ url_for('static', filename='js/section3.js', v='133') }}"></script>
 {% endblock %}

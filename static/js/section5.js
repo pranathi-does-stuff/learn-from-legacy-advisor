@@ -7,7 +7,6 @@
 // Global Audio Reference & Voice Constants
 let currentAudio = null;
 const SECTION_1_VOICE_ID = "ktHrlQPfUoEUQDP8xbm1";
-const INTRO_TEXT = "Let's take a look at your final career blueprint.";
 
 document.addEventListener("DOMContentLoaded", async () => {
     const state = QuizApp.getQuizState();
@@ -20,6 +19,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const introReplayBtn = document.getElementById("intro-replay-voice-btn");
     const thoughtReplayBtn = document.getElementById("voice-replay-btn");
     const thoughtBubbleText = document.getElementById("thought-bubble-text");
+    const introText = document.getElementById("advisor-intro-message")?.textContent?.trim() || "";
 
     let speechRequestId = 0;
     let voiceBlocked = false;
@@ -60,16 +60,16 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (response.status === 402) {
                     const data = await response.json();
                     voiceBlocked = true;
-                    console.warn(data.error || "ElevenLabs voice unavailable on plan.");
+                    console.warn(data.error || "Voice unavailable on plan.");
                 } else if (response.ok) {
                     const data = await response.json();
                     if (data.audio) {
-                        const played = await QuizApp.playBase64Audio(data.audio);
-                        if (played) return;
+                        await QuizApp.playBase64Audio(data.audio);
+                        return;
                     }
                 }
             } catch (e) {
-                console.warn("ElevenLabs voice playback failed:", e);
+                console.warn("Voice playback failed:", e);
             }
         }
 
@@ -82,13 +82,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     // EVENT A: INTRO SCREEN (Hardcoded Text & Audio)
     // =========================================================================
     const playIntroVoice = () => {
-        playElevenLabsVoice(INTRO_TEXT);
+        playElevenLabsVoice(introText);
     };
 
-    // Auto-play hardcoded intro voice on initial load of Section 5
-    setTimeout(() => {
-        playIntroVoice();
-    }, 350);
+    // Start the final advisor's intro speech as soon as the page is initialized.
+    playIntroVoice();
 
     if (introReplayBtn) {
         introReplayBtn.addEventListener("click", () => {
@@ -117,8 +115,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         // 3. Render cached data or fetch live from /api/generate-report
-        if (!sec5Data) {
-            QuizApp.avatarSayTextOnly("Analyzing your complete multi-dimensional profile against Tiger Data historical benchmarks...", 1);
+        if (!sec5Data || !Array.isArray(sec5Data.timeline_steps) || sec5Data.timeline_steps.length === 0) {
+            QuizApp.avatarSayTextOnly("Analyzing your complete multi-dimensional profile against historical alumni benchmarks...", 1);
             try {
                 const res = await fetch("/api/generate-report", {
                     method: "POST",
@@ -406,38 +404,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         const track = document.getElementById("section5-timeline-track");
         if (!track) return;
 
-        const defaultSteps = [
-            {
-                timeframe: "Next 7 Days",
-                title: "Degree Pacing & Core Audit",
-                description: "Verify degree progress in myUMBC and confirm prerequisite clearance with departmental advising.",
-                badge: "Immediate Priority",
-            },
-            {
-                timeframe: "In 30-60 Days",
-                title: "Join 1 Technical Organization",
-                description: "Engage actively in ACM Chapter or Data Science Collective to launch collaborative builds.",
-                badge: "Co-Curricular",
-            },
-            {
-                timeframe: "In 3-6 Months",
-                title: "Portfolio & Interview Prep",
-                description: "Publish a GitHub project showcasing core competencies and practice technical systems questions.",
-                badge: "Recruiting Prep",
-            },
-            {
-                timeframe: "1-2 Years",
-                title: "Internship & Career Launch",
-                description: "Leverage career fair interviews to lock in a summer internship and convert into full-time offers.",
-                badge: "Career Milestone",
-            },
-        ];
-
-        const steps = (data && Array.isArray(data.timeline_steps) && data.timeline_steps.length > 0)
-            ? data.timeline_steps
-            : defaultSteps;
+        const steps = data?.timeline_steps;
 
         track.innerHTML = "";
+        if (!Array.isArray(steps) || steps.length === 0) {
+            track.textContent = "Your personalized next steps will appear once your profile is complete.";
+            return;
+        }
         steps.forEach((step) => {
             const node = document.createElement("div");
             node.className = "timeline-node";
@@ -481,12 +454,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         form.remove();
     };
 
-    const btnPrintTop = document.getElementById("btn-print-report");
     const btnPrintBottom = document.getElementById("btn-print-report-bottom");
 
-    if (btnPrintTop) {
-        btnPrintTop.addEventListener("click", handlePrintDossier);
-    }
     if (btnPrintBottom) {
         btnPrintBottom.addEventListener("click", handlePrintDossier);
     }
@@ -498,7 +467,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             stopAudio();
             if (confirm("Start a new student career assessment?")) {
                 QuizApp.resetQuizState();
-                window.location.href = "/section/1";
+                QuizApp.navigateWithTransition("/section/1");
             }
         });
     }

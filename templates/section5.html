@@ -38,7 +38,8 @@
             </div>
         </div>
         <p id="advisor-intro-message" class="intro-dialogue-text">
-            Let's take a look at your final career blueprint.
+            Thank you for using us. With all of your advisor inputs complete, here is your final personalized
+            academic and career summary.
         </p>
     </div>
 
@@ -55,25 +56,6 @@
 <div id="section-questions-stage" class="section-questions-stage section5-stage" hidden>
     <!-- Top Hero Section: Large Avatar 1 (Half Screen) + Thought Bubble -->
     <div id="avatar-stage" class="avatar-stage-wrapper section5-hero-stage-wrapper">
-        <div class="avatar-dock" aria-label="Advisory Council Avatars">
-            <div class="dock-avatar-indicator active" data-avatar="1">
-                <div class="dock-circle dock-blue"></div>
-                <span class="dock-label">Foundations</span>
-            </div>
-            <div class="dock-avatar-indicator" data-avatar="2">
-                <div class="dock-circle dock-green"></div>
-                <span class="dock-label">Courses</span>
-            </div>
-            <div class="dock-avatar-indicator" data-avatar="3">
-                <div class="dock-circle dock-orange"></div>
-                <span class="dock-label">Involvement</span>
-            </div>
-            <div class="dock-avatar-indicator" data-avatar="4">
-                <div class="dock-circle dock-purple"></div>
-                <span class="dock-label">Career</span>
-            </div>
-        </div>
-
         <div class="section5-top-hero-row">
             <!-- Left Half: Large Hero Avatar taking 50% width / 50vh height -->
             <div class="section5-avatar-half">
@@ -86,7 +68,7 @@
                 <span class="avatar-name-tag section5-avatar-tag">Avatar 1 &bull; Academic Foundations Advisor</span>
             </div>
 
-            <!-- Right Half: Thought Bubble with Gemini Synthesis & Audio Controls -->
+            <!-- Right Half: Thought Bubble with Audio Controls -->
             <div class="section5-thought-half">
                 <div class="thought-bubble-container">
                     <div class="thought-bubble" id="thought-bubble">
@@ -111,7 +93,7 @@
                         </div>
                         <div class="thought-body">
                             <p id="thought-bubble-text" class="thought-text">
-                                Analyzing your complete multi-dimensional profile against Tiger Data historical
+                                Analyzing your complete multi-dimensional profile against historical alumni
                                 benchmarks...
                             </p>
                         </div>
@@ -131,12 +113,6 @@
                     Your complete profile synthesized across Academic Foundations, Course Planning, Campus Involvement,
                     and Industry Readiness.
                 </p>
-            </div>
-            <div class="report-actions-quick-bar">
-                <button type="button" class="submit-btn" id="btn-print-report"
-                    style="background-color:var(--accent-emerald); color:#fff;">
-                    🖨️ Print My Report
-                </button>
             </div>
         </div>
 
@@ -191,7 +167,7 @@
         <div id="section5-ultimate-match-container" class="ultimate-match-section">
             <div class="matches-header">
                 <h3 class="matches-title">🌟 The Ultimate Alumni Match</h3>
-                <span class="matches-subtitle">Single highest-synergy alumni blueprint identified from Tiger Data</span>
+                <span class="matches-subtitle">Single highest-synergy alumni blueprint identified from alumni outcomes</span>
             </div>
             <div id="section5-ultimate-match-card" class="ultimate-match-hero">
                 <!-- Populated dynamically via JS -->
@@ -202,7 +178,7 @@
         <div class="timeline-section-wrapper">
             <div class="matches-header">
                 <h3 class="matches-title">🗓️ Actionable Next Steps Timeline</h3>
-                <span class="matches-subtitle">Gemini-synthesized milestones tailored to your academic standing and
+                <span class="matches-subtitle">Personalized milestones tailored to your academic standing and
                     target career path</span>
             </div>
             <div class="timeline-container" id="section5-timeline-container">
@@ -220,7 +196,7 @@
             </h4>
             <p style="color:var(--text-secondary); font-size:0.88rem; margin-bottom:1.25rem;">
                 Generate and print an official, comprehensive career dossier synthesizing your degree requirements,
-                Tiger Data compensation benchmarks, and alumni milestones into a formal document.
+                compensation benchmarks, and alumni milestones into a formal document.
             </p>
 
             <div style="display:flex; flex-wrap:wrap; align-items:center; gap:1rem;">
@@ -238,5 +214,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/section5.js', v='130') }}"></script>
+<script src="{{ url_for('static', filename='js/section5.js', v='134') }}"></script>
 {% endblock %}

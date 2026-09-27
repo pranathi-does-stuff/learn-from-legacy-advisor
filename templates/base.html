@@ -12,7 +12,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap"
         rel="stylesheet" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='130') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='133') }}" />
     {% block head %}{% endblock %}
 </head>
 
@@ -26,7 +26,7 @@
             <div class="header-brand">
                 <a href="/" class="brand-link">
                     <div class="brand-mark" aria-hidden="true"></div>
-                    <span class="brand-title">Legacy Advisory &bull; Tiger Data &bull; Gemini &bull; ElevenLabs</span>
+                    <span class="brand-title">Legacy Academic &amp; Career Advisory</span>
                 </a>
             </div>
             <div id="wizard-progress" class="wizard-progress">
@@ -35,6 +35,9 @@
                 <div class="progress-track" aria-hidden="true">
                     <div id="progress-fill" class="progress-fill"
                         data-progress="{% block progress_percent %}20%{% endblock %}"></div>
+                    <span class="progress-segment"></span><span class="progress-segment"></span>
+                    <span class="progress-segment"></span><span class="progress-segment"></span>
+                    <span class="progress-segment"></span>
                 </div>
             </div>
         </header>
@@ -46,12 +49,12 @@
         </main>
 
         <footer class="site-footer">
-            <span>Powered by UMBC Legacy Dataset &bull; Tiger Data &bull; Google Gemini &bull; ElevenLabs TTS</span>
+            <span>Personalized academic and career guidance for UMBC students</span>
         </footer>
     </div>
 
     <!-- Core Cross-Page Quiz State & Voice Handler -->
-    <script src="{{ url_for('static', filename='js/quiz_state.js', v='130') }}"></script>
+    <script src="{{ url_for('static', filename='js/quiz_state.js', v='135') }}"></script>
     <script>
         (function () {
             var pf = document.getElementById('progress-fill');
@@ -61,6 +64,31 @@
                     pf.style.width = pVal;
                 }
             }
+
+            var homeLink = document.querySelector('.brand-link');
+            if (homeLink) {
+                homeLink.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    QuizApp.clearCurrentUserData();
+                    QuizApp.navigateWithTransition(homeLink.href);
+                });
+            }
+
+            document.addEventListener('click', function (event) {
+                var link = event.target.closest('a[href]');
+                if (!link || link.classList.contains('brand-link') || event.defaultPrevented ||
+                    event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey ||
+                    link.target || link.hasAttribute('download')) return;
+                var destination = new URL(link.href, window.location.href);
+                if (destination.origin !== window.location.origin ||
+                    (destination.pathname === window.location.pathname && destination.hash)) return;
+                event.preventDefault();
+                QuizApp.navigateWithTransition(destination.href);
+            });
+
+            requestAnimationFrame(function () {
+                document.querySelector('.page-wrapper')?.classList.add('page-ready');
+            });
         })();
     </script>
     {% block scripts %}{% endblock %}

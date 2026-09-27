@@ -2,6 +2,8 @@ import base64
 import csv
 import json
 import os
+import urllib.error
+import urllib.request
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -37,6 +39,13 @@ AVATAR_VOICE_IDS = {
     3: "Bn9xWp6PwkrqKRbq8cX2",
     4: "Sq93GQT4X1lKDXsQcixO",
     5: "ktHrlQPfUoEUQDP8xbm1",
+}
+
+# Keep Avatar 3's energetic campus-involvement delivery from feeling sluggish.
+# ElevenLabs supports values from 0.7 to 1.2; 1.15 remains natural while
+# noticeably shortening longer report narration.
+AVATAR_VOICE_SPEEDS = {
+    3: 1.15,
 }
 
 DATA_DIR = Path(__file__).resolve().parent / "hackumbc-2026-main" / "data"
@@ -253,8 +262,8 @@ def get_course_options():
     1. required_courses: Major-specific required courses filtered by credit tier (max 6-8).
     2. popular_electives: Electives filtered by popularity among alumni/students sharing Major, Minor, Track, and Career Path (max 6-8).
     3. dynamic_phrasing: Heading text based on credits:
-       - <= 30 credits: "Do any of these electives interest you?"
-       - > 30 credits: "Which of these electives have you taken?"
+       - Fewer than 30 credits: "Are you interested in taking any of these electives?"
+       - 30 or more credits: "Which of these electives have you taken?"
     4. all_catalog_courses: Full catalog for planned course selection.
     """
     if request.method == "POST":
@@ -267,6 +276,7 @@ def get_course_options():
     major_track = (payload.get("majorTrack") or payload.get("track") or "").strip()
     target_ind = (payload.get("targetCompanyIndustry") or payload.get("industry") or "").strip()
     career_goals = (payload.get("careerGoals") or payload.get("goals") or "").strip()
+    class_year = (payload.get("classYear") or payload.get("class_year") or "").strip()
 
     try:
         credits_completed = float(payload.get("creditsCompleted") or payload.get("credits") or payload.get("credits_completed") or 15)
@@ -404,12 +414,15 @@ def get_course_options():
     ranked_electives.sort(key=lambda x: x["score"], reverse=True)
     all_catalog.sort(key=lambda x: x["course_id"])
 
-    # Dynamic phrasing based on credits
-    dynamic_phrasing = "Do any of these electives interest you?" if credits_completed <= 30 else "Which of these electives have you taken?"
+    # Students early in their degree are choosing a direction, not reporting
+    # completed electives.
+    is_interest_mode = credits_completed < 30
+    dynamic_phrasing = "Are you interested in taking any of these electives?" if is_interest_mode else "Which of these electives have you taken?"
 
     return jsonify({
         "major": major,
         "credits_completed": credits_completed,
+        "elective_response_mode": "interest" if is_interest_mode else "completed",
         "dynamic_phrasing": dynamic_phrasing,
         "required_courses": required_courses,
         "popular_electives": ranked_electives[:8],
@@ -1334,7 +1347,7 @@ def query_tiger_data(section_name: str, user_data: dict) -> list:
                             FROM top_engaged_alums a
                             LEFT JOIN student_experience se ON se.campus_id = a.campus_id
                             WHERE (se.experience_type IS NULL OR se.experience_type IN ('Student Organization', 'Competitive Team'))
-                              AND (se.experience_type NOT ILIKE '%research%' AND se.experience_name NOT ILIKE '%research%');
+                              AND (se.experience_type NOT ILIKE '%%research%%' AND se.experience_name NOT ILIKE '%%research%%');
                             """,
                             (major, matched_industry),
                         )
@@ -1637,6 +1650,36 @@ def query_tiger_data(section_name: str, user_data: dict) -> list:
     return matches
 
 
+@app.route("/api/professional-skill-suggestions", methods=["POST"])
+def professional_skill_suggestions():
+    """Return quick-add skills aggregated from the student's closest alumni matches."""
+    payload = request.get_json(silent=True) or {}
+    user_data = payload.get("user_data") or {}
+    if not isinstance(user_data, dict):
+        return jsonify({"error": "user_data must be an object."}), 400
+
+    matches = query_tiger_data("professional_involvement", user_data)
+    ranked_skills = {}
+    for match_rank, match in enumerate(matches):
+        for raw_skill in sorted(match.get("skills_mastered") or [], key=lambda skill: str(skill).casefold()):
+            skill = str(raw_skill or "").strip()
+            if not skill:
+                continue
+            key = skill.casefold()
+            if key not in ranked_skills:
+                ranked_skills[key] = {"name": skill, "count": 0, "first_rank": match_rank}
+            ranked_skills[key]["count"] += 1
+
+    skills = [
+        item["name"]
+        for item in sorted(
+            ranked_skills.values(),
+            key=lambda item: (-item["count"], item["first_rank"], item["name"].casefold()),
+        )[:12]
+    ]
+    return jsonify({"skills": skills})
+
+
 def _get_ultimate_alumni_match(user_data: dict) -> dict:
     """
     Run a comprehensive scoring query across all collected session data
@@ -1760,69 +1803,93 @@ def _get_ultimate_alumni_match(user_data: dict) -> dict:
 
 
 def _get_recommended_timeline_steps(user_data: dict, class_analysis: dict = None, involvement_analysis: dict = None) -> list:
-    """Generate dynamic 4-stage actionable timeline steps based on student standing and path."""
+    """Build four next steps from the student's actual academic and career gaps."""
     class_year = (user_data.get("classYear") or "Freshman").strip()
     target_ind = (user_data.get("targetCompanyIndustry") or "Software Products").strip()
+    missing_req = [
+        c.get("course_id")
+        for c in (class_analysis or {}).get("missing_required", [])[:3]
+        if c.get("course_id")
+    ]
+    planned_courses = [str(course) for course in (user_data.get("plannedCourses") or [])[:3] if course]
+    activities = [str(activity) for activity in ((user_data.get("selectedActivities") or []) + (user_data.get("otherOrganizations") or []))[:2] if activity]
+    skills = [str(skill) for skill in (user_data.get("skillsList") or [])[:3] if skill]
+    if not skills:
+        skills = [skill.strip() for skill in str(user_data.get("skills") or "").split(",")[:3] if skill.strip()]
+    experience_categories = user_data.get("experienceCategories") or []
+    job_roles = user_data.get("jobRoles") or []
+    is_upperclassman = class_year in ("Junior", "Senior", "More than 4 years")
 
-    missing_req = []
-    if class_analysis and class_analysis.get("missing_required"):
-        missing_req = [c.get("course_id") for c in class_analysis["missing_required"][:2]]
-    req_str = f" ({', '.join(missing_req)})" if missing_req else ""
+    if missing_req:
+        academic_step = {
+            "timeframe": "Next 7 Days",
+            "title": "Clear Your Highest-Priority Course Gaps",
+            "description": f"Confirm a term-by-term path for {', '.join(missing_req)} and verify their prerequisites before registration.",
+            "badge": "Academic Priority",
+        }
+    elif planned_courses:
+        academic_step = {
+            "timeframe": "Next 7 Days",
+            "title": "Sequence Your Planned Coursework",
+            "description": f"Validate that {', '.join(planned_courses)} fit your next term, workload, and prerequisite sequence.",
+            "badge": "Academic Priority",
+        }
+    else:
+        academic_step = {
+            "timeframe": "Next 7 Days",
+            "title": "Set Your Next Academic Milestone",
+            "description": "Choose the next courses that most directly advance your degree progress and target career direction.",
+            "badge": "Academic Priority",
+        }
 
-    if class_year in ("Freshman", "Sophomore"):
-        return [
-            {
-                "timeframe": "Next 7 Days",
-                "title": "Gateway Core & Pacing Audit",
-                "description": f"Audit degree progress in myUMBC and confirm prerequisite enrollment for core courses{req_str}.",
-                "badge": "Immediate Priority",
-            },
-            {
-                "timeframe": "In 30-60 Days",
-                "title": "Join 1 Technical Organization",
-                "description": "Engage actively in ACM Student Chapter or Data Science Collective to start collaborative builds.",
-                "badge": "Short-Term Action",
-            },
-            {
-                "timeframe": "In 3-6 Months",
-                "title": "First Technical Portfolio Build",
-                "description": "Develop a public GitHub project showcasing core competencies in Python, Git, and APIs.",
-                "badge": "Recruiting Prep",
-            },
-            {
-                "timeframe": "1-2 Years",
-                "title": "Summer Internship Landing",
-                "description": f"Leverage campus networking and career fair interviews to lock in a summer internship in {target_ind}.",
-                "badge": "Career Milestone",
-            },
-        ]
-    else: # Junior, Senior, More than 4 years
-        return [
-            {
-                "timeframe": "Next 7 Days",
-                "title": "Degree Clearance & Capstone Audit",
-                "description": f"Confirm all remaining upper-level elective credits{req_str} and graduation clearance with department advising.",
-                "badge": "Immediate Priority",
-            },
-            {
-                "timeframe": "In 30-60 Days",
-                "title": "Leadership & Project Demonstration",
-                "description": "Lead a team project or competition entry demonstrating end-to-end architecture on GitHub.",
-                "badge": "Short-Term Action",
-            },
-            {
-                "timeframe": "In 3-6 Months",
-                "title": "Technical Interview & Recruiting Push",
-                "description": f"Execute structured LeetCode/Systems interview prep and apply to 25+ target employers in {target_ind}.",
-                "badge": "Recruiting Sprint",
-            },
-            {
-                "timeframe": "1-2 Years",
-                "title": "Full-Time Offer & Launch",
-                "description": f"Convert internship experience into full-time return offers targeting starting compensation of $105,000+.",
-                "badge": "Career Launch",
-            },
-        ]
+    if activities:
+        involvement_step = {
+            "timeframe": "In 30 Days",
+            "title": "Turn Current Involvement Into Evidence",
+            "description": f"Take ownership of one measurable outcome through {', '.join(activities)} and document the result for your resume.",
+            "badge": "Profile Building",
+        }
+    else:
+        involvement_step = {
+            "timeframe": "In 30 Days",
+            "title": "Add a Relevant Community Commitment",
+            "description": f"Identify one campus organization, competition, or service project that builds relationships and experience in {target_ind}.",
+            "badge": "Profile Building",
+        }
+
+    skill_focus = ", ".join(skills) if skills else target_ind
+    portfolio_step = {
+        "timeframe": "In 60-90 Days",
+        "title": "Create Proof of Your Skills",
+        "description": f"Complete a scoped project or documented work sample that demonstrates {skill_focus} in a real {target_ind} use case.",
+        "badge": "Portfolio Evidence",
+    }
+
+    has_experience = bool(experience_categories or job_roles)
+    if is_upperclassman:
+        career_title = "Convert Your Profile Into Targeted Applications"
+        career_desc = f"Use your coursework, involvement, and work examples to tailor applications and interview stories for {target_ind} roles."
+        career_badge = "Career Launch"
+    elif has_experience:
+        career_title = "Build on Your Existing Experience"
+        career_desc = f"Use your current experience to pursue the next higher-responsibility opportunity in {target_ind} and request a concrete deliverable."
+        career_badge = "Career Progression"
+    else:
+        career_title = "Pursue Your First Relevant Experience"
+        career_desc = f"Target an entry-level project, research role, campus position, or early internship that gives you hands-on exposure to {target_ind}."
+        career_badge = "Experience Goal"
+
+    return [
+        academic_step,
+        involvement_step,
+        portfolio_step,
+        {
+            "timeframe": "This Academic Year" if not is_upperclassman else "This Recruiting Cycle",
+            "title": career_title,
+            "description": career_desc,
+            "badge": career_badge,
+        },
+    ]
 
 
 # ==============================================================================
@@ -1928,12 +1995,16 @@ Student Professional Profile:
         completed_req = [c.get("course_id", "") for c in (class_analysis.get("completed_required") if class_analysis else []) if c.get("course_id")]
         missing_req = [c.get("course_id", "") for c in (class_analysis.get("missing_required") if class_analysis else []) if c.get("course_id")]
         completed_elec = [c.get("course_id", "") for c in (class_analysis.get("completed_electives") if class_analysis else []) if c.get("course_id")]
+        interested_elec = [c.get("course_id", "") for c in (class_analysis.get("interested_electives") if class_analysis else []) if c.get("course_id")]
         planned = [c.get("course_id", "") for c in (class_analysis.get("planned_courses") if class_analysis else []) if c.get("course_id")]
         section_scoped_context = f"""Student Coursework Profile:
 - Completed Required Core Courses: {', '.join(completed_req) or 'None logged yet'}
 - Remaining Required Core Courses: {', '.join(missing_req[:8]) or 'All core requirements completed'}
 - Completed Electives: {', '.join(completed_elec) or 'None logged yet'}
+- Electives the Student Is Interested In (not completed): {', '.join(interested_elec) or 'None specified'}
 - Planned Future Courses: {', '.join(planned) or 'None selected yet'}"""
+        if interested_elec:
+            tone_instruction += " Treat the listed electives as interests—not completed coursework—and recommend a clear next-course pathway that connects those interests to their required foundations."
     elif is_involvement_sec:
         section_scoped_context = involvement_context.strip()
     elif is_professional_sec:
@@ -1964,13 +2035,14 @@ Student Context:
 - Target Industry: {target_industry}
 {section_scoped_context}
 
-Tiger Data Alumni Matches (Top 3):
+Alumni Matches (Top 3):
 {json.dumps(matches[:3], indent=2)}
 
 Guidelines:
 1. Write EXACTLY 2 to 3 concise, impactful sentences.
 2. {tone_instruction}
-3. Ground your advice directly in the alumni data matches and the student's stated path. Do not include markdown headers or bullet points."""
+3. Ground your advice directly in the alumni matches and the student's stated path. Do not include markdown headers or bullet points.
+4. Never name data sources, AI systems, voice services, or other internal tools in the student-facing response."""
 
     if gemini_client:
         candidate_models = [
@@ -2050,7 +2122,7 @@ Guidelines:
         if is_underclassman:
             return (
                 f"Your skills and experiential background provide a solid foundation for high-demand roles across {top_ind}. "
-                f"Based on alumni outcomes from Tiger Data, targeting early internships and technical research at organizations like {top_emp} and {second_emp} "
+                f"Based on alumni outcomes, targeting early internships and technical research at organizations like {top_emp} and {second_emp} "
                 f"will accelerate your competitive positioning for junior and senior recruiting cycles."
             )
         else:
@@ -2086,85 +2158,93 @@ def generate_elevenlabs_tts(
     raise_errors: bool = False,
 ) -> str:
     """
-    Pass the generated Gemini response string into the ElevenLabs SDK
-    to generate the TTS audio stream, and return it as a Base64 encoded audio string.
+    Generate ElevenLabs TTS audio stream and return as Base64 encoded MP3 audio string.
+    Uses ElevenLabs SDK if available, or direct HTTPS REST API call as a resilient zero-dependency engine.
     """
-    if not elevenlabs_client or not text:
+    if not text or not str(text).strip():
         if raise_errors:
-            raise RuntimeError("ElevenLabs client is not configured or text is empty.")
+            raise RuntimeError("Text is empty.")
         return ""
 
-    try:
-        audio_stream = elevenlabs_client.text_to_speech.convert(
-            voice_id=voice_id,
-            text=text,
-            model_id="eleven_turbo_v2_5",
-            output_format="mp3_44100_128",
-        )
-        audio_chunks = []
-        for chunk in audio_stream:
-            if isinstance(chunk, bytes):
-                audio_chunks.append(chunk)
+    clean_text = str(text).strip()
+    target_voice = str(voice_id or DEFAULT_ELEVENLABS_VOICE_ID).strip()
+    voice_speed = next(
+        (
+            AVATAR_VOICE_SPEEDS.get(avatar_num, 1.0)
+            for avatar_num, configured_voice_id in AVATAR_VOICE_IDS.items()
+            if target_voice == configured_voice_id
+        ),
+        1.0,
+    )
+    if not ELEVENLABS_API_KEY:
+        if raise_errors:
+            raise RuntimeError("ELEVENLABS_API_KEY is not configured in .env.")
+        return ""
 
-        if audio_chunks:
-            audio_bytes = b"".join(audio_chunks)
-            return base64.b64encode(audio_bytes).decode("utf-8")
-        raise RuntimeError("ElevenLabs returned an empty audio stream.")
-    except Exception as exc:
+    # Strategy 1: ElevenLabs Official SDK Client (if installed and available)
+    if elevenlabs_client:
+        try:
+            audio_stream = elevenlabs_client.text_to_speech.convert(
+                voice_id=target_voice,
+                text=clean_text,
+                model_id="eleven_turbo_v2_5",
+                output_format="mp3_44100_128",
+                voice_settings={
+                    "stability": 0.5,
+                    "similarity_boost": 0.75,
+                    "speed": voice_speed,
+                },
+            )
+            audio_chunks = []
+            for chunk in audio_stream:
+                if isinstance(chunk, bytes):
+                    audio_chunks.append(chunk)
+
+            if audio_chunks:
+                audio_bytes = b"".join(audio_chunks)
+                return base64.b64encode(audio_bytes).decode("utf-8")
+        except Exception as sdk_exc:
+            print(f"ElevenLabs SDK conversion note: {sdk_exc}, attempting direct REST endpoint fallback...")
+
+    # Strategy 2: Direct Standard Library HTTPS REST Endpoint (Works in all environments with zero dependencies)
+    try:
+        url = f"https://api.elevenlabs.io/v1/text-to-speech/{target_voice}"
+        payload_data = {
+            "text": clean_text,
+            "model_id": "eleven_turbo_v2_5",
+            "voice_settings": {
+                "stability": 0.5,
+                "similarity_boost": 0.75,
+                "speed": voice_speed,
+            },
+        }
+        encoded_data = json.dumps(payload_data).encode("utf-8")
+        req = urllib.request.Request(
+            url,
+            data=encoded_data,
+            headers={
+                "xi-api-key": ELEVENLABS_API_KEY,
+                "Content-Type": "application/json",
+                "Accept": "audio/mpeg",
+                "User-Agent": "CareerAdvisoryApp/1.0",
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            audio_bytes = resp.read()
+            if audio_bytes:
+                return base64.b64encode(audio_bytes).decode("utf-8")
+            raise RuntimeError("Empty audio response from ElevenLabs REST API.")
+    except urllib.error.HTTPError as http_err:
+        print(f"ElevenLabs HTTP Error ({http_err.code}): {http_err.reason}")
         if raise_errors:
             raise
-        print(f"ElevenLabs TTS generation warning: {exc}")
+    except Exception as exc:
+        print(f"ElevenLabs REST TTS generation error: {exc}")
+        if raise_errors:
+            raise
 
     return ""
-
-
-def _parse_prerequisites(prereq_str: str) -> list:
-    """Extract individual course IDs from a prerequisite_ids string."""
-    if not prereq_str or str(prereq_str).strip().lower() in ("not applicable", "none", "n/a"):
-        return []
-    cleaned = (
-        str(prereq_str)
-        .replace("|", " ")
-        .replace(";", " ")
-        .replace(",", " ")
-        .replace(" or ", " ")
-        .replace(" and ", " ")
-    )
-    tokens = cleaned.split()
-    prereqs = []
-    for token in tokens:
-        t = token.strip().upper().replace(" ", "")
-        if t and len(t) >= 5 and any(char.isdigit() for char in t):
-            prereqs.append(t)
-    return prereqs
-
-
-def _resolve_all_prerequisites(taken_course_ids: set, catalog_dict: dict) -> set:
-    """
-    Given a set of completed course IDs, recursively identify all prerequisites
-    and return the full transitive closure of completed + inferred prerequisite course IDs.
-    """
-    all_completed = set(taken_course_ids)
-    queue = list(taken_course_ids)
-    visited = set(taken_course_ids)
-
-    norm_catalog = {k.upper().replace(" ", ""): v for k, v in catalog_dict.items()}
-
-    while queue:
-        current_cid = queue.pop(0)
-        cat_info = norm_catalog.get(current_cid)
-        if cat_info:
-            raw_prereqs = cat_info.get("prerequisite_ids") or ""
-            parsed = _parse_prerequisites(raw_prereqs)
-            for p in parsed:
-                p_clean = p.upper().replace(" ", "")
-                if p_clean not in all_completed:
-                    all_completed.add(p_clean)
-                    if p_clean not in visited:
-                        visited.add(p_clean)
-                        queue.append(p_clean)
-
-    return all_completed
 
 
 @app.route("/api/section1-voice", methods=["POST"])
@@ -2198,7 +2278,7 @@ def generate_section1_voice():
     except Exception as exc:
         if getattr(exc, "status_code", None) == 402:
             return jsonify({
-                "error": "This ElevenLabs voice requires a paid API plan. Upgrade the account or use a voice available on its current plan.",
+                "error": "This voice requires a paid API plan. Upgrade the account or use a voice available on its current plan.",
                 "code": "paid_plan_required",
             }), 402
         app.logger.error("ElevenLabs TTS failed: %s", type(exc).__name__)
@@ -2212,8 +2292,7 @@ def analyze_student_coursework(user_data: dict) -> dict:
     Direct comparative breakdown comparing classes the user has already taken
     against required major core and high-yield electives recommended by the dataset.
     Implements:
-    1. Prerequisite Inference: If a course has been completed, all its prerequisites are
-       assumed to be completed and removed from remaining courses.
+    1. Explicit completion: Only courses selected as completed count toward progress.
     2. Tier Filter: If higher-level courses were shown in the required section, lower-level
        courses in the student's major/minor discipline are omitted from remaining required core.
     3. Gen-Ed Exception: Lower-level courses NOT directly affiliated with the user's major/minor
@@ -2225,6 +2304,7 @@ def analyze_student_coursework(user_data: dict) -> dict:
     minor = (user_data.get("minor") or "").strip()
     target_ind = (user_data.get("targetCompanyIndustry") or "").strip()
     career_goals = (user_data.get("careerGoals") or "").strip()
+    class_year = (user_data.get("classYear") or user_data.get("class_year") or "").strip()
 
     try:
         credits_completed = int(user_data.get("creditsCompleted") or user_data.get("credits_completed") or 0)
@@ -2233,14 +2313,18 @@ def analyze_student_coursework(user_data: dict) -> dict:
 
     raw_taken_req = [c.upper().replace(" ", "") for c in (user_data.get("takenRequiredCourses") or user_data.get("taken_required_courses") or [])]
     raw_taken_elec = [c.upper().replace(" ", "") for c in (user_data.get("takenElectives") or user_data.get("taken_electives") or [])]
+    raw_interested_elec = [c.upper().replace(" ", "") for c in (user_data.get("interestedElectives") or user_data.get("interested_electives") or [])]
+    custom_interested_elec = (user_data.get("customInterestedElectives") or user_data.get("custom_interested_electives") or "").strip()
     planned = user_data.get("plannedCourses") or user_data.get("planned_courses") or []
     custom_planned = (user_data.get("customPlannedCourses") or user_data.get("custom_planned_courses") or "").strip()
 
     catalog_dict = _load_course_catalog()
 
-    # Transitive prerequisite closure: all prerequisites of completed courses are assumed completed
-    user_taken_set = set(raw_taken_req + raw_taken_elec)
-    inferred_all_completed = _resolve_all_prerequisites(user_taken_set, catalog_dict)
+    # A course is complete only when the student explicitly selected it.  A
+    # prerequisite can be satisfied in several ways, so it is not safe to
+    # infer it from enrollment in a later course.
+    explicitly_completed = set(raw_taken_req + raw_taken_elec)
+    explicitly_completed_electives = set(raw_taken_elec)
 
     major_disciplines = {
         "Computer Science": {"CMSC", "CMPE"},
@@ -2307,7 +2391,7 @@ def analyze_student_coursework(user_data: dict) -> dict:
 
     for req in all_required_objs:
         cid_clean = req["course_id"].upper().replace(" ", "")
-        if cid_clean in inferred_all_completed or any(cid_clean == t or cid_clean in t or t in cid_clean for t in inferred_all_completed):
+        if cid_clean in explicitly_completed:
             completed_required.append(req)
         else:
             raw_missing_required.append(req)
@@ -2315,7 +2399,7 @@ def analyze_student_coursework(user_data: dict) -> dict:
     completed_electives = []
     for cid, c in catalog_dict.items():
         cid_clean = cid.upper().replace(" ", "")
-        if cid_clean in inferred_all_completed or any(cid_clean == t or cid_clean in t or t in cid_clean for t in raw_taken_elec):
+        if cid_clean in explicitly_completed_electives:
             if not any(r["course_id"].upper().replace(" ", "") == cid_clean for r in completed_required):
                 completed_electives.append({
                     "course_id": cid,
@@ -2323,6 +2407,31 @@ def analyze_student_coursework(user_data: dict) -> dict:
                     "credits": int(c.get("credits", 3) or 3),
                     "skill_tags": (c.get("skill_tags") or "").replace("|", ", "),
                 })
+
+    interested_electives = []
+    seen_interests = set()
+    for cid_clean in raw_interested_elec:
+        if cid_clean in seen_interests:
+            continue
+        seen_interests.add(cid_clean)
+        catalog_item = next(
+            (item for cid, item in catalog_dict.items() if cid.upper().replace(" ", "") == cid_clean),
+            None,
+        )
+        interested_electives.append({
+            "course_id": catalog_item.get("course_id", cid_clean) if catalog_item else cid_clean,
+            "course_title": catalog_item.get("course_title", cid_clean) if catalog_item else cid_clean,
+            "credits": int(catalog_item.get("credits", 3) or 3) if catalog_item else 3,
+            "skill_tags": (catalog_item.get("skill_tags") or "").replace("|", ", ") if catalog_item else "Student interest",
+        })
+    for course_name in (item.strip() for item in custom_interested_elec.split(",")):
+        if course_name and course_name.casefold() not in {item["course_id"].casefold() for item in interested_electives}:
+            interested_electives.append({
+                "course_id": course_name,
+                "course_title": course_name,
+                "credits": 0,
+                "skill_tags": "Student interest",
+            })
 
     # Filter remaining required courses based on credit tier:
     # If the user was shown higher-level courses, do NOT show lower-level courses in major/minor disciplines.
@@ -2375,6 +2484,7 @@ def analyze_student_coursework(user_data: dict) -> dict:
 
     recommended_electives = []
     combined_keywords = f"{target_ind} {career_goals}".lower()
+    interested_elective_ids = set(raw_interested_elec)
 
     for e in electives_pool_objs:
         if e["course_id"].upper().replace(" ", "") in taken_all_cids:
@@ -2387,8 +2497,13 @@ def analyze_student_coursework(user_data: dict) -> dict:
         if any(k in combined_keywords for k in ["web", "software", "cloud", "fullstack", "dev"]) and any(k in e["skill_tags"].lower() for k in ["web", "cloud", "software", "testing", "design", "sql"]):
             boost += 60
 
+        is_student_interest = e["course_id"].upper().replace(" ", "") in interested_elective_ids
+        if is_student_interest:
+            boost += 250
+
         e_copy = dict(e)
         e_copy["priority_score"] = boost
+        e_copy["matches_student_interest"] = is_student_interest
         recommended_electives.append(e_copy)
 
     recommended_electives.sort(key=lambda x: x["priority_score"], reverse=True)
@@ -2425,6 +2540,8 @@ def analyze_student_coursework(user_data: dict) -> dict:
         "missing_required_note": missing_required_note,
         "tone_shift": tone_shift,
         "completed_electives": completed_electives,
+        "interested_electives": interested_electives,
+        "elective_response_mode": "interest" if credits_completed < 30 else "completed",
         "recommended_electives": recommended_electives[:4],
         "planned_courses": planned_course_objs,
         "custom_planned": custom_planned,
@@ -3132,4 +3249,3 @@ if __name__ == "__main__":
             app.run(host="127.0.0.1", port=fallback_port, debug=True)
         else:
             raise e
-

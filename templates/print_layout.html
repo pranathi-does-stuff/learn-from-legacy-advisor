@@ -500,7 +500,7 @@
                 <div class="brand-crest" aria-hidden="true">UMBC</div>
                 <div class="header-titles">
                     <h1>Academic &amp; Career Trajectory Dossier</h1>
-                    <p>Division of Academic &amp; Career Advising &bull; Tiger Data Historical Benchmark Synthesis</p>
+                    <p>Division of Academic &amp; Career Advising &bull; Historical Alumni Benchmark Synthesis</p>
                 </div>
             </div>
             <div class="header-meta-block">
@@ -631,13 +631,36 @@
                 </div>
             </div>
 
+            {% if class_analysis.interested_electives %}
+            <table class="formal-table" style="margin-top:0.25rem;">
+                <thead>
+                    <tr>
+                        <th colspan="3">Electives You Are Interested In — Not Yet Completed</th>
+                    </tr>
+                    <tr>
+                        <th>Code</th>
+                        <th>Course Title</th>
+                        <th>Interest Focus</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in class_analysis.interested_electives %}
+                    <tr>
+                        <td><strong>{{ e.course_id }}</strong></td>
+                        <td>{{ e.course_title }}</td>
+                        <td>{{ e.skill_tags or 'Student interest' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+
             <!-- Recommended Track Electives -->
             {% if class_analysis.recommended_electives %}
             <table class="formal-table" style="margin-top:0.25rem;">
                 <thead>
                     <tr>
-                        <th colspan="4">Prioritized Upper-Level Electives Aligned to {{ user.targetCompanyIndustry or
-                            'Target Industry' }}</th>
+                        <th colspan="4">{% if class_analysis.elective_response_mode == 'interest' %}Recommended Elective Pathway From Your Interests{% else %}Prioritized Upper-Level Electives Aligned to {{ user.targetCompanyIndustry or 'Target Industry' }}{% endif %}</th>
                     </tr>
                     <tr>
                         <th>Code</th>
@@ -660,10 +683,10 @@
             {% endif %}
         </section>
 
-        <!-- 3. Tiger Data Departmental & Industry Benchmarks -->
+        <!-- 3. Departmental & Industry Benchmarks -->
         <section class="dossier-section">
             <div class="section-title-bar">
-                <h2 class="section-heading">3. Tiger Data Alumni Benchmarks &amp; Industry Analytics</h2>
+                <h2 class="section-heading">3. Alumni Benchmarks &amp; Industry Analytics</h2>
                 <span class="section-tag">{{ user.major }} Historical Placement Data</span>
             </div>
 
@@ -802,7 +825,7 @@
         <section class="dossier-section">
             <div class="section-title-bar">
                 <h2 class="section-heading">6. The Ultimate Matched Alumni Blueprint</h2>
-                <span class="section-tag">Tiger Data Benchmark Match</span>
+                <span class="section-tag">Alumni Benchmark Match</span>
             </div>
 
             <div class="ultimate-match-dossier">
@@ -901,7 +924,7 @@
                 </div>
                 <div class="sig-block">
                     <div class="sig-line"></div>
-                    <div class="sig-name">Tiger Data Analytics Engine</div>
+                    <div class="sig-name">Academic &amp; Career Advising</div>
                     <div class="sig-title">Institutional Historical Benchmark Unit</div>
                 </div>
                 <div class="sig-block">
@@ -913,8 +936,8 @@
         </section>
 
         <footer class="footer-disclaimer">
-            This dossier is an official advisory roadmap synthesized from historical Tiger Data alumni outcomes and
-            Gemini cognitive modeling. All degree clearance milestones must be verified with departmental advisors.
+            This dossier is an official advisory roadmap synthesized from historical alumni outcomes. All degree
+            clearance milestones must be verified with departmental advisors.
         </footer>
     </main>
 
